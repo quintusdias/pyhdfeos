@@ -79,7 +79,6 @@ class Grid(object):
         detach(self.gridid)
 
     def __str__(self):
-        print("Grid:  '{0}'".format(self.gridname))
         print("Shape:  {0}".self.shape)    
         print("Upper Left (x,y):  {0}".format(self.upleft))
         print("Lower Right (x,y):  {0}".format(self.lowright))
@@ -189,8 +188,8 @@ class GridFile(object):
     def __enter__(self):
         return self
 
-    def __exit__(self):
-        close(self.gdfid)
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
 
     def __del__(self):
         """

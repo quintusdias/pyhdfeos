@@ -21,10 +21,16 @@ class TestClass(unittest.TestCase):
     def setUpClass(cls):
         file = fullpath("TOMS-EP_L3-TOMSEPL3_2000m0101_v8.HDF")
         cls.gridfile = GridFile(file)
+        cls.file = file
 
     @classmethod
     def tearDownClass(self):
         del self.gridfile
+
+    def test_context_manager(self):
+        with GridFile(self.file) as gdf:
+            pass
+        self.assertTrue(True)
 
     def test_inqgrid(self):
         self.assertEqual(list(self.gridfile.grids.keys()), ['TOMS Level 3'])
