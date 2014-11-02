@@ -85,13 +85,24 @@ class Grid(object):
         msg += "Shape:  {0}\n".format(self.shape)
         msg += "Upper Left (x,y):  {0}\n".format(self.upleft)
         msg += "Lower Right (x,y):  {0}\n".format(self.lowright)
-
         if self.projcode == 0:
             msg += "Projection:  Geographic\n"
+        elif self.projcode == 3:
+            msg += "Projection:  Albers Conical Equal Area\n"
+            msg += self._projection_semi_major_semi_minor()
+            msg += self._projection_latitudes_of_standard_parallels()
+            msg += self._projection_longitude_of_central_meridian()
+            msg += self._projection_latitude_of_projection_origin()
+            msg += self._projection_false_easting_northing()
         elif self.projcode == 11:
             msg += "Projection:  Lambert Azimuthal\n"
             msg += self._projection_sphere()
             msg += self._projection_center_lon_lat()
+            msg += self._projection_false_easting_northing()
+        elif self.projcode == 16:
+            msg += "Projection:  Sinusoidal\n"
+            msg += self._projection_sphere()
+            msg += self._projection_longitude_of_central_meridian()
             msg += self._projection_false_easting_northing()
 
         msg += "Fields:\n"
@@ -108,12 +119,59 @@ class Grid(object):
             sphere = 6370.997
         return "    Radius of reference sphere(km):  {0}\n".format(sphere)
 
+    def _projection_semi_major_semi_minor(self):
+        """
+        __str__ helper method for projections semi-major and semi-minor values
+        """
+        if self.projparms[0] == 0:
+            # Clarke 1866
+            semi_major = 6378.2064
+        else:
+            semi_major = self.projparms[0] / 1000
+        if self.projparms[1] == 0:
+            # spherical
+            semi_minor = semi_major
+        elif self.projparms[1] < 0:
+            # eccentricity
+            semi_minor = semi_major * np.sqrt(1 - self.projparms[1]**2)
+        else:
+            # semi minor axis
+            semi_minor = self.projparms[1]
+        msg = "    Semi-major axis(km):  {0}\n".format(semi_major)
+        msg += "    Semi-minor axis(km):  {0}\n".format(semi_minor)
+        return msg
+
+    def _projection_latitudes_of_standard_parallels(self):
+        """
+        __str__ helper method for projections with 1st, 2nd standard parallels
+        """
+        msg = "    Latitude of 1st Standard Parallel:  {0}\n"
+        msg += "    Latitude of 2nd Standard Parallel:  {1}\n"
+        msg = msg.format(self.projparms[2]/1e6, self.projparms[3]/1e6)
+        return msg
+
     def _projection_center_lon_lat(self):
         """
         __str__ helper method for projections center of projection lat and lon
         """
         msg = "    Center Longitude:  {0}\n".format(self.projparms[4]/1e6)
         msg += "    Center Latitude:  {0}\n".format(self.projparms[5]/1e6)
+        return msg
+
+    def _projection_latitude_of_projection_origin(self):
+        """
+        __str__ helper method for latitude of projection origin
+        """
+        val = self.projparms[5]/1e6
+        msg = "    Latitude of Projection Origin:  {0}\n".format(val)
+        return msg
+
+    def _projection_longitude_of_central_meridian(self):
+        """
+        __str__ helper method for longitude of central meridian
+        """
+        val = self.projparms[4]/1e6
+        msg = "    Longitude of Central Meridian:  {0}\n".format(val)
         return msg
 
     def _projection_false_easting_northing(self):

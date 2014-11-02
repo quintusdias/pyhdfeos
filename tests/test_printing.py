@@ -45,4 +45,24 @@ class TestPrinting(unittest.TestCase):
 
         self.assertEqual(actual, fixtures.lambert_azimuthal_grid)
 
+    def test_sinusoidal_grid(self):
+        file = fullpath("MOD10A1.A2000065.h00v08.005.2008237034422.hdf")
+        grid = 'MOD_Grid_Snow_500m'
+        with GridFile(file) as gdf:
+            with patch('sys.stdout', new=StringIO()) as fake_out:
+                print(gdf.grids[grid])
+                actual = fake_out.getvalue().strip()
+
+        self.assertEqual(actual, fixtures.sinusoidal_grid)
+
+    def test_albers_grid(self):
+        file = fullpath("CONUS.annual.2012.h01v06.doy007to356.v1.5.hdf")
+        grid = 'WELD_GRID'
+        with GridFile(file) as gdf:
+            with patch('sys.stdout', new=StringIO()) as fake_out:
+                print(gdf.grids[grid])
+                actual = fake_out.getvalue().strip()
+
+        self.assertEqual(actual, fixtures.albers_grid)
+
 
