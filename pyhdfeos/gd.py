@@ -75,13 +75,54 @@ class Grid(object):
         self.origincode = origininfo(self.gridid)
         self.pixregcode = pixreginfo(self.gridid)
 
+        self._fields, _, _ = inqfields(self.gridid)
+
     def __del__(self):
         detach(self.gridid)
 
     def __str__(self):
-        print("Shape:  {0}".self.shape)    
-        print("Upper Left (x,y):  {0}".format(self.upleft))
-        print("Lower Right (x,y):  {0}".format(self.lowright))
+        msg = "Grid:  {0}\n".format(self.gridname)
+        msg += "Shape:  {0}\n".format(self.shape)
+        msg += "Upper Left (x,y):  {0}\n".format(self.upleft)
+        msg += "Lower Right (x,y):  {0}\n".format(self.lowright)
+
+        if self.projcode == 0:
+            msg += "Projection:  Geographic\n"
+        elif self.projcode == 11:
+            msg += "Projection:  Lambert Azimuthal\n"
+            msg += self._projection_sphere()
+            msg += self._projection_center_lon_lat()
+            msg += self._projection_false_easting_northing()
+
+        msg += "Fields:\n"
+        for field in self._fields:
+            msg += "    {0}:\n".format(field)
+        return msg
+
+    def _projection_sphere(self):
+        """
+        __str__ helper method for projections with known reference sphere radius
+        """
+        sphere = self.projparms[0] / 1000
+        if sphere == 0:
+            sphere = 6370.997
+        return "    Radius of reference sphere(km):  {0}\n".format(sphere)
+
+    def _projection_center_lon_lat(self):
+        """
+        __str__ helper method for projections center of projection lat and lon
+        """
+        msg = "    Center Longitude:  {0}\n".format(self.projparms[4]/1e6)
+        msg += "    Center Latitude:  {0}\n".format(self.projparms[5]/1e6)
+        return msg
+
+    def _projection_false_easting_northing(self):
+        """
+        __str__ helper method for projections with false easting and northing
+        """
+        msg = "    False Easting:  {0}\n".format(self.projparms[6])
+        msg += "    False Northing:  {0}\n".format(self.projparms[7])
+        return msg
 
     def __getitem__(self, index):
         """
