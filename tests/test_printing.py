@@ -30,7 +30,7 @@ class TestPrinting(unittest.TestCase):
     def test_geo_grid(self):
         with GridFile(self.file) as gdf:
             with patch('sys.stdout', new=StringIO()) as fake_out:
-                print(gdf.grids['TOMS Level 3'])
+                print(gdf)
                 actual = fake_out.getvalue().strip()
 
         self.assertEqual(actual, fixtures.geographic_grid)
