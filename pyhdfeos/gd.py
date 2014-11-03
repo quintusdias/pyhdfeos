@@ -1,4 +1,5 @@
 from contextlib import contextmanager
+import os
 import pkg_resources
 import platform
 
@@ -14,6 +15,8 @@ ffi.cdef("""
         typedef double float64;
 
         int32 GDattach(int32 gdfid, char *grid);
+        intn  GDattrinfo(int32 gdfid, char *attrname, int32 *nbyte, int32
+                         *count);
         intn  GDdetach(int32 gid);
         intn  GDclose(int32 fid);
         int32 GDij2ll(int32 projcode, int32 zonecode,
@@ -22,6 +25,7 @@ ffi.cdef("""
                       int32 npts, int32 row[], int32 col[], float64
                       longititude[], float64 latitude[], int32 pixcen,
                       int32 pixcnr);
+        int32 GDinqattrs(int32 gridid, char *attrlist, int32 *strbufsize);
         int32 GDinqfields(int32 gridid, char *fieldlist, int32 rank[],
                           int32 numbertype[]);
         int32 GDinqgrid(char *filename, char *gridlist, int32 *strbufsize);
@@ -33,6 +37,7 @@ ffi.cdef("""
         intn  GDpixreginfo(int32 gridid, int32 *pixregcode);
         intn  GDprojinfo(int32 gridid, int32 *projcode, int32 *zonecode,
                          int32 *spherecode, float64 projparm[]);
+        intn  GDreadattr(int32 gridid, char* attrname, void *buffer);
         """)
 
 if platform.system().startswith('Linux'):
@@ -75,14 +80,123 @@ class Grid(object):
         self.origincode = origininfo(self.gridid)
         self.pixregcode = pixreginfo(self.gridid)
 
+        self._fields, _, _ = inqfields(self.gridid)
+
+        attr_list = inqattrs(self.gridid)
+        self.attrs = {}
+        for attr in attr_list:
+            self.attrs[attr] = readattr(self.gridid, attr)
+
     def __del__(self):
         detach(self.gridid)
 
     def __str__(self):
-        print("Grid:  '{0}'".format(self.gridname))
-        print("Shape:  {0}".self.shape)    
-        print("Upper Left (x,y):  {0}".format(self.upleft))
-        print("Lower Right (x,y):  {0}".format(self.lowright))
+        msg = "Grid:  {0}\n".format(self.gridname)
+        msg += "    Shape:  {0}\n".format(self.shape)
+        msg += "    Upper Left (x,y):  {0}\n".format(self.upleft)
+        msg += "    Lower Right (x,y):  {0}\n".format(self.lowright)
+        if self.projcode == 0:
+            msg += "    Projection:  Geographic\n"
+        elif self.projcode == 3:
+            msg += "    Projection:  Albers Conical Equal Area\n"
+            msg += self._projection_semi_major_semi_minor()
+            msg += self._projection_latitudes_of_standard_parallels()
+            msg += self._projection_longitude_of_central_meridian()
+            msg += self._projection_latitude_of_projection_origin()
+            msg += self._projection_false_easting_northing()
+        elif self.projcode == 11:
+            msg += "    Projection:  Lambert Azimuthal\n"
+            msg += self._projection_sphere()
+            msg += self._projection_center_lon_lat()
+            msg += self._projection_false_easting_northing()
+        elif self.projcode == 16:
+            msg += "    Projection:  Sinusoidal\n"
+            msg += self._projection_sphere()
+            msg += self._projection_longitude_of_central_meridian()
+            msg += self._projection_false_easting_northing()
+
+        msg += "    Fields:\n"
+        for field in self._fields:
+            msg += "        {0}:\n".format(field)
+
+        msg += "    Attributes:\n"
+        for attr in self.attrs.keys():
+            msg += "        {0}:  {1}\n".format(attr, self.attrs[attr])
+
+        
+        return msg
+
+    def _projection_sphere(self):
+        """
+        __str__ helper method for projections with known reference sphere radius
+        """
+        sphere = self.projparms[0] / 1000
+        if sphere == 0:
+            sphere = 6370.997
+        return "        Radius of reference sphere(km):  {0}\n".format(sphere)
+
+    def _projection_semi_major_semi_minor(self):
+        """
+        __str__ helper method for projections semi-major and semi-minor values
+        """
+        if self.projparms[0] == 0:
+            # Clarke 1866
+            semi_major = 6378.2064
+        else:
+            semi_major = self.projparms[0] / 1000
+        if self.projparms[1] == 0:
+            # spherical
+            semi_minor = semi_major
+        elif self.projparms[1] < 0:
+            # eccentricity
+            semi_minor = semi_major * np.sqrt(1 - self.projparms[1]**2)
+        else:
+            # semi minor axis
+            semi_minor = self.projparms[1]
+        msg = "        Semi-major axis(km):  {0}\n".format(semi_major)
+        msg += "        Semi-minor axis(km):  {0}\n".format(semi_minor)
+        return msg
+
+    def _projection_latitudes_of_standard_parallels(self):
+        """
+        __str__ helper method for projections with 1st, 2nd standard parallels
+        """
+        msg = "        Latitude of 1st Standard Parallel:  {0}\n"
+        msg += "        Latitude of 2nd Standard Parallel:  {1}\n"
+        msg = msg.format(self.projparms[2]/1e6, self.projparms[3]/1e6)
+        return msg
+
+    def _projection_center_lon_lat(self):
+        """
+        __str__ helper method for projections center of projection lat and lon
+        """
+        msg = "        Center Longitude:  {0}\n".format(self.projparms[4]/1e6)
+        msg += "        Center Latitude:  {0}\n".format(self.projparms[5]/1e6)
+        return msg
+
+    def _projection_latitude_of_projection_origin(self):
+        """
+        __str__ helper method for latitude of projection origin
+        """
+        val = self.projparms[5]/1e6
+        msg = "        Latitude of Projection Origin:  {0}\n".format(val)
+        return msg
+
+    def _projection_longitude_of_central_meridian(self):
+        """
+        __str__ helper method for longitude of central meridian
+        """
+        val = self.projparms[4]/1e6
+        msg = "        Longitude of Central Meridian:  {0}\n".format(val)
+        return msg
+
+    def _projection_false_easting_northing(self):
+        """
+        __str__ helper method for projections with false easting and northing
+        """
+        msg = "        False Easting:  {0}\n".format(self.projparms[6])
+        msg += "        False Northing:  {0}\n".format(self.projparms[7])
+        return msg
 
     def __getitem__(self, index):
         """
@@ -177,7 +291,7 @@ class GridFile(object):
     Access to HDF-EOS grid files.
     """
     def __init__(self, filename, access=core.DFACC_READ):
-        self.filename = filename,
+        self.filename = filename
         self.access = access
         self.gdfid = open(filename, access=access)
 
@@ -186,11 +300,17 @@ class GridFile(object):
         for gridname in gridlist:
             self.grids[gridname] = Grid(self.gdfid, gridname)
 
+    def __str__(self):
+        msg = "{0}\n".format(os.path.basename(self.filename))
+        for grid in self.grids.keys():
+            msg += str(self.grids[grid])
+        return msg
+
     def __enter__(self):
         return self
 
-    def __exit__(self):
-        close(self.gdfid)
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
 
     def __del__(self):
         """
@@ -254,6 +374,36 @@ def attach(gdfid, gridname):
         If associated library routine fails.
     """
     return _lib.GDattach(gdfid, gridname.encode())
+
+def attrinfo(grid_id, attr_name):
+    """return information about a grid attribute
+
+    Parameters
+    ----------
+    grid_id : int
+        grid identifier
+    attr_name : str
+        attribute name
+
+    Returns
+    -------
+    number_type : int
+        number type of attribute
+    count : int
+        number of total bytes in attribute
+
+    Raises
+    ------
+    IOError
+        If associated library routine fails.
+    """
+    number_type_p = ffi.new("int32 *")
+    count_p = ffi.new("int32 *")
+    status = _lib.GDattrinfo(grid_id, attr_name.encode(),
+                             number_type_p, count_p)
+    _handle_error(status)
+
+    return number_type_p[0], count_p[0]
 
 def close(gdfid):
     """Close an HDF-EOS file.
@@ -406,6 +556,34 @@ def inqfields(gridid):
 
     return fieldlist, ranks, numbertypes
 
+def inqattrs(gridid):
+    """Retrieve information about grid attributes.
+
+    Parameters
+    ----------
+    grid_id : int
+        grid identifier
+
+    Returns
+    -------
+    attrlist : list
+        list of attributes defined for the grid
+
+    Raises
+    ------
+    IOError
+        If associated library routine fails.
+    """
+    strbufsize = ffi.new("int32 *")
+    nattrs = _lib.GDinqattrs(gridid, ffi.NULL, strbufsize)
+    if nattrs == 0:
+        return []
+    attr_buffer = ffi.new("char[]", b'\0' * (strbufsize[0] + 1))
+    nattrs = _lib.GDinqattrs(gridid, attr_buffer, strbufsize)
+    _handle_error(nattrs)
+    attr_list = ffi.string(attr_buffer).decode('ascii').split(',')
+    return attr_list
+
 def inqgrid(filename):
     """Retrieve grid structures defined in HDF-EOS file.
 
@@ -541,4 +719,49 @@ def projinfo(grid_id):
     _handle_error(status)
 
     return projcode[0], zonecode[0], spherecode[0], projparm
+
+def readattr(gridid, attrname):
+    """read grid attribute
+
+    Parameters
+    ----------
+    grid_id : int
+        grid identifier
+    attrname : str
+        attribute name
+
+    Returns
+    -------
+    value : object
+        grid attribute value
+
+    Raises
+    ------
+    IOError
+        If associated library routine fails.
+    """
+    [number_type, count] = attrinfo(gridid, attrname)
+    if number_type == 4:
+        # char8
+        buffer = ffi.new("char[]", b'\0' * (count + 1))
+        status = _lib.GDreadattr(gridid, attrname.encode(), buffer)
+        _handle_error(status)
+        return ffi.string(buffer).decode('ascii')
+
+    if number_type == 5:
+        value = np.ones(count, dtype=np.float32)
+        pvalue = ffi.cast("float *", value.ctypes.data)
+    elif number_type == 6:
+        value = np.ones(count, dtype=np.float64)
+        pvalue = ffi.cast("double *", value.ctypes.data)
+    elif number_type == 24:
+        value = np.ones(count, dtype=np.int32)
+        pvalue = ffi.cast("int32 *", value.ctypes.data)
+    else:
+        raise RuntimeError("unhandled datatype")
+
+    status = _lib.GDreadattr(gridid, attrname.encode(), pvalue)
+    _handle_error(status)
+    return value
+
 
