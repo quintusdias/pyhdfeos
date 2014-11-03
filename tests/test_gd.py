@@ -5,8 +5,7 @@ import unittest
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pyhdfeos import gd as GD
-from pyhdfeos.gd import GridFile, Grid
+from pyhdfeos import GridFile
 from pyhdfeos import core
 
 def fullpath(fname):

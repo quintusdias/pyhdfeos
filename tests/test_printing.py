@@ -10,8 +10,7 @@ else:
     from io import StringIO
     from unittest.mock import patch
 
-from pyhdfeos import gd as GD
-from pyhdfeos.gd import GridFile, Grid
+from pyhdfeos import GridFile
 from pyhdfeos import core
 
 from . import fixtures
