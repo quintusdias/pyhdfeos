@@ -1,6 +1,7 @@
 import platform
 
 from cffi import FFI
+import numpy as np
 
 ffi = FFI()
 ffi.cdef("""
@@ -11,6 +12,8 @@ ffi.cdef("""
         hid_t  HE5_GDattach(hid_t fid, char *gridname);
         herr_t HE5_GDclose(hid_t fid);
         herr_t HE5_GDdetach(hid_t gridid);
+        herr_t HE5_GDgridinfo(hid_t gridID, long *xdimsize, long *ydimsize,
+                              double upleftpt[], double lowrightpt[]);
         long   HE5_GDinqgrid(const char *filename, char *gridlist, long *strbufsize);
         hid_t  HE5_GDopen(const char *filename, uintn access);
         /*int HE5_EHHEisHE5(char *filename);*/
@@ -101,6 +104,40 @@ def gddetach(grid_id):
     """
     status = _lib.HE5_GDdetach(grid_id)
     _handle_error(status)
+
+def gdgridinfo(grid_id):
+    """Return information about a grid structure.
+
+    This function wraps the HDF-EOS5 HE5_GDgridinfo library function.
+
+    Parameters
+    ----------
+    grid_id : int
+        Grid identifier.
+
+    Returns
+    -------
+    shape : tuple
+        Number of rows, columns in grid.
+    upleft, lowright : np.float64[2]
+        Location in meters of upper left, lower right corners.
+    """
+    xdimsize = ffi.new("long *")
+    ydimsize = ffi.new("long *")
+    upleft_buffer = ffi.new("double[]", 2)
+    lowright_buffer = ffi.new("double[]", 2)
+
+    upleft = np.zeros(2, dtype=np.float64)
+    upleftp = ffi.cast("double *", upleft.ctypes.data)
+    lowright = np.zeros(2, dtype=np.float64)
+    lowrightp = ffi.cast("double *", lowright.ctypes.data)
+
+    status = _lib.HE5_GDgridinfo(grid_id, xdimsize, ydimsize, upleftp, lowrightp)
+    _handle_error(status)
+
+    shape = (ydimsize[0], xdimsize[0])
+
+    return shape, upleft, lowright
 
 def gdinqgrid(filename):
     """Retrieve names of grids defined in HDF-EOS5 file.
