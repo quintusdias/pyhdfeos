@@ -13,10 +13,7 @@ class Grid(object):
         self.gridid = gd2.attach(gdfid, gridname)
         self.gridname = gridname
 
-        (numrows, numcols), upleft, lowright = gd2.gridinfo(self.gridid)
-        self.shape = (numrows, numcols)
-        self.upleft = upleft
-        self.lowright = lowright
+        self.shape, self.upleft, self.lowright = gd2.gridinfo(self.gridid)
 
         projcode, zonecode, spherecode, projparms = gd2.projinfo(self.gridid)
         self.projcode = projcode
@@ -149,7 +146,7 @@ class Grid(object):
         """
         Retrieve grid coordinates.
         """
-        (numrows, numcols), _, _ = gd2.gridinfo(self.gridid)
+        numrows, numcols = self.shape
 
         if isinstance(index, int):
             raise RuntimeError("A scalar integer is not a legal argument.")

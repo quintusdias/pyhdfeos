@@ -161,7 +161,7 @@ def gridinfo(grid_id):
 
     Returns
     -------
-    gridsize : tuple
+    shape : tuple
         Number of rows, columns in grid.
     upleft, lowright : np.float64[2]
         Location in meters of upper left, lower right corners.
@@ -179,7 +179,7 @@ def gridinfo(grid_id):
                              upleft_buffer, lowright_buffer)
     _handle_error(status)
 
-    gridsize = (ydimsize[0], xdimsize[0])
+    shape = (ydimsize[0], xdimsize[0])
 
     upleft = np.zeros(2, dtype=np.float64)
     upleft[0] = upleft_buffer[0]
@@ -189,7 +189,7 @@ def gridinfo(grid_id):
     lowright[0] = lowright_buffer[0]
     lowright[1] = lowright_buffer[1]
 
-    return gridsize, upleft, lowright
+    return shape, upleft, lowright
 
 def ij2ll(projcode, zonecode, projparm, spherecode, xdimsize, ydimsize, upleft,
           lowright, row, col, pixcen, pixcnr):
