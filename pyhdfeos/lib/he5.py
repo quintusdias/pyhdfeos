@@ -14,8 +14,12 @@ ffi.cdef("""
         herr_t HE5_GDdetach(hid_t gridid);
         herr_t HE5_GDgridinfo(hid_t gridID, long *xdimsize, long *ydimsize,
                               double upleftpt[], double lowrightpt[]);
-        long   HE5_GDinqgrid(const char *filename, char *gridlist, long *strbufsize);
+        long   HE5_GDinqattrs(hid_t gridID, char *attrnames, long *strbufsize);
+        long   HE5_GDinqgrid(const char *filename, char *gridlist,
+                             long *strbufsize);
         hid_t  HE5_GDopen(const char *filename, uintn access);
+        herr_t HE5_GDprojinfo(hid_t gridID, int *projcode, int *zonecode,
+                              int *spherecode, double projparm[]);
         /*int HE5_EHHEisHE5(char *filename);*/
         """)
 
@@ -139,6 +143,31 @@ def gdgridinfo(grid_id):
 
     return shape, upleft, lowright
 
+def gdinqattrs(gridid):
+    """Retrieve information about attributes for a specific grid.
+
+    This function wraps the HDF-EOS5 HE5_GDinqattrs library function.
+
+    Parameters
+    ----------
+    grid_id : int
+        grid identifier
+
+    Returns
+    -------
+    attrlist : list
+        list of attributes defined for the grid
+    """
+    strbufsize = ffi.new("long *")
+    nattrs = _lib.HE5_GDinqattrs(gridid, ffi.NULL, strbufsize)
+    if nattrs == 0:
+        return []
+    attr_buffer = ffi.new("char[]", b'\0' * (strbufsize[0] + 1))
+    nattrs = _lib.HE5_GDinqattrs(gridid, attr_buffer, strbufsize)
+    _handle_error(nattrs)
+    attr_list = ffi.string(attr_buffer).decode('ascii').split(',')
+    return attr_list
+
 def gdinqgrid(filename):
     """Retrieve names of grids defined in HDF-EOS5 file.
 
@@ -182,4 +211,36 @@ def gdopen(filename, access=H5F_ACC_RDONLY):
     fid = _lib.HE5_GDopen(filename.encode(), access)
     _handle_error(fid)
     return fid
+
+def gdprojinfo(grid_id):
+    """Return projection information about grid.
+
+    This function wraps the HDF-EOS5 HE5_GDprojinfo library function.
+
+    Parameters
+    ----------
+    grid_id : int
+        Grid identifier.
+
+    Returns
+    -------
+    projode : int
+        GCTP projection code.
+    zonecode : int
+        GCTP zone code used by UTM projection.
+    spherecode : int
+        GCTP spheroid code
+    projparm : ndarray
+        GCTP projection parameters
+    """
+    projcode = ffi.new("int *")
+    zonecode = ffi.new("int *")
+    spherecode = ffi.new("int *")
+    projparm = np.zeros(13, dtype=np.float64)
+    projparmp = ffi.cast("double *", projparm.ctypes.data)
+    status = _lib.HE5_GDprojinfo(grid_id, projcode, zonecode, spherecode,
+                                 projparmp)
+    _handle_error(status)
+
+    return projcode[0], zonecode[0], spherecode[0], projparm
 
