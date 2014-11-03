@@ -36,7 +36,8 @@ ffi.cdef("""
         intn  GDprojinfo(int32 gridid, int32 *projcode, int32 *zonecode,
                          int32 *spherecode, float64 projparm[]);
         intn  GDreadattr(int32 gridid, char* attrname, void *buffer);
-        """)
+        """
+)
 
 if platform.system().startswith('Linux'):
     if platform.linux_distribution() == ('Fedora', '20', 'Heisenbug'):
@@ -61,32 +62,6 @@ _lib = ffi.verify("""
 def _handle_error(status):
     if status < 0:
         raise IOError("Library routine failed.")
-
-def get_grid(filename, gridname=None):
-    """
-    """
-    if gridname is None:
-        gridlist = inqgrid(filename)
-        gridname = gridlist[0]
-    with open(filename) as gdfid:
-        with attach(gdfid, gridname) as gridid:
-            projcode, zonecode, spherecode, projparms = projinfo(gridid)
-            (nrow, ncol), upleft, lowright = gridinfo(gridid)
-            pixcen = pixreginfo(gridid)
-            pixcnr = origininfo(gridid)
-            col = np.arange(ncol)
-            col = col.astype(np.int32)
-            lon = np.zeros((nrow, ncol))
-            lat = np.zeros((nrow, ncol))
-            for j in range(nrow):
-                row = j * np.ones((ncol,), dtype = np.int32)
-                _lon, _lat = ij2ll(projcode, zonecode, projparms, spherecode,
-                                   ncol, nrow, upleft, lowright, row, col,
-                                   pixcen, pixcnr)
-                lat[j,:] = _lat
-                lon[j,:] = _lon
-            return lon, lat
-
 
 def attach(gdfid, gridname):
     """Attach to an existing grid structure.
