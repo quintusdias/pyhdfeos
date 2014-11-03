@@ -66,6 +66,8 @@ def _handle_error(status):
 def attach(gdfid, gridname):
     """Attach to an existing grid structure.
 
+    This function wraps the HDF-EOS GDattach library function.
+
     Parameters
     ----------
     gdfid : int
@@ -117,6 +119,8 @@ def attrinfo(grid_id, attr_name):
 
 def close(gdfid):
     """Close an HDF-EOS file.
+
+    This function wraps the HDF-EOS GDclose library function.
 
     Parameters
     ----------
@@ -297,6 +301,8 @@ def inqattrs(gridid):
 def inqgrid(filename):
     """Retrieve grid structures defined in HDF-EOS file.
 
+    This function wraps the HDF-EOS GDinqgrid library function.
+
     Parameters
     ----------
     grid_id : int
@@ -345,6 +351,23 @@ def nentries(gridid, entry_code):
     return nentries, strbufsize[0]
 
 def open(filename, access=core.DFACC_READ):
+    """Opens or creates HDF file in order to create, read, or write a grid.
+    
+    This function wraps the HDF-EOS GDopen library function.
+
+    Parameters
+    ----------
+    filename : str
+        name of file
+    access : int
+        one of H5F_ACC_RDONLY, H5F_ACC_RDWR, or H5F_ACC_TRUNC
+
+    Returns
+    -------
+    fid : int
+        grid file ID handle
+    """
+
     return _lib.GDopen(filename.encode(), access)
 
 def origininfo(grid_id):

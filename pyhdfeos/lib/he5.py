@@ -8,7 +8,10 @@ ffi.cdef("""
         typedef int hid_t;
         typedef int herr_t;
 
+        hid_t  HE5_GDattach(hid_t fid, char *gridname);
         herr_t HE5_GDclose(hid_t fid);
+        herr_t HE5_GDdetach(hid_t gridid);
+        long   HE5_GDinqgrid(const char *filename, char *gridlist, long *strbufsize);
         hid_t  HE5_GDopen(const char *filename, uintn access);
         /*int HE5_EHHEisHE5(char *filename);*/
         """)
@@ -38,9 +41,9 @@ def _handle_error(status):
         raise IOError("Library routine failed.")
 
 def ehheish5(filename):
-    """determine if the input file type is HDF-EOS5
+    """Determine if the input file type is HDF-EOS5.
 
-    wrapper for HE5_EHHEisHE5 function
+    This function wraps the HDF-EOS5 HE5_EHHEisHE5 library function.
 
     Parameters
     ----------
@@ -54,10 +57,29 @@ def ehheish5(filename):
     """
     return _lib.HE5_EHHEisHE5(filename.encode())
 
+def gdattach(gdfid, gridname):
+    """Attach to an existing grid within the file.
+
+    This function wraps the HDF-EOS5 HE5_GDattach library function.
+
+    Parameters
+    ----------
+    gdfid : int
+        grid file id
+    gridname : str
+        name of grid to be attached
+
+    Returns
+    -------
+    grid_id : int
+        grid identifier
+    """
+    return _lib.HE5_GDattach(gdfid, gridname.encode())
+
 def gdclose(fid):
     """Closes the HDF-EOS grid file.
 
-    Wrapper for HE5_GDclose function.
+    This function wraps the HDF-EOS5 HE5_GDclose library function.
 
     Parameters
     ----------
@@ -67,15 +89,53 @@ def gdclose(fid):
     status = _lib.HE5_GDclose(fid)
     _handle_error(status)
 
-def gdopen(filename, access=H5F_ACC_RDONLY):
-    """opens or creates HDF file in order to create, read, or write a grid
-    
-    wrapper for HE5_GDopen function
+def gddetach(grid_id):
+    """Detach from grid structure.
+
+    This function wraps the HDF-EOS5 HE5_GDdetach library function.
+
+    Parameters
+    ----------
+    grid_id : int
+        Grid identifier.
+    """
+    status = _lib.HE5_GDdetach(grid_id)
+    _handle_error(status)
+
+def gdinqgrid(filename):
+    """Retrieve names of grids defined in HDF-EOS5 file.
+
+    This function wraps the HDF-EOS5 HE5_GDinqgrid library function.
 
     Parameters
     ----------
     filename : str
         name of file
+
+    Returns
+    -------
+    gridlist : list
+        List of grids defined in HDF-EOS file.
+    """
+    strbufsize = ffi.new("long *")
+    ngrids = _lib.HE5_GDinqgrid(filename.encode(), ffi.NULL, strbufsize)
+    gridbuffer = ffi.new("char[]", b'\0' * (strbufsize[0] + 1))
+    ngrids = _lib.HE5_GDinqgrid(filename.encode(), gridbuffer, ffi.NULL)
+    _handle_error(ngrids)
+    gridlist = ffi.string(gridbuffer).decode('ascii').split(',')
+    return gridlist
+
+def gdopen(filename, access=H5F_ACC_RDONLY):
+    """Opens or creates HDF file in order to create, read, or write a grid.
+    
+    This function wraps the HDF-EOS5 HE5_GDopen library function.
+
+    Parameters
+    ----------
+    filename : str
+        name of file
+    access : int
+        one of H5F_ACC_RDONLY, H5F_ACC_RDWR, or H5F_ACC_TRUNC
 
     Returns
     -------
