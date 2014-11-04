@@ -195,6 +195,8 @@ def ij2ll(projcode, zonecode, projparm, spherecode, xdimsize, ydimsize, upleft,
           lowright, row, col, pixcen, pixcnr):
     """Convert coordinates (i, j) to (longitude, latitude).
 
+    This function wraps the HDF-EOS GDij2ll library function.
+
     Parameters
     ----------
     projcode : int

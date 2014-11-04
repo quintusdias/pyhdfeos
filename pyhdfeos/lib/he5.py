@@ -14,6 +14,12 @@ ffi.cdef("""
         herr_t HE5_GDdetach(hid_t gridid);
         herr_t HE5_GDgridinfo(hid_t gridID, long *xdimsize, long *ydimsize,
                               double upleftpt[], double lowrightpt[]);
+        herr_t HE5_GDij2ll(int projcode, int zonecode,
+                           double projparm[], int spherecode, long xdimsize,
+                           long ydimsize, double upleft[], double lowright[],
+                           long npts, long row[], long col[],
+                           double longititude[], double latitude[],
+                           int pixcen, int pixcnr);
         long   HE5_GDinqattrs(hid_t gridID, char *attrnames, long *strbufsize);
         int    HE5_GDinqfields(hid_t gridID, char *fieldlist, int rank[],
                                hid_t ntype[]);
@@ -138,6 +144,49 @@ def gdgridinfo(grid_id):
     shape = (ydimsize[0], xdimsize[0])
 
     return shape, upleft, lowright
+
+def ij2ll(projcode, zonecode, projparm, spherecode, xdimsize, ydimsize, upleft,
+          lowright, row, col, pixcen, pixcnr):
+    """Convert coordinates (i, j) to (longitude, latitude).
+
+    This function wraps the HDF-EOS5 HE5_GDij2ll library function.
+
+    Parameters
+    ----------
+    projcode : int
+        GCTP projection code
+    zonecode : int
+        GCTP zone code used by UTM projection
+    projparm : ndarray
+        Projection parameters.
+    spherecode : int
+        GCTP spherecode
+    xdimsize, ydimsize : int
+        Size of grid.
+    upleft, lowright : ndarray
+        Upper left, lower right corner of the grid in meter (all projections
+        except Geographic) or DMS degree (Geographic).
+    row, col : ndarray
+        row, column numbers of the pixels (zero based)
+
+    Returns
+    -------
+    longitude, latitude : ndarray
+        Longitude and latitude in decimal degrees.
+    """
+    longitude = np.zeros(col.shape, dtype=np.float64)
+    latitude = np.zeros(col.shape, dtype=np.float64)
+    upleftp = ffi.cast("float64 *", upleft.ctypes.data)
+    lowrightp = ffi.cast("float64 *", lowright.ctypes.data)
+    projparmp = ffi.cast("float64 *", projparm.ctypes.data)
+    colp = ffi.cast("int32 *", col.ctypes.data)
+    rowp = ffi.cast("int32 *", row.ctypes.data)
+    longitudep = ffi.cast("float64 *", longitude.ctypes.data)
+    latitudep = ffi.cast("float64 *", latitude.ctypes.data)
+    status = _lib.HE5_GDij2ll(projcode, zonecode, projparmp, spherecode,
+                              xdimsize, ydimsize, upleftp, lowrightp, col.size,
+                              rowp, colp, longitudep, latitudep, pixcen, pixcnr)
+    return longitude, latitude
 
 def gdinqattrs(gridid):
     """Retrieve information about attributes for a specific grid.
