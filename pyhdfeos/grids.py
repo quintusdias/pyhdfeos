@@ -4,35 +4,35 @@ import platform
 import numpy as np
 
 from . import core
-from .lib import gd2
+from .lib import he4, he5
 
 class Grid(object):
     """
     """
     def __init__(self, gdfid, gridname):
-        self.gridid = gd2.attach(gdfid, gridname)
+        self.gridid = he4.gdattach(gdfid, gridname)
         self.gridname = gridname
 
-        self.shape, self.upleft, self.lowright = gd2.gridinfo(self.gridid)
+        self.shape, self.upleft, self.lowright = he4.gdgridinfo(self.gridid)
 
-        projcode, zonecode, spherecode, projparms = gd2.projinfo(self.gridid)
+        projcode, zonecode, spherecode, projparms = he4.gdprojinfo(self.gridid)
         self.projcode = projcode
         self.zonecode = zonecode
         self.spherecode = spherecode
         self.projparms = projparms
 
-        self.origincode = gd2.origininfo(self.gridid)
-        self.pixregcode = gd2.pixreginfo(self.gridid)
+        self.origincode = he4.gdorigininfo(self.gridid)
+        self.pixregcode = he4.gdpixreginfo(self.gridid)
 
-        self._fields, _, _ = gd2.inqfields(self.gridid)
+        self._fields, _, _ = he4.gdinqfields(self.gridid)
 
-        attr_list = gd2.inqattrs(self.gridid)
+        attr_list = he4.gdinqattrs(self.gridid)
         self.attrs = {}
         for attr in attr_list:
-            self.attrs[attr] = gd2.readattr(self.gridid, attr)
+            self.attrs[attr] = he4.gdreadattr(self.gridid, attr)
 
     def __del__(self):
-        gd2.detach(self.gridid)
+        he4.gddetach(self.gridid)
 
     def __str__(self):
         msg = "Grid:  {0}\n".format(self.gridname)
@@ -222,7 +222,7 @@ class Grid(object):
         cols, rows = np.meshgrid(col,row)
         cols = cols.astype(np.int32)
         rows = rows.astype(np.int32)
-        lon, lat = gd2.ij2ll(self.projcode, self.zonecode, self.projparms,
+        lon, lat = he4.gdij2ll(self.projcode, self.zonecode, self.projparms,
                              self.spherecode, self.shape[1], self.shape[0],
                              self.upleft, self.lowright,
                              rows, cols,
@@ -237,9 +237,9 @@ class GridFile(object):
     def __init__(self, filename, access=core.DFACC_READ):
         self.filename = filename
         self.access = access
-        self.gdfid = gd2.open(filename, access=access)
+        self.gdfid = he4.gdopen(filename, access=access)
 
-        gridlist = gd2.inqgrid(filename)
+        gridlist = he4.gdinqgrid(filename)
         self.grids = {}
         for gridname in gridlist:
             self.grids[gridname] = Grid(self.gdfid, gridname)
@@ -264,6 +264,6 @@ class GridFile(object):
             grid = self.grids[gridname]
             self.grids[gridname] = None
             del grid
-        gd2.close(self.gdfid)
+        he4.gdclose(self.gdfid)
 
 

@@ -63,7 +63,7 @@ def _handle_error(status):
     if status < 0:
         raise IOError("Library routine failed.")
 
-def attach(gdfid, gridname):
+def gdattach(gdfid, gridname):
     """Attach to an existing grid structure.
 
     This function wraps the HDF-EOS GDattach library function.
@@ -87,7 +87,7 @@ def attach(gdfid, gridname):
     """
     return _lib.GDattach(gdfid, gridname.encode())
 
-def attrinfo(grid_id, attr_name):
+def gdattrinfo(grid_id, attr_name):
     """return information about a grid attribute
 
     Parameters
@@ -117,7 +117,7 @@ def attrinfo(grid_id, attr_name):
 
     return number_type_p[0], count_p[0]
 
-def close(gdfid):
+def gdclose(gdfid):
     """Close an HDF-EOS file.
 
     This function wraps the HDF-EOS GDclose library function.
@@ -135,7 +135,7 @@ def close(gdfid):
     status = _lib.GDclose(gdfid)
     _handle_error(status)
 
-def detach(grid_id):
+def gddetach(grid_id):
     """Detach from grid structure.
 
     Parameters
@@ -151,7 +151,7 @@ def detach(grid_id):
     status = _lib.GDdetach(grid_id)
     _handle_error(status)
 
-def gridinfo(grid_id):
+def gdgridinfo(grid_id):
     """Return information about a grid structure.
 
     Parameters
@@ -191,7 +191,7 @@ def gridinfo(grid_id):
 
     return shape, upleft, lowright
 
-def ij2ll(projcode, zonecode, projparm, spherecode, xdimsize, ydimsize, upleft,
+def gdij2ll(projcode, zonecode, projparm, spherecode, xdimsize, ydimsize, upleft,
           lowright, row, col, pixcen, pixcnr):
     """Convert coordinates (i, j) to (longitude, latitude).
 
@@ -239,7 +239,7 @@ def ij2ll(projcode, zonecode, projparm, spherecode, xdimsize, ydimsize, upleft,
                           rowp, colp, longitudep, latitudep, pixcen, pixcnr)
     return longitude, latitude
 
-def inqfields(gridid):
+def gdinqfields(gridid):
     """Retrieve information about data fields defined in a grid.
 
     This function wraps the HDF-EOS GDinqfields library function.
@@ -263,7 +263,7 @@ def inqfields(gridid):
     IOError
         If associated library routine fails.
     """
-    nfields, strbufsize = nentries(gridid, core.HDFE_NENTFLD)
+    nfields, strbufsize = gdnentries(gridid, core.HDFE_NENTFLD)
     fieldlist_buffer = ffi.new("char[]", b'\0' * (strbufsize + 1))
     rank_buffer = ffi.new("int[]", nfields)
     numbertype_buffer = ffi.new("int[]", nfields)
@@ -279,7 +279,7 @@ def inqfields(gridid):
 
     return fieldlist, ranks, numbertypes
 
-def inqattrs(gridid):
+def gdinqattrs(gridid):
     """Retrieve information about grid attributes.
 
     Parameters
@@ -307,7 +307,7 @@ def inqattrs(gridid):
     attr_list = ffi.string(attr_buffer).decode('ascii').split(',')
     return attr_list
 
-def inqgrid(filename):
+def gdinqgrid(filename):
     """Retrieve grid structures defined in HDF-EOS file.
 
     This function wraps the HDF-EOS GDinqgrid library function.
@@ -335,7 +335,7 @@ def inqgrid(filename):
     gridlist = ffi.string(gridbuffer).decode('ascii').split(',')
     return gridlist
 
-def nentries(gridid, entry_code):
+def gdnentries(gridid, entry_code):
     """Return number of specified objects in a grid.
 
     This function wraps the HDF-EOS GDnentries library function.
@@ -361,7 +361,7 @@ def nentries(gridid, entry_code):
     nentries = _lib.GDnentries(gridid, entry_code, strbufsize)
     return nentries, strbufsize[0]
 
-def open(filename, access=core.DFACC_READ):
+def gdopen(filename, access=core.DFACC_READ):
     """Opens or creates HDF file in order to create, read, or write a grid.
     
     This function wraps the HDF-EOS GDopen library function.
@@ -381,7 +381,7 @@ def open(filename, access=core.DFACC_READ):
 
     return _lib.GDopen(filename.encode(), access)
 
-def origininfo(grid_id):
+def gdorigininfo(grid_id):
     """Return grid pixel origin information.
 
     This function wraps the HDF-EOS GDorigininfo library function.
@@ -407,7 +407,7 @@ def origininfo(grid_id):
 
     return origincode[0]
 
-def pixreginfo(grid_id):
+def gdpixreginfo(grid_id):
     """Return pixel registration information.
 
     This function wraps the HDF-EOS GDpixreginfo library function.
@@ -433,7 +433,7 @@ def pixreginfo(grid_id):
 
     return pixregcode[0]
 
-def projinfo(grid_id):
+def gdprojinfo(grid_id):
     """Return grid projection information.
 
     Parameters
@@ -468,7 +468,7 @@ def projinfo(grid_id):
 
     return projcode[0], zonecode[0], spherecode[0], projparm
 
-def readattr(gridid, attrname):
+def gdreadattr(gridid, attrname):
     """read grid attribute
 
     Parameters
@@ -488,7 +488,7 @@ def readattr(gridid, attrname):
     IOError
         If associated library routine fails.
     """
-    [number_type, count] = attrinfo(gridid, attrname)
+    [number_type, count] = gdattrinfo(gridid, attrname)
     if number_type == 4:
         # char8
         buffer = ffi.new("char[]", b'\0' * (count + 1))
