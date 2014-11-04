@@ -15,9 +15,14 @@ ffi.cdef("""
         herr_t HE5_GDgridinfo(hid_t gridID, long *xdimsize, long *ydimsize,
                               double upleftpt[], double lowrightpt[]);
         long   HE5_GDinqattrs(hid_t gridID, char *attrnames, long *strbufsize);
+        int    HE5_GDinqfields(hid_t gridID, char *fieldlist, int rank[],
+                               hid_t ntype[]);
         long   HE5_GDinqgrid(const char *filename, char *gridlist,
                              long *strbufsize);
+        long   HE5_GDnentries(hid_t gridID, int entrycode, long *strbufsize);
         hid_t  HE5_GDopen(const char *filename, uintn access);
+        herr_t HE5_GDorigininfo(hid_t gridID, int *origincode);
+        herr_t HE5_GDpixreginfo(hid_t gridID, int *pixregcode);
         herr_t HE5_GDprojinfo(hid_t gridID, int *projcode, int *zonecode,
                               int *spherecode, double projparm[]);
         /*int HE5_EHHEisHE5(char *filename);*/
@@ -29,40 +34,31 @@ if platform.system().startswith('Linux'):
     else:
         # Linux Mint 17?
         libraries=['he5_hdfeos', 'gctp', 'hdf5_hl', 'hdf5', 'z']
-
 else:
-    libraries=['hdfeos', 'Gctp', 'mfhdf', 'df', 'jpeg', 'z']
+    libraries=['he5_hdfeos', 'gctp', 'hdf5_hl', 'hdf5', 'z']
+
 _lib = ffi.verify("""
         #include "HE5_HdfEosDef.h"
         """,
         libraries=libraries,
         include_dirs=['/usr/include/hdf-eos5',
+                      #'/opt/local/lib/hdfeos5/include',
                       '/opt/local/include',
                       '/usr/local/include'],
-        library_dirs=['/usr/lib', '/opt/local/lib', '/usr/local/lib', '/usr/lib/x86_64-linux-gnu'])
+        library_dirs=['/usr/lib',
+                      #'/opt/local/lib/hdfeos5/lib',
+                      '/opt/local/lib',
+                      '/usr/local/lib',
+                      '/usr/lib/x86_64-linux-gnu'])
 
 H5F_ACC_RDONLY = 0x0000
+
+HE5_HDFE_NENTDIM = 0
+HE5_HDFE_NENTDFLD = 4
 
 def _handle_error(status):
     if status < 0:
         raise IOError("Library routine failed.")
-
-def ehheish5(filename):
-    """Determine if the input file type is HDF-EOS5.
-
-    This function wraps the HDF-EOS5 HE5_EHHEisHE5 library function.
-
-    Parameters
-    ----------
-    filename : str
-        name of file
-
-    Returns
-    -------
-    yesno : bool
-        1 if file is HDF-EOS5, 0 if not HDF-EOS5, -1 otherwise.
-    """
-    return _lib.HE5_EHHEisHE5(filename.encode())
 
 def gdattach(gdfid, gridname):
     """Attach to an existing grid within the file.
@@ -168,6 +164,37 @@ def gdinqattrs(gridid):
     attr_list = ffi.string(attr_buffer).decode('ascii').split(',')
     return attr_list
 
+def gdinqfields(gridid):
+    """Retrieve information about the data fields defined in a grid.
+
+    This function wraps the HDF-EOS5 HE5_GDinqfields library function.
+
+    Parameters
+    ----------
+    grid_id : int
+        grid identifier
+
+    Returns
+    -------
+    fields : list
+        List of fields in the grid.
+    ranks : list
+        List of ranks corresponding to the fields
+    numbertypes : list
+        List of numbertypes corresponding to the fields
+    """
+    nfields, strbufsize = gdnentries(gridid, HE5_HDFE_NENTDFLD)
+    fieldlist_buffer = ffi.new("char[]", b'\0' * (strbufsize + 1))
+    ranks = np.zeros(nfields, dtype=np.int32)
+    rankp = ffi.cast("int *", ranks.ctypes.data)
+    numbertypes = np.zeros(nfields, dtype=np.int32)
+    numbertypep = ffi.cast("hid_t *", numbertypes.ctypes.data)
+    nfields2 = _lib.HE5_GDinqfields(gridid, fieldlist_buffer,
+                                    rankp, numbertypep)
+    fieldlist = ffi.string(fieldlist_buffer).decode('ascii').split(',')
+
+    return fieldlist, ranks, numbertypes
+
 def gdinqgrid(filename):
     """Retrieve names of grids defined in HDF-EOS5 file.
 
@@ -191,6 +218,27 @@ def gdinqgrid(filename):
     gridlist = ffi.string(gridbuffer).decode('ascii').split(',')
     return gridlist
 
+def gdnentries(gridid, entry_code):
+    """Return number of specified objects in a grid.
+
+    This function wraps the HDF-EOS5 HE5_GDnentries library function.
+
+    Parameters
+    ----------
+    grid_id : int
+        Grid identifier.
+    entry_code : int
+        Entry code, either HE5_HDFE_NENTDIM or HE5_HDFE_NENTDFLD
+
+    Returns
+    -------
+    nentries, strbufsize : int
+       Number of specified entries, number of bytes in descriptive strings. 
+    """
+    strbufsize = ffi.new("long *")
+    nentries = _lib.HE5_GDnentries(gridid, entry_code, strbufsize)
+    return nentries, strbufsize[0]
+
 def gdopen(filename, access=H5F_ACC_RDONLY):
     """Opens or creates HDF file in order to create, read, or write a grid.
     
@@ -211,6 +259,46 @@ def gdopen(filename, access=H5F_ACC_RDONLY):
     fid = _lib.HE5_GDopen(filename.encode(), access)
     _handle_error(fid)
     return fid
+
+def gdorigininfo(grid_id):
+    """Return grid pixel origin information.
+
+    This function wraps the HDF-EOS5 HE5_GDorigininfo library function.
+
+    Parameters
+    ----------
+    grid_id : int
+        Grid identifier.
+
+    Returns
+    -------
+    origincode : int
+        Origin code.
+    """
+    origincode = ffi.new("int *")
+    status = _lib.HE5_GDorigininfo(grid_id, origincode)
+    _handle_error(status)
+    return origincode[0]
+
+def gdpixreginfo(grid_id):
+    """Return pixel registration information.
+
+    This function wraps the HDF-EOS5 HE5_GDpixreginfo library function.
+
+    Parameters
+    ----------
+    grid_id : int
+        Grid identifier.
+
+    Returns
+    -------
+    pixregcode : int
+        Pixel registration code.
+    """
+    pixregcode = ffi.new("int *")
+    status = _lib.HE5_GDpixreginfo(grid_id, pixregcode)
+    _handle_error(status)
+    return pixregcode[0]
 
 def gdprojinfo(grid_id):
     """Return projection information about grid.

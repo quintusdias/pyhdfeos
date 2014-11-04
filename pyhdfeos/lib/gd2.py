@@ -240,6 +240,13 @@ def ij2ll(projcode, zonecode, projparm, spherecode, xdimsize, ydimsize, upleft,
 def inqfields(gridid):
     """Retrieve information about data fields defined in a grid.
 
+    This function wraps the HDF-EOS GDinqfields library function.
+
+    Parameters
+    ----------
+    grid_id : int
+        grid identifier
+
     Returns
     -------
     fields : list
@@ -329,6 +336,8 @@ def inqgrid(filename):
 def nentries(gridid, entry_code):
     """Return number of specified objects in a grid.
 
+    This function wraps the HDF-EOS GDnentries library function.
+
     Parameters
     ----------
     grid_id : int
@@ -373,6 +382,8 @@ def open(filename, access=core.DFACC_READ):
 def origininfo(grid_id):
     """Return grid pixel origin information.
 
+    This function wraps the HDF-EOS GDorigininfo library function.
+
     Parameters
     ----------
     grid_id : int
@@ -396,6 +407,8 @@ def origininfo(grid_id):
 
 def pixreginfo(grid_id):
     """Return pixel registration information.
+
+    This function wraps the HDF-EOS GDpixreginfo library function.
 
     Parameters
     ----------
