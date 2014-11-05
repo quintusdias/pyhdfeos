@@ -12,6 +12,34 @@ Grid:  TOMS Level 3
     Attributes:
         VerticalCoordinate:  Total Column"""
 
+geographic_grids_he5 = """GSSTFYC.3.Year.1988_2008.he5
+Grid:  NCEP
+    Shape:  (720, 1440)
+    Upper Left (x,y):  [ -1.80000000e+08  -9.00000000e+07]
+    Lower Right (x,y):  [  1.80000000e+08   9.00000000e+07]
+    Projection:  Geographic
+    Fields:
+        SST:
+        Psea_level:
+        Tair_2m:
+        Qsat:
+    Attributes:
+Grid:  SET1
+    Shape:  (720, 1440)
+    Upper Left (x,y):  [ -1.80000000e+08  -9.00000000e+07]
+    Lower Right (x,y):  [  1.80000000e+08   9.00000000e+07]
+    Projection:  Geographic
+    Fields:
+        E:
+        STu:
+        STv:
+        H:
+        Qair:
+        U:
+        DQ:
+        Tot_Precip_Water:
+    Attributes:"""
+
 lambert_azimuthal_grid = """Grid:  MOD_Grid_Seaice_1km
     Shape:  (951, 951)
     Upper Left (x,y):  [ -476784.3255  2383921.6275]

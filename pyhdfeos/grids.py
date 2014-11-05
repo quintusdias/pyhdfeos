@@ -1,38 +1,40 @@
 import os
 import platform
+import struct
 
 import numpy as np
 
 from . import core
 from .lib import he4, he5
 
-class Grid(object):
+class _Grid(object):
     """
     """
-    def __init__(self, gdfid, gridname):
-        self.gridid = he4.gdattach(gdfid, gridname)
+    def __init__(self, gdfid, gridname, he_module):
+        self._he = he_module
+        self.gridid = self._he.gdattach(gdfid, gridname)
         self.gridname = gridname
 
-        self.shape, self.upleft, self.lowright = he4.gdgridinfo(self.gridid)
+        self.shape, self.upleft, self.lowright = self._he.gdgridinfo(self.gridid)
 
-        projcode, zonecode, spherecode, projparms = he4.gdprojinfo(self.gridid)
+        projcode, zonecode, spherecode, projparms = self._he.gdprojinfo(self.gridid)
         self.projcode = projcode
         self.zonecode = zonecode
         self.spherecode = spherecode
         self.projparms = projparms
 
-        self.origincode = he4.gdorigininfo(self.gridid)
-        self.pixregcode = he4.gdpixreginfo(self.gridid)
+        self.origincode = self._he.gdorigininfo(self.gridid)
+        self.pixregcode = self._he.gdpixreginfo(self.gridid)
 
-        self._fields, _, _ = he4.gdinqfields(self.gridid)
+        self._fields, _, _ = self._he.gdinqfields(self.gridid)
 
-        attr_list = he4.gdinqattrs(self.gridid)
+        attr_list = self._he.gdinqattrs(self.gridid)
         self.attrs = {}
         for attr in attr_list:
-            self.attrs[attr] = he4.gdreadattr(self.gridid, attr)
+            self.attrs[attr] = self._he.gdreadattr(self.gridid, attr)
 
     def __del__(self):
-        he4.gddetach(self.gridid)
+        self._he.gddetach(self.gridid)
 
     def __str__(self):
         msg = "Grid:  {0}\n".format(self.gridname)
@@ -222,7 +224,7 @@ class Grid(object):
         cols, rows = np.meshgrid(col,row)
         cols = cols.astype(np.int32)
         rows = rows.astype(np.int32)
-        lon, lat = he4.gdij2ll(self.projcode, self.zonecode, self.projparms,
+        lon, lat = self._he.gdij2ll(self.projcode, self.zonecode, self.projparms,
                              self.spherecode, self.shape[1], self.shape[0],
                              self.upleft, self.lowright,
                              rows, cols,
@@ -234,15 +236,19 @@ class GridFile(object):
     """
     Access to HDF-EOS grid files.
     """
-    def __init__(self, filename, access=core.DFACC_READ):
+    def __init__(self, filename):
         self.filename = filename
-        self.access = access
-        self.gdfid = he4.gdopen(filename, access=access)
+        try:
+            self.gdfid = he4.gdopen(filename)
+            self._he = he4
+        except IOError as err:
+            self.gdfid = he5.gdopen(filename)
+            self._he = he5
 
-        gridlist = he4.gdinqgrid(filename)
+        gridlist = self._he.gdinqgrid(filename)
         self.grids = {}
         for gridname in gridlist:
-            self.grids[gridname] = Grid(self.gdfid, gridname)
+            self.grids[gridname] = _Grid(self.gdfid, gridname, self._he)
 
     def __str__(self):
         msg = "{0}\n".format(os.path.basename(self.filename))
@@ -264,6 +270,6 @@ class GridFile(object):
             grid = self.grids[gridname]
             self.grids[gridname] = None
             del grid
-        he4.gdclose(self.gdfid)
+        self._he.gdclose(self.gdfid)
 
 

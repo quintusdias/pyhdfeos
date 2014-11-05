@@ -4,8 +4,6 @@ import platform
 import numpy as np
 from cffi import FFI
 
-from .. import core
-
 ffi = FFI()
 ffi.cdef("""
         typedef int int32;
@@ -62,6 +60,19 @@ _lib = ffi.verify("""
 def _handle_error(status):
     if status < 0:
         raise IOError("Library routine failed.")
+
+DFACC_READ = 1
+DFACC_WRITE = 2
+DFACC_CREATE = 4
+HDFE_CENTER = 0
+HDFE_CORNER = 1
+HDFE_NENTDIM = 0
+HDFE_NENTFLD = 4
+HDFE_GD_UL = 0
+HDFE_GD_UR = 1
+HDFE_GD_LL = 2
+HDFE_GD_LR = 3
+DFNT_FLOAT = 5
 
 def gdattach(gdfid, gridname):
     """Attach to an existing grid structure.
@@ -263,7 +274,7 @@ def gdinqfields(gridid):
     IOError
         If associated library routine fails.
     """
-    nfields, strbufsize = gdnentries(gridid, core.HDFE_NENTFLD)
+    nfields, strbufsize = gdnentries(gridid, HDFE_NENTFLD)
     fieldlist_buffer = ffi.new("char[]", b'\0' * (strbufsize + 1))
     rank_buffer = ffi.new("int[]", nfields)
     numbertype_buffer = ffi.new("int[]", nfields)
@@ -361,7 +372,7 @@ def gdnentries(gridid, entry_code):
     nentries = _lib.GDnentries(gridid, entry_code, strbufsize)
     return nentries, strbufsize[0]
 
-def gdopen(filename, access=core.DFACC_READ):
+def gdopen(filename, access=DFACC_READ):
     """Opens or creates HDF file in order to create, read, or write a grid.
     
     This function wraps the HDF-EOS GDopen library function.
@@ -378,8 +389,9 @@ def gdopen(filename, access=core.DFACC_READ):
     fid : int
         grid file ID handle
     """
-
-    return _lib.GDopen(filename.encode(), access)
+    fid = _lib.GDopen(filename.encode(), access)
+    _handle_error(fid)
+    return fid
 
 def gdorigininfo(grid_id):
     """Return grid pixel origin information.

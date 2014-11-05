@@ -34,6 +34,15 @@ class TestPrinting(unittest.TestCase):
 
         self.assertEqual(actual, fixtures.geographic_grid)
 
+    def test_geo_grid_he5(self):
+        hdffile = fullpath('GSSTFYC.3.Year.1988_2008.he5')
+        with GridFile(hdffile) as gdf:
+            with patch('sys.stdout', new=StringIO()) as fake_out:
+                print(gdf)
+                actual = fake_out.getvalue().strip()
+
+        self.assertEqual(actual, fixtures.geographic_grids_he5)
+
     def test_lamaz_grid(self):
         file = fullpath("MYD29P1D.A2010133.h09v07.005.2010135182659.hdf")
         grid = 'MOD_Grid_Seaice_1km'

@@ -5,8 +5,8 @@ import unittest
 import matplotlib.pyplot as plt
 import numpy as np
 
+from pyhdfeos.lib import he4
 from pyhdfeos import GridFile
-from pyhdfeos import core
 
 def fullpath(fname):
     """
@@ -48,11 +48,11 @@ class TestClass(unittest.TestCase):
 
     def test_origininfo(self):
         origincode = self.gridfile.grids['TOMS Level 3'].origincode
-        self.assertEqual(origincode, core.HDFE_GD_UL)
+        self.assertEqual(origincode, he4.HDFE_GD_UL)
 
     def test_pixreginfo(self):
         pixregcode = self.gridfile.grids['TOMS Level 3'].pixregcode
-        self.assertEqual(pixregcode, core.HDFE_CENTER)
+        self.assertEqual(pixregcode, he4.HDFE_CENTER)
 
     def test_projinfo(self):
         self.assertEqual(self.gridfile.grids['TOMS Level 3'].projcode, 0)
@@ -178,12 +178,12 @@ class TestLibrary(unittest.TestCase):
                                  ['Ozone', 'Reflectivity', 'Aerosol',
                                   'Erythemal'])
                 self.assertEqual(ranks, [2, 2, 2, 2])
-                self.assertEqual(numbertypes, [core.DFNT_FLOAT] * 4)
+                self.assertEqual(numbertypes, [he4.DFNT_FLOAT] * 4)
 
     def test_nentries(self):
         with GD.open(self.gridfile) as gdfid:
             with GD.attach(gdfid, 'TOMS Level 3') as gridid:
-                ndims, _ = GD.nentries(gridid, core.HDFE_NENTDIM)
+                ndims, _ = GD.nentries(gridid, he4.HDFE_NENTDIM)
                 self.assertEqual(ndims, 2)
-                nfields, _ = GD.nentries(gridid, core.HDFE_NENTFLD)
+                nfields, _ = GD.nentries(gridid, he4.HDFE_NENTFLD)
                 self.assertEqual(nfields, 4)
