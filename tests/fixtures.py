@@ -1,6 +1,9 @@
 geographic_grid = """TOMS-EP_L3-TOMSEPL3_2000m0101_v8.HDF
 Grid:  TOMS Level 3
     Shape:  (180, 288)
+    Dimensions:
+        XDim:  288
+        YDim:  180
     Upper Left (x,y):  [ -1.80000000e+08   9.00000000e+07]
     Lower Right (x,y):  [  1.80000000e+08  -9.00000000e+07]
     Projection:  Geographic
@@ -15,6 +18,9 @@ Grid:  TOMS Level 3
 geographic_grids_he5 = """GSSTFYC.3.Year.1988_2008.he5
 Grid:  NCEP
     Shape:  (720, 1440)
+    Dimensions:
+        Xdim:  1440
+        Ydim:  720
     Upper Left (x,y):  [ -1.80000000e+08  -9.00000000e+07]
     Lower Right (x,y):  [  1.80000000e+08   9.00000000e+07]
     Projection:  Geographic
@@ -26,6 +32,9 @@ Grid:  NCEP
     Attributes:
 Grid:  SET1
     Shape:  (720, 1440)
+    Dimensions:
+        Xdim:  1440
+        Ydim:  720
     Upper Left (x,y):  [ -1.80000000e+08  -9.00000000e+07]
     Lower Right (x,y):  [  1.80000000e+08   9.00000000e+07]
     Projection:  Geographic
@@ -42,6 +51,7 @@ Grid:  SET1
 
 lambert_azimuthal_grid = """Grid:  MOD_Grid_Seaice_1km
     Shape:  (951, 951)
+    Dimensions:
     Upper Left (x,y):  [ -476784.3255  2383921.6275]
     Lower Right (x,y):  [  476784.3255  1430352.9765]
     Projection:  Lambert Azimuthal
@@ -59,6 +69,7 @@ lambert_azimuthal_grid = """Grid:  MOD_Grid_Seaice_1km
 
 sinusoidal_grid = """Grid:  MOD_Grid_Snow_500m
     Shape:  (2400, 2400)
+    Dimensions:
     Upper Left (x,y):  [-20015109.354      1111950.519667]
     Lower Right (x,y):  [-18903158.834333        -0.      ]
     Projection:  Sinusoidal
@@ -75,6 +86,7 @@ sinusoidal_grid = """Grid:  MOD_Grid_Snow_500m
 
 albers_grid = """Grid:  WELD_GRID
     Shape:  (5000, 5000)
+    Dimensions:
     Upper Left (x,y):  [-2415600.  2414800.]
     Lower Right (x,y):  [-2265600.  2264800.]
     Projection:  Albers Conical Equal Area

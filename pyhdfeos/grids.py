@@ -1,10 +1,10 @@
+import collections
 import os
 import platform
 import struct
 
 import numpy as np
 
-from . import core
 from .lib import he4, he5
 
 class _Grid(object):
@@ -14,6 +14,10 @@ class _Grid(object):
         self._he = he_module
         self.gridid = self._he.gdattach(gdfid, gridname)
         self.gridname = gridname
+
+        dimnames, dimlens = self._he.gdinqdims(self.gridid)
+        dims = [(k, v) for (k, v) in zip(dimnames, dimlens)]
+        self.dims = collections.OrderedDict(dims)
 
         self.shape, self.upleft, self.lowright = self._he.gdgridinfo(self.gridid)
 
@@ -39,6 +43,11 @@ class _Grid(object):
     def __str__(self):
         msg = "Grid:  {0}\n".format(self.gridname)
         msg += "    Shape:  {0}\n".format(self.shape)
+
+        msg += "    Dimensions:\n"
+        for dimname, dimlen in self.dims.items():
+            msg += "        {0}:  {1}\n".format(dimname, dimlen)
+
         msg += "    Upper Left (x,y):  {0}\n".format(self.upleft)
         msg += "    Lower Right (x,y):  {0}\n".format(self.lowright)
         if self.projcode == 0:
@@ -246,7 +255,7 @@ class GridFile(object):
             self._he = he5
 
         gridlist = self._he.gdinqgrid(filename)
-        self.grids = {}
+        self.grids = collections.OrderedDict()
         for gridname in gridlist:
             self.grids[gridname] = _Grid(self.gdfid, gridname, self._he)
 

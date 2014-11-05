@@ -41,7 +41,8 @@ class TestPrinting(unittest.TestCase):
                 print(gdf)
                 actual = fake_out.getvalue().strip()
 
-        self.assertEqual(actual, fixtures.geographic_grids_he5)
+        expected = fixtures.geographic_grids_he5
+        self.assertEqual(actual, expected)
 
     def test_lamaz_grid(self):
         file = fullpath("MYD29P1D.A2010133.h09v07.005.2010135182659.hdf")

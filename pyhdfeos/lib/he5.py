@@ -6,6 +6,7 @@ import numpy as np
 ffi = FFI()
 ffi.cdef("""
         typedef unsigned uintn;
+        typedef unsigned long long hsize_t;
         typedef int hid_t;
         typedef int herr_t;
 
@@ -21,6 +22,7 @@ ffi.cdef("""
                            double longititude[], double latitude[],
                            int pixcen, int pixcnr);
         long   HE5_GDinqattrs(hid_t gridID, char *attrnames, long *strbufsize);
+        int    HE5_GDinqdims(hid_t gridid, char *dims, hsize_t *dims);
         int    HE5_GDinqfields(hid_t gridID, char *fieldlist, int rank[],
                                hid_t ntype[]);
         long   HE5_GDinqgrid(const char *filename, char *gridlist,
@@ -212,6 +214,32 @@ def gdinqattrs(gridid):
     _handle_error(nattrs)
     attr_list = ffi.string(attr_buffer).decode('ascii').split(',')
     return attr_list
+
+def gdinqdims(gridid):
+    """Retrieve information about dimensions defined in a grid.
+
+    This function wraps the HDF-EOS5 HE5_GDinqdims library function.
+
+    Parameters
+    ----------
+    grid_id : int
+        grid identifier
+
+    Returns
+    -------
+    dimlist : list
+        list of dimensions defined for the grid
+    dimlens : ndarray
+        corresponding length of each dimension
+    """
+    ndims, strbufsize = gdnentries(gridid, HE5_HDFE_NENTDIM)
+    dim_buffer = ffi.new("char[]", b'\0' * (strbufsize + 1))
+    dimlens = np.zeros(ndims, dtype=np.uint64)
+    dimlensp = ffi.cast("unsigned long long *", dimlens.ctypes.data)
+    status = _lib.HE5_GDinqdims(gridid, dim_buffer, dimlensp)
+    _handle_error(status)
+    dimlist = ffi.string(dim_buffer).decode('ascii').split(',')
+    return dimlist, dimlens
 
 def gdinqfields(gridid):
     """Retrieve information about the data fields defined in a grid.

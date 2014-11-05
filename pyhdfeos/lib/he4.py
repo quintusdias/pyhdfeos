@@ -22,6 +22,7 @@ ffi.cdef("""
                       longititude[], float64 latitude[], int32 pixcen,
                       int32 pixcnr);
         int32 GDinqattrs(int32 gridid, char *attrlist, int32 *strbufsize);
+        int32 GDinqdims(int32 gridid, char *dimname, int32 *dims);
         int32 GDinqfields(int32 gridid, char *fieldlist, int32 rank[],
                           int32 numbertype[]);
         int32 GDinqgrid(char *filename, char *gridlist, int32 *strbufsize);
@@ -317,6 +318,37 @@ def gdinqattrs(gridid):
     _handle_error(nattrs)
     attr_list = ffi.string(attr_buffer).decode('ascii').split(',')
     return attr_list
+
+def gdinqdims(gridid):
+    """Retrieve information about dimensions defined in a grid.
+
+    This function wraps the HDF-EOS GDinqdims library function.
+
+    Parameters
+    ----------
+    grid_id : int
+        grid identifier
+
+    Returns
+    -------
+    dimlist : list
+        list of dimensions defined for the grid
+    dimlens : ndarray
+        corresponding length of each dimension
+
+    Raises
+    ------
+    IOError
+        If associated library routine fails.
+    """
+    ndims, strbufsize = gdnentries(gridid, HDFE_NENTDIM)
+    dim_buffer = ffi.new("char[]", b'\0' * (strbufsize + 1))
+    dimlens = np.zeros(ndims, dtype=np.int32)
+    dimlensp = ffi.cast("int32 *", dimlens.ctypes.data)
+    status = _lib.GDinqdims(gridid, dim_buffer, dimlensp)
+    _handle_error(status)
+    dimlist = ffi.string(dim_buffer).decode('ascii').split(',')
+    return dimlist, dimlens
 
 def gdinqgrid(filename):
     """Retrieve grid structures defined in HDF-EOS file.
