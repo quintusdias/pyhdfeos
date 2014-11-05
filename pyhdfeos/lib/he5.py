@@ -150,29 +150,32 @@ def gdfieldinfo(grid_id, fieldname):
     dimlist, maxdimlist : list
         list of dimensions
     """
+    _, strbufsize = gdnentries(grid_id, HE5_HDFE_NENTDIM)
+    dimlist_buffer = ffi.new("char[]", b'\0' * (strbufsize + 1))
+    max_dimlist_buffer = ffi.new("char[]", b'\0' * (strbufsize + 1))
+
     rankp = ffi.new("int *")
     ntypep = ffi.new("hid_t *")
-    status = _lib.HE5_GDfieldinfo(grid_id, fieldname.encode(), rankp, ffi.NULL,
-                                  ntypep, ffi.NULL, ffi.NULL)  
+
+    # Assume that no field has more than 8 dimensions.  Seems like a safe bet.
+    #dimsp = ffi.new("unsigned long long []", 8)
+    dims = np.zeros(8, dtype=np.uint64)
+    dimsp = ffi.cast("hsize_t *", dims.ctypes.data)
+
+    status = _lib.HE5_GDfieldinfo(grid_id, fieldname.encode(), rankp, dimsp,
+                                  ntypep, dimlist_buffer, max_dimlist_buffer)
     _handle_error(status)
 
-    ntype = number_type_dict[ntype[0]]
+    shape = []
+    for j in range(rankp[0]):
+        shape.append(dimsp[j])
 
-    dims = np.zeroes(rankp[0], dtype=np.uint64)
-    dimsp = ffi.cast("unsigned long long *", dims.ctypes.data)
+    ntype = number_type_dict[ntypep[0]]
 
-    _, strbufsize = gdnentries(grid_id, HE5_HDFE_NENTDIM)
-    dims_buffer = ffi.new("char[]", b'\0' * (strbufsize + 1))
-    max_dims_buffer = ffi.new("char[]", b'\0' * (strbufsize + 1))
+    dimlist = ffi.string(dimlist_buffer).decode('ascii').split(',')
+    maxdimlist = ffi.string(max_dimlist_buffer).decode('ascii').split(',')
 
-    status = _lib.HE5_GDfieldinfo(grid_id, fieldname.encode(), ffi.NULL, dimsp,
-                                  ffi.NULL, dims_buffer, max_dims_buffer)
-    _handle_error(status)
-
-    dimlist = ffi.string(dims_buffer).decode('ascii').split(',')
-    maxdimlist = ffi.string(max_dims_buffer).decode('ascii').split(',')
-
-    return shape, ntype, dimlist, maxdimlist
+    return tuple(shape), ntype, dimlist, maxdimlist
 
 def gdgridinfo(grid_id):
     """Return information about a grid structure.

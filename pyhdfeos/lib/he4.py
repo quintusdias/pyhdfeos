@@ -241,27 +241,29 @@ def gdfieldinfo(grid_id, fieldname):
     dimlist : list
         list of dimensions
     """
+    _, strbufsize = gdnentries(grid_id, HDFE_NENTDIM)
+    dimlist_buffer = ffi.new("char[]", b'\0' * (strbufsize + 1))
+
     rankp = ffi.new("int32 *")
     ntypep = ffi.new("int32 *")
-    status = _lib.GDfieldinfo(grid_id, fieldname.encode(), rankp, ffi.NULL,
-                              ntypep, ffi.NULL)  
+
+    # Assume that no field has more than 8 dimensions.  Seems like a safe bet.
+    # dimsp = ffi.new("int32[]", 8)
+    dims = np.zeros(8, dtype=np.int32)
+    dimsp = ffi.cast("int32 *", dims.ctypes.data)
+    status = _lib.GDfieldinfo(grid_id, fieldname.encode(), rankp, dimsp,
+                              ntypep, dimlist_buffer)  
     _handle_error(status)
 
-    ntype = number_type_dict[ntype[0]]
+    ntype = number_type_dict[ntypep[0]]
 
-    dims = np.zeroes(rankp[0], dtype=np.int32)
-    dimsp = ffi.cast("int32*", dims.ctypes.data)
+    shape = []
+    for j in range(rankp[0]):
+        shape.append(dims[j])
 
-    _, strbufsize = gdnentries(grid_id, HDFE_NENTDIM)
-    dims_buffer = ffi.new("char[]", b'\0' * (strbufsize + 1))
+    dimlist = ffi.string(dimlist_buffer).decode('ascii').split(',')
 
-    status = _lib.GDfieldinfo(grid_id, fieldname.encode(), ffi.NULL, dimsp,
-                              ffi.NULL, dims_buffer)
-    _handle_error(status)
-
-    dimlist = ffi.string(dims_buffer).decode('ascii').split(',')
-
-    return shape, ntype, dimlist
+    return tuple(shape), ntype, dimlist
 
 def gdij2ll(projcode, zonecode, projparm, spherecode, xdimsize, ydimsize, upleft,
           lowright, row, col, pixcen, pixcnr):
@@ -460,9 +462,16 @@ def gdnentries(gridid, entry_code):
     IOError
         If associated library routine fails.
     """
-    strbufsize = ffi.new("int32 *")
-    nentries = _lib.GDnentries(gridid, entry_code, strbufsize)
-    return nentries, strbufsize[0]
+    strbufsizep = ffi.new("int32 *")
+    nentries = _lib.GDnentries(gridid, entry_code, strbufsizep)
+
+    # sometimes running this with HDFE_NENTDIM results in 0 for STRBUFSIZE.
+    # This should never be correct, make it a minimum of 9 (for "YDim,XDim").
+    if entry_code == HDFE_NENTDIM:
+        strbufsize = max(9, strbufsizep[0])
+    else:
+        strbufsize = strbufsizep[0]
+    return nentries, strbufsize
 
 def gdopen(filename, access=DFACC_READ):
     """Opens or creates HDF file in order to create, read, or write a grid.
