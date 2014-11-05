@@ -7,6 +7,22 @@ import numpy as np
 
 from .lib import he4, he5
 
+class _GridVariable(object):
+    """
+    """
+    def __init__(self, gridid, fieldname, he_module):
+        self.gridid = gridid
+        self.fieldname = fieldname
+        self._he = he_module
+
+        x = self._he.gdfieldinfo(self.gridid, fieldname)
+        self.shape, self.ntype, self.dimlist = x[0:3]
+
+    def __str__(self):
+        dimstr = ", ".join(self.dimlist)
+        msg = "{0}[{1}]:".format(self.fieldname, dimstr)
+        return msg
+
 class _Grid(object):
     """
     """
@@ -30,7 +46,13 @@ class _Grid(object):
         self.origincode = self._he.gdorigininfo(self.gridid)
         self.pixregcode = self._he.gdpixreginfo(self.gridid)
 
+        # collect the fieldnames (netcdf calls these "variables"
         self._fields, _, _ = self._he.gdinqfields(self.gridid)
+        self.variables = collections.OrderedDict()
+        for fieldname in self._fields:
+            self.variables[fieldname] = _GridVariable(self.gridid,
+                                                      fieldname,
+                                                      self._he)
 
         attr_list = self._he.gdinqattrs(self.gridid)
         self.attrs = {}
@@ -71,10 +93,10 @@ class _Grid(object):
             msg += self._projection_false_easting_northing()
 
         msg += "    Fields:\n"
-        for field in self._fields:
-            msg += "        {0}:\n".format(field)
+        for field in self.variables.keys():
+            msg += "        {0}\n".format(self.variables[field])
 
-        msg += "    Attributes:\n"
+        msg += "    Grid Attributes:\n"
         for attr in self.attrs.keys():
             msg += "        {0}:  {1}\n".format(attr, self.attrs[attr])
 

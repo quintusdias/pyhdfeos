@@ -52,7 +52,8 @@ class TestPrinting(unittest.TestCase):
                 print(gdf.grids[grid])
                 actual = fake_out.getvalue().strip()
 
-        self.assertEqual(actual, fixtures.lambert_azimuthal_grid)
+        expected = fixtures.lambert_azimuthal_grid
+        self.assertEqual(actual, expected)
 
     def test_sinusoidal_grid(self):
         file = fullpath("MOD10A1.A2000065.h00v08.005.2008237034422.hdf")

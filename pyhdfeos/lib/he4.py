@@ -15,6 +15,8 @@ ffi.cdef("""
                          *count);
         intn  GDdetach(int32 gid);
         intn  GDclose(int32 fid);
+        intn  GDfieldinfo(int32 gridid, char *fieldname, int32 *rank,
+                          int32 dims[], int32 *numbertype, char *dimlist);
         int32 GDij2ll(int32 projcode, int32 zonecode,
                       float64 projparm[], int32 spherecode, int32 xdimsize,
                       int32 ydimsize, float64 upleft[], float64 lowright[],
@@ -74,6 +76,21 @@ HDFE_GD_UR = 1
 HDFE_GD_LL = 2
 HDFE_GD_LR = 3
 DFNT_FLOAT = 5
+
+number_type_dict = {
+                    3: np.uint16,
+                    4: np.int8,
+                    5: np.float32,
+                    6: np.float64,
+                    20: np.int8,
+                    21: np.uint8,
+                    22: np.int16,
+                    23: np.uint16,
+                    24: np.int32,
+                    25: np.uint32,
+                    26: np.int64,
+                    27: np.uint64,
+        }
 
 def gdattach(gdfid, gridname):
     """Attach to an existing grid structure.
@@ -202,6 +219,51 @@ def gdgridinfo(grid_id):
     lowright[1] = lowright_buffer[1]
 
     return shape, upleft, lowright
+
+def gdfieldinfo(grid_id, fieldname):
+    """Return information about a geolocation field or data field in a grid.
+
+    This function wraps the HDF-EOS GDfieldinfo library function.
+
+    Parameters
+    ----------
+    grid_id : int
+        Grid identifier.
+    fieldname : str
+        field name
+
+    Returns
+    -------
+    shape : tuple
+        size of the field
+    ntype : type
+        numpy datatype of the field
+    dimlist : list
+        list of dimensions
+    """
+    _, strbufsize = gdnentries(grid_id, HDFE_NENTDIM)
+    dimlist_buffer = ffi.new("char[]", b'\0' * (strbufsize + 1))
+
+    rankp = ffi.new("int32 *")
+    ntypep = ffi.new("int32 *")
+
+    # Assume that no field has more than 8 dimensions.  Seems like a safe bet.
+    # dimsp = ffi.new("int32[]", 8)
+    dims = np.zeros(8, dtype=np.int32)
+    dimsp = ffi.cast("int32 *", dims.ctypes.data)
+    status = _lib.GDfieldinfo(grid_id, fieldname.encode(), rankp, dimsp,
+                              ntypep, dimlist_buffer)  
+    _handle_error(status)
+
+    ntype = number_type_dict[ntypep[0]]
+
+    shape = []
+    for j in range(rankp[0]):
+        shape.append(dims[j])
+
+    dimlist = ffi.string(dimlist_buffer).decode('ascii').split(',')
+
+    return tuple(shape), ntype, dimlist
 
 def gdij2ll(projcode, zonecode, projparm, spherecode, xdimsize, ydimsize, upleft,
           lowright, row, col, pixcen, pixcnr):
@@ -400,9 +462,16 @@ def gdnentries(gridid, entry_code):
     IOError
         If associated library routine fails.
     """
-    strbufsize = ffi.new("int32 *")
-    nentries = _lib.GDnentries(gridid, entry_code, strbufsize)
-    return nentries, strbufsize[0]
+    strbufsizep = ffi.new("int32 *")
+    nentries = _lib.GDnentries(gridid, entry_code, strbufsizep)
+
+    # sometimes running this with HDFE_NENTDIM results in 0 for STRBUFSIZE.
+    # This should never be correct, make it a minimum of 9 (for "YDim,XDim").
+    if entry_code == HDFE_NENTDIM:
+        strbufsize = max(9, strbufsizep[0])
+    else:
+        strbufsize = strbufsizep[0]
+    return nentries, strbufsize
 
 def gdopen(filename, access=DFACC_READ):
     """Opens or creates HDF file in order to create, read, or write a grid.
