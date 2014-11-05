@@ -10,8 +10,7 @@ else:
     from io import StringIO
     from unittest.mock import patch
 
-from pyhdfeos import gd as GD
-from pyhdfeos.gd import GridFile, Grid
+from pyhdfeos import GridFile
 from pyhdfeos import core
 
 from . import fixtures
@@ -30,10 +29,20 @@ class TestPrinting(unittest.TestCase):
     def test_geo_grid(self):
         with GridFile(self.file) as gdf:
             with patch('sys.stdout', new=StringIO()) as fake_out:
-                print(gdf.grids['TOMS Level 3'])
+                print(gdf)
                 actual = fake_out.getvalue().strip()
 
         self.assertEqual(actual, fixtures.geographic_grid)
+
+    def test_geo_grid_he5(self):
+        hdffile = fullpath('GSSTFYC.3.Year.1988_2008.he5')
+        with GridFile(hdffile) as gdf:
+            with patch('sys.stdout', new=StringIO()) as fake_out:
+                print(gdf)
+                actual = fake_out.getvalue().strip()
+
+        expected = fixtures.geographic_grids_he5
+        self.assertEqual(actual, expected)
 
     def test_lamaz_grid(self):
         file = fullpath("MYD29P1D.A2010133.h09v07.005.2010135182659.hdf")
