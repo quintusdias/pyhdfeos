@@ -13,6 +13,9 @@ ffi.cdef("""
         hid_t  HE5_GDattach(hid_t fid, char *gridname);
         herr_t HE5_GDclose(hid_t fid);
         herr_t HE5_GDdetach(hid_t gridid);
+        herr_t HE5_GDfieldinfo(hid_t gridID, const char *fieldname, int *rank,
+                               hsize_t dims[], hid_t *ntype, char *dimlist,
+                               char *maxdimlist);
         herr_t HE5_GDgridinfo(hid_t gridID, long *xdimsize, long *ydimsize,
                               double upleftpt[], double lowrightpt[]);
         herr_t HE5_GDij2ll(int projcode, int zonecode,
@@ -64,6 +67,19 @@ H5F_ACC_RDONLY = 0x0000
 HE5_HDFE_NENTDIM = 0
 HE5_HDFE_NENTDFLD = 4
 
+number_type_dict = {0: np.int32,
+                    1: np.uint32,
+                    2: np.int16,
+                    3: np.uint16,
+                    4: np.int8,
+                    5: np.uint8,
+                    8: np.int64,
+                    9: np.uint64,
+                    10: np.float32,
+                    11: np.float64
+        }
+
+    
 def _handle_error(status):
     if status < 0:
         raise IOError("Library routine failed.")
@@ -112,6 +128,51 @@ def gddetach(grid_id):
     """
     status = _lib.HE5_GDdetach(grid_id)
     _handle_error(status)
+
+def gdfieldinfo(grid_id, fieldname):
+    """Return information about a geolocation field or data field in a grid.
+
+    This function wraps the HDF-EOS5 HE5_GDfieldinfo library function.
+
+    Parameters
+    ----------
+    grid_id : int
+        Grid identifier.
+    fieldname : str
+        field name
+
+    Returns
+    -------
+    shape : tuple
+        size of the field
+    ntype : type
+        numpy datatype of the field
+    dimlist, maxdimlist : list
+        list of dimensions
+    """
+    rankp = ffi.new("int *")
+    ntypep = ffi.new("hid_t *")
+    status = _lib.HE5_GDfieldinfo(grid_id, fieldname.encode(), rankp, ffi.NULL,
+                                  ntypep, ffi.NULL, ffi.NULL)  
+    _handle_error(status)
+
+    ntype = number_type_dict[ntype[0]]
+
+    dims = np.zeroes(rankp[0], dtype=np.uint64)
+    dimsp = ffi.cast("unsigned long long *", dims.ctypes.data)
+
+    _, strbufsize = gdnentries(grid_id, HE5_HDFE_NENTDIM)
+    dims_buffer = ffi.new("char[]", b'\0' * (strbufsize + 1))
+    max_dims_buffer = ffi.new("char[]", b'\0' * (strbufsize + 1))
+
+    status = _lib.HE5_GDfieldinfo(grid_id, fieldname.encode(), ffi.NULL, dimsp,
+                                  ffi.NULL, dims_buffer, max_dims_buffer)
+    _handle_error(status)
+
+    dimlist = ffi.string(dims_buffer).decode('ascii').split(',')
+    maxdimlist = ffi.string(max_dims_buffer).decode('ascii').split(',')
+
+    return shape, ntype, dimlist, maxdimlist
 
 def gdgridinfo(grid_id):
     """Return information about a grid structure.

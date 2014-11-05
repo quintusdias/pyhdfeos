@@ -15,6 +15,8 @@ ffi.cdef("""
                          *count);
         intn  GDdetach(int32 gid);
         intn  GDclose(int32 fid);
+        intn  GDfieldinfo(int32 gridid, char *fieldname, int32 *rank,
+                          int32 dims[], int32 *numbertype, char *dimlist);
         int32 GDij2ll(int32 projcode, int32 zonecode,
                       float64 projparm[], int32 spherecode, int32 xdimsize,
                       int32 ydimsize, float64 upleft[], float64 lowright[],
@@ -74,6 +76,21 @@ HDFE_GD_UR = 1
 HDFE_GD_LL = 2
 HDFE_GD_LR = 3
 DFNT_FLOAT = 5
+
+number_type_dict = {
+                    3: np.uint16,
+                    4: np.int8,
+                    5: np.float32,
+                    6: np.float64,
+                    20: np.int8,
+                    21: np.uint8,
+                    22: np.int16,
+                    23: np.uint16,
+                    24: np.int32,
+                    25: np.uint32,
+                    26: np.int64,
+                    27: np.uint64,
+        }
 
 def gdattach(gdfid, gridname):
     """Attach to an existing grid structure.
@@ -202,6 +219,49 @@ def gdgridinfo(grid_id):
     lowright[1] = lowright_buffer[1]
 
     return shape, upleft, lowright
+
+def gdfieldinfo(grid_id, fieldname):
+    """Return information about a geolocation field or data field in a grid.
+
+    This function wraps the HDF-EOS GDfieldinfo library function.
+
+    Parameters
+    ----------
+    grid_id : int
+        Grid identifier.
+    fieldname : str
+        field name
+
+    Returns
+    -------
+    shape : tuple
+        size of the field
+    ntype : type
+        numpy datatype of the field
+    dimlist : list
+        list of dimensions
+    """
+    rankp = ffi.new("int32 *")
+    ntypep = ffi.new("int32 *")
+    status = _lib.GDfieldinfo(grid_id, fieldname.encode(), rankp, ffi.NULL,
+                              ntypep, ffi.NULL)  
+    _handle_error(status)
+
+    ntype = number_type_dict[ntype[0]]
+
+    dims = np.zeroes(rankp[0], dtype=np.int32)
+    dimsp = ffi.cast("int32*", dims.ctypes.data)
+
+    _, strbufsize = gdnentries(grid_id, HDFE_NENTDIM)
+    dims_buffer = ffi.new("char[]", b'\0' * (strbufsize + 1))
+
+    status = _lib.GDfieldinfo(grid_id, fieldname.encode(), ffi.NULL, dimsp,
+                              ffi.NULL, dims_buffer)
+    _handle_error(status)
+
+    dimlist = ffi.string(dims_buffer).decode('ascii').split(',')
+
+    return shape, ntype, dimlist
 
 def gdij2ll(projcode, zonecode, projparm, spherecode, xdimsize, ydimsize, upleft,
           lowright, row, col, pixcen, pixcnr):
