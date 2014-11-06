@@ -11,6 +11,8 @@ ffi.cdef("""
         typedef int herr_t;
 
         hid_t  HE5_GDattach(hid_t fid, char *gridname);
+        long   HE5_GDattrinfo(hid_t gridID, const char *attrname,
+                                 hid_t *ntype, hsize_t *count);
         herr_t HE5_GDclose(hid_t fid);
         herr_t HE5_GDdetach(hid_t gridid);
         herr_t HE5_GDfieldinfo(hid_t gridID, const char *fieldname, int *rank,
@@ -40,6 +42,7 @@ ffi.cdef("""
         herr_t HE5_GDpixreginfo(hid_t gridID, int *pixregcode);
         herr_t HE5_GDprojinfo(hid_t gridID, int *projcode, int *zonecode,
                               int *spherecode, double projparm[]);
+        herr_t HE5_GDreadattr(hid_t gridID, const char* attrname, void *buffer);
         herr_t HE5_GDreadlocattr(hid_t gridID, const char *fieldname,
                                  const char *attrname, void *databuf);
         /*int HE5_EHHEisHE5(char *filename);*/
@@ -109,6 +112,32 @@ def gdattach(gdfid, gridname):
         grid identifier
     """
     return _lib.HE5_GDattach(gdfid, gridname.encode())
+
+def gdattrinfo(grid_id, attrname):
+    """return information about a grid attribute
+
+    Parameters
+    ----------
+    grid_id : int
+        grid identifier
+    attrname : str
+        attribute name
+
+    Returns
+    -------
+    numbertype : type
+        numpy datatype of the attribute
+    count : int
+        number of attribute elements
+    """
+    ntypep = ffi.new("hid_t *")
+    countp = ffi.new("hsize_t *")
+    status = _lib.HE5_GDattrinfo(grid_id, attrname.encode(), ntypep, countp)
+    _handle_error(status)
+
+    ntype = number_type_dict[ntypep[0]]
+
+    return ntype, countp[0]
 
 def gdclose(fid):
     """Closes the HDF-EOS grid file.
@@ -442,9 +471,18 @@ def gdnentries(gridid, entry_code):
     nentries, strbufsize : int
        Number of specified entries, number of bytes in descriptive strings. 
     """
-    strbufsize = ffi.new("long *")
-    nentries = _lib.HE5_GDnentries(gridid, entry_code, strbufsize)
-    return nentries, strbufsize[0]
+    strbufsizep = ffi.new("long *")
+    nentries = _lib.HE5_GDnentries(gridid, entry_code, strbufsizep)
+
+    # Sometimes running this with HDFE_NENTDIM results in too small a value.
+    # Since there's no real reason for a python user to be directly interested
+    # in this value, we'll make it a minimum size of 100.
+    if entry_code == HE5_HDFE_NENTDIM:
+        strbufsize = max(100, strbufsizep[0])
+    else:
+        strbufsize = strbufsizep[0]
+    #print(entry_code, nentries, strbufsize)
+    return nentries, strbufsize
 
 def gdopen(filename, access=H5F_ACC_RDONLY):
     """Opens or creates HDF file in order to create, read, or write a grid.
@@ -538,6 +576,45 @@ def gdprojinfo(grid_id):
     _handle_error(status)
 
     return projcode[0], zonecode[0], spherecode[0], projparm
+
+def gdreadattr(gridid, attrname):
+    """read grid attribute
+
+    This function wraps the HDF-EOS5 HE5_GDreadattr library function.
+
+    Parameters
+    ----------
+    grid_id : int
+        grid identifier
+    attrname : str
+        attribute name
+
+    Returns
+    -------
+    value : object
+        grid field attribute value
+    """
+    [number_type, count] = gdattrinfo(gridid, attrname)
+    if number_type is np.str:
+        buffer = ffi.new("char[]", b'\0' * (count + 1))
+        status = _lib.HE5_GDreadattr(gridid, attrname.encode(), buffer)
+        _handle_error(status)
+        return ffi.string(buffer).decode('ascii')
+    elif number_type is np.float32:
+        value = np.ones(count, dtype=np.float32)
+        pvalue = ffi.cast("float *", value.ctypes.data)
+    else:
+        raise RuntimeError("unhandled datatype")
+
+    status = _lib.HE5_GDreadattr(gridid, attrname.encode(), pvalue)
+    _handle_error(status)
+
+    if count == 1:
+        # present as a scalar rather than an array.
+        value = value[0]
+    return value
+
+
 
 def gdreadlocattr(gridid, fieldname, attrname):
     """read grid field attribute
