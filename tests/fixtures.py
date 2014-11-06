@@ -26,9 +26,21 @@ Grid:  NCEP
     Projection:  Geographic
     Fields:
         SST[YDim, XDim]:
+            _FillValue:  -999.0 ;
+            LongName:  sea surface skin temperature ;
+            units:  C ;
         Psea_level[YDim, XDim]:
+            _FillValue:  -999.0 ;
+            LongName:  sea level pressure ;
+            units:  hPa ;
         Tair_2m[YDim, XDim]:
+            _FillValue:  -999.0 ;
+            LongName:  2m air temperature ;
+            units:  C ;
         Qsat[YDim, XDim]:
+            _FillValue:  -999.0 ;
+            LongName:  sea surface saturation humidity ;
+            units:  g/kg ;
     Grid Attributes:
 Grid:  SET1
     Shape:  (720, 1440)
@@ -40,13 +52,37 @@ Grid:  SET1
     Projection:  Geographic
     Fields:
         E[YDim, XDim]:
+            _FillValue:  -999.0 ;
+            long_name:  latent heat flux ;
+            units:  W/m^^2 ;
         STu[YDim, XDim]:
+            _FillValue:  -999.0 ;
+            long_name:  zonal wind stress ;
+            units:  N/m^^2 ;
         STv[YDim, XDim]:
+            _FillValue:  -999.0 ;
+            long_name:  meridional wind stress ;
+            units:  N/m^^2 ;
         H[YDim, XDim]:
+            _FillValue:  -999.0 ;
+            long_name:  sensible heat flux ;
+            units:  W/m^^2 ;
         Qair[YDim, XDim]:
+            _FillValue:  -999.0 ;
+            long_name:  surface air (~10-m) specific humidity ;
+            units:  g/kg ;
         U[YDim, XDim]:
+            _FillValue:  -999.0 ;
+            long_name:  10-m wind speed ;
+            units:  m/s ;
         DQ[YDim, XDim]:
+            _FillValue:  -999.0 ;
+            long_name:  sea-air humidity difference ;
+            units:  g/kg ;
         Tot_Precip_Water[YDim, XDim]:
+            _FillValue:  -999.0 ;
+            long_name:  total precipitable water ;
+            units:  g/cm^^2 ;
     Grid Attributes:"""
 
 lambert_azimuthal_grid = """Grid:  MOD_Grid_Seaice_1km

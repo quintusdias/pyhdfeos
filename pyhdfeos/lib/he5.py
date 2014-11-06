@@ -30,12 +30,18 @@ ffi.cdef("""
                                hid_t ntype[]);
         long   HE5_GDinqgrid(const char *filename, char *gridlist,
                              long *strbufsize);
+        long   HE5_GDinqlocattrs(hid_t gridID, char *fieldname, char *attrnames,
+                                 long *strbufsize);
+        long   HE5_GDlocattrinfo(hid_t gridID, char *fieldname, char *attrname,
+                                 hid_t *ntype, hsize_t *count);
         long   HE5_GDnentries(hid_t gridID, int entrycode, long *strbufsize);
         hid_t  HE5_GDopen(const char *filename, uintn access);
         herr_t HE5_GDorigininfo(hid_t gridID, int *origincode);
         herr_t HE5_GDpixreginfo(hid_t gridID, int *pixregcode);
         herr_t HE5_GDprojinfo(hid_t gridID, int *projcode, int *zonecode,
                               int *spherecode, double projparm[]);
+        herr_t HE5_GDreadlocattr(hid_t gridID, const char *fieldname,
+                                 const char *attrname, void *databuf);
         /*int HE5_EHHEisHE5(char *filename);*/
         """)
 
@@ -76,7 +82,8 @@ number_type_dict = {0: np.int32,
                     8: np.int64,
                     9: np.uint64,
                     10: np.float32,
-                    11: np.float64
+                    11: np.float64,
+                    57: np.str
         }
 
     
@@ -359,6 +366,65 @@ def gdinqgrid(filename):
     gridlist = ffi.string(gridbuffer).decode('ascii').split(',')
     return gridlist
 
+def gdinqlocattrs(gridid, fieldname):
+    """Retrieve information about grid field attributes.
+
+    This function wraps the HDF-EOS5 HE5_GDinqlocattrs library function.
+
+    Parameters
+    ----------
+    grid_id : int
+        grid identifier
+    fieldname : str
+        retrieve attribute names for this field
+
+    Returns
+    -------
+    attrlist : list
+        list of attributes defined for the grid
+    """
+    strbufsize = ffi.new("long *")
+    nattrs = _lib.HE5_GDinqlocattrs(gridid, fieldname.encode(), 
+                                    ffi.NULL, strbufsize)
+    if nattrs == 0:
+        return []
+    attr_buffer = ffi.new("char[]", b'\0' * (strbufsize[0] + 1))
+    nattrs = _lib.HE5_GDinqlocattrs(gridid, fieldname.encode(),
+                                    attr_buffer, strbufsize)
+    _handle_error(nattrs)
+    attr_list = ffi.string(attr_buffer).decode('ascii').split(',')
+    return attr_list
+
+def gdlocattrinfo(grid_id, fieldname, attrname):
+    """return information about a grid field attribute
+
+    Parameters
+    ----------
+    grid_id : int
+        grid identifier
+    fieldname : str
+        attribute name
+    attrname : str
+        attribute name
+
+    Returns
+    -------
+    numbertype : type
+        numpy datatype of the attribute
+    count : int
+        number of attribute elements
+    """
+    ntypep = ffi.new("hid_t *")
+    countp = ffi.new("hsize_t *")
+    status = _lib.HE5_GDlocattrinfo(grid_id,
+                                    fieldname.encode(), attrname.encode(),
+                                    ntypep, countp)
+    _handle_error(status)
+
+    ntype = number_type_dict[ntypep[0]]
+
+    return ntype, countp[0]
+
 def gdnentries(gridid, entry_code):
     """Return number of specified objects in a grid.
 
@@ -472,4 +538,49 @@ def gdprojinfo(grid_id):
     _handle_error(status)
 
     return projcode[0], zonecode[0], spherecode[0], projparm
+
+def gdreadlocattr(gridid, fieldname, attrname):
+    """read grid field attribute
+
+    This function wraps the HDF-EOS5 HE5_GDreadlocattr library function.
+
+    Parameters
+    ----------
+    grid_id : int
+        grid identifier
+    fieldname : str
+        name of grid field
+    attrname : str
+        attribute name
+
+    Returns
+    -------
+    value : object
+        grid field attribute value
+    """
+    [number_type, count] = gdlocattrinfo(gridid, fieldname, attrname)
+    if number_type is np.str:
+        buffer = ffi.new("char[]", b'\0' * (count + 1))
+        status = _lib.HE5_GDreadlocattr(gridid,
+                                        fieldname.encode(), attrname.encode(),
+                                        buffer)
+        _handle_error(status)
+        return ffi.string(buffer).decode('ascii')
+    elif number_type is np.float32:
+        value = np.ones(count, dtype=np.float32)
+        pvalue = ffi.cast("float *", value.ctypes.data)
+    else:
+        raise RuntimeError("unhandled datatype")
+
+    status = _lib.HE5_GDreadlocattr(gridid,
+                                    fieldname.encode(), attrname.encode(),
+                                    pvalue)
+    _handle_error(status)
+
+    if count == 1:
+        # present as a scalar rather than an array.
+        value = value[0]
+    return value
+
+
 

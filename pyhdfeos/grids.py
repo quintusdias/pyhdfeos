@@ -2,6 +2,7 @@ import collections
 import os
 import platform
 import struct
+import textwrap
 
 import numpy as np
 
@@ -18,9 +19,21 @@ class _GridVariable(object):
         x = self._he.gdfieldinfo(self.gridid, fieldname)
         self.shape, self.ntype, self.dimlist = x[0:3]
 
+        # HDFEOS5 only.
+        self.attrs = collections.OrderedDict()
+        if hasattr(self._he, 'gdinqlocattrs'):
+            attr_names = self._he.gdinqlocattrs(self.gridid, self.fieldname)
+            for attrname in attr_names:
+                self.attrs[attrname] = self._he.gdreadlocattr(self.gridid,
+                                                              self.fieldname,
+                                                              attrname)
+
     def __str__(self):
         dimstr = ", ".join(self.dimlist)
-        msg = "{0}[{1}]:".format(self.fieldname, dimstr)
+        msg = "{0}[{1}]:\n".format(self.fieldname, dimstr)
+
+        for name, value in self.attrs.items():
+            msg += "    {0}:  {1} ;\n".format(name, value)
         return msg
 
 class _Grid(object):
@@ -94,7 +107,7 @@ class _Grid(object):
 
         msg += "    Fields:\n"
         for field in self.variables.keys():
-            msg += "        {0}\n".format(self.variables[field])
+            msg += textwrap.indent(str(self.variables[field]), ' ' * 8)
 
         msg += "    Grid Attributes:\n"
         for attr in self.attrs.keys():
