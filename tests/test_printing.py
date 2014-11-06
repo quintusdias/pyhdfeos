@@ -10,8 +10,7 @@ else:
     from io import StringIO
     from unittest.mock import patch
 
-from pyhdfeos import gd as GD
-from pyhdfeos.gd import GridFile, Grid
+from pyhdfeos import GridFile
 from pyhdfeos import core
 
 from . import fixtures
@@ -35,6 +34,16 @@ class TestPrinting(unittest.TestCase):
 
         self.assertEqual(actual, fixtures.geographic_grid)
 
+    def test_geo_grid_he5(self):
+        hdffile = fullpath('GSSTFYC.3.Year.1988_2008.he5')
+        with GridFile(hdffile) as gdf:
+            with patch('sys.stdout', new=StringIO()) as fake_out:
+                print(gdf)
+                actual = fake_out.getvalue().strip()
+
+        expected = fixtures.geographic_grids_he5
+        self.assertEqual(actual, expected)
+
     def test_lamaz_grid(self):
         file = fullpath("MYD29P1D.A2010133.h09v07.005.2010135182659.hdf")
         grid = 'MOD_Grid_Seaice_1km'
@@ -43,7 +52,8 @@ class TestPrinting(unittest.TestCase):
                 print(gdf.grids[grid])
                 actual = fake_out.getvalue().strip()
 
-        self.assertEqual(actual, fixtures.lambert_azimuthal_grid)
+        expected = fixtures.lambert_azimuthal_grid
+        self.assertEqual(actual, expected)
 
     def test_sinusoidal_grid(self):
         file = fullpath("MOD10A1.A2000065.h00v08.005.2008237034422.hdf")

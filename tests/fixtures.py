@@ -1,19 +1,57 @@
 geographic_grid = """TOMS-EP_L3-TOMSEPL3_2000m0101_v8.HDF
 Grid:  TOMS Level 3
     Shape:  (180, 288)
+    Dimensions:
+        XDim:  288
+        YDim:  180
     Upper Left (x,y):  [ -1.80000000e+08   9.00000000e+07]
     Lower Right (x,y):  [  1.80000000e+08  -9.00000000e+07]
     Projection:  Geographic
     Fields:
-        Ozone:
-        Reflectivity:
-        Aerosol:
-        Erythemal:
-    Attributes:
+        Ozone[YDim, XDim]:
+        Reflectivity[YDim, XDim]:
+        Aerosol[YDim, XDim]:
+        Erythemal[YDim, XDim]:
+    Grid Attributes:
         VerticalCoordinate:  Total Column"""
+
+geographic_grids_he5 = """GSSTFYC.3.Year.1988_2008.he5
+Grid:  NCEP
+    Shape:  (720, 1440)
+    Dimensions:
+        Xdim:  1440
+        Ydim:  720
+    Upper Left (x,y):  [ -1.80000000e+08  -9.00000000e+07]
+    Lower Right (x,y):  [  1.80000000e+08   9.00000000e+07]
+    Projection:  Geographic
+    Fields:
+        SST[YDim, XDim]:
+        Psea_level[YDim, XDim]:
+        Tair_2m[YDim, XDim]:
+        Qsat[YDim, XDim]:
+    Grid Attributes:
+Grid:  SET1
+    Shape:  (720, 1440)
+    Dimensions:
+        Xdim:  1440
+        Ydim:  720
+    Upper Left (x,y):  [ -1.80000000e+08  -9.00000000e+07]
+    Lower Right (x,y):  [  1.80000000e+08   9.00000000e+07]
+    Projection:  Geographic
+    Fields:
+        E[YDim, XDim]:
+        STu[YDim, XDim]:
+        STv[YDim, XDim]:
+        H[YDim, XDim]:
+        Qair[YDim, XDim]:
+        U[YDim, XDim]:
+        DQ[YDim, XDim]:
+        Tot_Precip_Water[YDim, XDim]:
+    Grid Attributes:"""
 
 lambert_azimuthal_grid = """Grid:  MOD_Grid_Seaice_1km
     Shape:  (951, 951)
+    Dimensions:
     Upper Left (x,y):  [ -476784.3255  2383921.6275]
     Lower Right (x,y):  [  476784.3255  1430352.9765]
     Projection:  Lambert Azimuthal
@@ -23,14 +61,15 @@ lambert_azimuthal_grid = """Grid:  MOD_Grid_Seaice_1km
         False Easting:  0.0
         False Northing:  0.0
     Fields:
-        Sea_Ice_by_Reflectance:
-        Sea_Ice_by_Reflectance_Spatial_QA:
-        Ice_Surface_Temperature:
-        Ice_Surface_Temperature_Spatial_QA:
-    Attributes:"""
+        Sea_Ice_by_Reflectance[YDim, XDim]:
+        Sea_Ice_by_Reflectance_Spatial_QA[YDim, XDim]:
+        Ice_Surface_Temperature[YDim, XDim]:
+        Ice_Surface_Temperature_Spatial_QA[YDim, XDim]:
+    Grid Attributes:"""
 
 sinusoidal_grid = """Grid:  MOD_Grid_Snow_500m
     Shape:  (2400, 2400)
+    Dimensions:
     Upper Left (x,y):  [-20015109.354      1111950.519667]
     Lower Right (x,y):  [-18903158.834333        -0.      ]
     Projection:  Sinusoidal
@@ -39,14 +78,15 @@ sinusoidal_grid = """Grid:  MOD_Grid_Snow_500m
         False Easting:  0.0
         False Northing:  0.0
     Fields:
-        Snow_Cover_Daily_Tile:
-        Snow_Spatial_QA:
-        Snow_Albedo_Daily_Tile:
-        Fractional_Snow_Cover:
-    Attributes:"""
+        Snow_Cover_Daily_Tile[YDim, XDim]:
+        Snow_Spatial_QA[YDim, XDim]:
+        Snow_Albedo_Daily_Tile[YDim, XDim]:
+        Fractional_Snow_Cover[YDim, XDim]:
+    Grid Attributes:"""
 
 albers_grid = """Grid:  WELD_GRID
     Shape:  (5000, 5000)
+    Dimensions:
     Upper Left (x,y):  [-2415600.  2414800.]
     Lower Right (x,y):  [-2265600.  2264800.]
     Projection:  Albers Conical Equal Area
@@ -59,18 +99,18 @@ albers_grid = """Grid:  WELD_GRID
         False Easting:  0.0
         False Northing:  0.0
     Fields:
-        Band1_TOA_REF:
-        Band2_TOA_REF:
-        Band3_TOA_REF:
-        Band4_TOA_REF:
-        Band5_TOA_REF:
-        Band61_TOA_BT:
-        Band62_TOA_BT:
-        Band7_TOA_REF:
-        NDVI_TOA:
-        Day_Of_Year:
-        Saturation_Flag:
-        DT_Cloud_State:
-        ACCA_State:
-        Num_Of_Obs:
-    Attributes:"""
+        Band1_TOA_REF[YDim, XDim]:
+        Band2_TOA_REF[YDim, XDim]:
+        Band3_TOA_REF[YDim, XDim]:
+        Band4_TOA_REF[YDim, XDim]:
+        Band5_TOA_REF[YDim, XDim]:
+        Band61_TOA_BT[YDim, XDim]:
+        Band62_TOA_BT[YDim, XDim]:
+        Band7_TOA_REF[YDim, XDim]:
+        NDVI_TOA[YDim, XDim]:
+        Day_Of_Year[YDim, XDim]:
+        Saturation_Flag[YDim, XDim]:
+        DT_Cloud_State[YDim, XDim]:
+        ACCA_State[YDim, XDim]:
+        Num_Of_Obs[YDim, XDim]:
+    Grid Attributes:"""
