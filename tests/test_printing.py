@@ -10,8 +10,8 @@ else:
     from io import StringIO
     from unittest.mock import patch
 
+import pyhdfeos
 from pyhdfeos import GridFile
-from pyhdfeos import core
 
 from . import fixtures
 
@@ -30,6 +30,14 @@ class TestPrinting(unittest.TestCase):
         with GridFile(self.file) as gdf:
             with patch('sys.stdout', new=StringIO()) as fake_out:
                 print(gdf)
+                actual = fake_out.getvalue().strip()
+
+        self.assertEqual(actual, fixtures.geographic_grid)
+
+    def test_geo_grid_console_script(self):
+        with patch('sys.stdout', new=StringIO()) as fake_out:
+            with patch('sys.argv', new=['', self.file]):
+                pyhdfeos.command_line.dump_metadata()
                 actual = fake_out.getvalue().strip()
 
         self.assertEqual(actual, fixtures.geographic_grid)

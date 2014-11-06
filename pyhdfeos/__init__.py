@@ -1,2 +1,3 @@
-from .grids import GridFile
 from . import lib
+from .grids import GridFile
+from . import command_line
