@@ -31,6 +31,14 @@ class TestClass(unittest.TestCase):
             pass
         self.assertTrue(True)
 
+    def test_eos5_readattr(self):
+        """
+        hdf-eos5 module needs implementation of gdreadattr
+        """
+        file = fullpath('TES-Aura_L3-CH4_r0000010410_F01_07.he5')
+        gdf = GridFile(file)
+        self.assertTrue(True)
+
     def test_inqgrid(self):
         self.assertEqual(list(self.gridfile.grids.keys()), ['TOMS Level 3'])
 
