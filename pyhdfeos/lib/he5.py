@@ -603,9 +603,30 @@ def gdreadattr(gridid, attrname):
         status = _lib.HE5_GDreadattr(gridid, attrname.encode(), buffer)
         _handle_error(status)
         return ffi.string(buffer).decode('ascii')
+    elif number_type is np.int8:
+        value = np.ones(count, dtype=np.int8)
+        pvalue = ffi.cast("signed char *", value.ctypes.data)
+    elif number_type is np.uint8:
+        value = np.ones(count, dtype=np.uint8)
+        pvalue = ffi.cast("unsigned char *", value.ctypes.data)
+    elif number_type is np.int16:
+        value = np.ones(count, dtype=np.int16)
+        pvalue = ffi.cast("short *", value.ctypes.data)
+    elif number_type is np.uint16:
+        value = np.ones(count, dtype=np.uint16)
+        pvalue = ffi.cast("unsigned short *", value.ctypes.data)
+    elif number_type is np.int32:
+        value = np.ones(count, dtype=np.int32)
+        pvalue = ffi.cast("int *", value.ctypes.data)
+    elif number_type is np.uint32:
+        value = np.ones(count, dtype=np.uint32)
+        pvalue = ffi.cast("unsigned int *", value.ctypes.data)
     elif number_type is np.float32:
         value = np.ones(count, dtype=np.float32)
         pvalue = ffi.cast("float *", value.ctypes.data)
+    elif number_type is np.float64:
+        value = np.ones(count, dtype=np.float64)
+        pvalue = ffi.cast("double *", value.ctypes.data)
     else:
         raise RuntimeError("unhandled datatype")
 
@@ -646,9 +667,30 @@ def gdreadlocattr(gridid, fieldname, attrname):
                                         buffer)
         _handle_error(status)
         return ffi.string(buffer).decode('ascii')
+    elif number_type is np.int8:
+        value = np.ones(count, dtype=np.int8)
+        pvalue = ffi.cast("signed char *", value.ctypes.data)
+    elif number_type is np.uint8:
+        value = np.ones(count, dtype=np.uint8)
+        pvalue = ffi.cast("unsigned char *", value.ctypes.data)
+    elif number_type is np.int16:
+        value = np.ones(count, dtype=np.int16)
+        pvalue = ffi.cast("short *", value.ctypes.data)
+    elif number_type is np.uint16:
+        value = np.ones(count, dtype=np.uint16)
+        pvalue = ffi.cast("unsigned short *", value.ctypes.data)
+    elif number_type is np.int32:
+        value = np.ones(count, dtype=np.int32)
+        pvalue = ffi.cast("int *", value.ctypes.data)
+    elif number_type is np.uint32:
+        value = np.ones(count, dtype=np.uint32)
+        pvalue = ffi.cast("unsigned int *", value.ctypes.data)
     elif number_type is np.float32:
         value = np.ones(count, dtype=np.float32)
         pvalue = ffi.cast("float *", value.ctypes.data)
+    elif number_type is np.float64:
+        value = np.ones(count, dtype=np.float64)
+        pvalue = ffi.cast("double *", value.ctypes.data)
     else:
         raise RuntimeError("unhandled datatype")
 
