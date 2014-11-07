@@ -392,6 +392,8 @@ def gdinqgrid(filename):
     """
     strbufsize = ffi.new("long *")
     ngrids = _lib.HE5_GDinqgrid(filename.encode(), ffi.NULL, strbufsize)
+    if ngrids == 0:
+        return []
     gridbuffer = ffi.new("char[]", b'\0' * (strbufsize[0] + 1))
     ngrids = _lib.HE5_GDinqgrid(filename.encode(), gridbuffer, ffi.NULL)
     _handle_error(ngrids)
