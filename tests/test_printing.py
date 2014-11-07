@@ -58,6 +58,15 @@ class TestPrinting(unittest.TestCase):
         expected = fixtures.geographic_grids_he5
         self.assertEqual(actual, expected)
 
+    def test_utm_grid_he5(self):
+        with GridFile(self.test_driver_file) as gdf:
+            with patch('sys.stdout', new=StringIO()) as fake_out:
+                print(gdf.grids['UTMGrid'])
+                actual = fake_out.getvalue().strip()
+
+        expected = fixtures.utm_grid
+        self.assertEqual(actual, expected)
+
     def test_ps_grid_he5(self):
         with GridFile(self.test_driver_file) as gdf:
             with patch('sys.stdout', new=StringIO()) as fake_out:
