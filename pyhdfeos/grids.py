@@ -87,6 +87,9 @@ class _Grid(object):
         msg += "    Lower Right (x,y):  {0}\n".format(self.lowright)
         if self.projcode == 0:
             msg += "    Projection:  Geographic\n"
+        elif self.projcode == 1:
+            msg += "    Projection:  UTM\n"
+            msg += self._projection_lonz_latz()
         elif self.projcode == 3:
             msg += "    Projection:  Albers Conical Equal Area\n"
             msg += self._projection_semi_major_semi_minor()
@@ -120,6 +123,19 @@ class _Grid(object):
             msg += "        {0}:  {1}\n".format(attr, self.attrs[attr])
 
         
+        return msg
+
+    def _projection_lonz_latz(self):
+        """
+        __str__ helper method for utm projections
+        """
+        if self.projparms[0] == 0 and self.projparms[1] == 0:
+            msg = "        UTM zone:  {0}\n".format(self.zonecode)
+        else:
+            lonz = self.projparms[0] / 1e6
+            latz = self.projparms[1] / 1e6
+            msg = "        UTM zone longitude:  {0}\n".format(lonz)
+            msg += "        UTM zone latitude:  {0}\n".format(latz)
         return msg
 
     def _projection_longitude_pole(self):

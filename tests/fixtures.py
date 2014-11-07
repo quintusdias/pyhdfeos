@@ -103,6 +103,20 @@ lambert_azimuthal_grid = """Grid:  MOD_Grid_Seaice_1km
         Ice_Surface_Temperature_Spatial_QA[YDim, XDim]:
     Grid Attributes:"""
 
+utm_grid = """Grid:  UTMGrid
+    Shape:  (200, 120)
+    Dimensions:
+        Time:  10
+        ExtDim:  60
+        Unlim:  18446744073709551615
+    Upper Left (x,y):  [  210584.50041  3322395.95445]
+    Lower Right (x,y):  [  813931.10959  2214162.53278]
+    Projection:  UTM
+        UTM zone:  40
+    Fields:
+        Vegetation[YDim, XDim]:
+    Grid Attributes:"""
+
 polar_stereographic_grid = """Grid:  PolarGrid
     Shape:  (100, 100)
     Dimensions:
