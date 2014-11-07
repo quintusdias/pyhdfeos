@@ -45,6 +45,12 @@ class TestClass(unittest.TestCase):
         gdf = GridFile(self.test_driver_file)
         self.assertTrue(True)
 
+    def test_aura_datatype(self):
+        file = fullpath('OMI-Aura_L2G-OMCLDO2G_2007m0129_v002-2007m0130t174603.he5')
+        with GridFile(file) as gdf:
+            pass
+        self.assertTrue(True)
+
     def test_inqgrid(self):
         self.assertEqual(list(self.gridfile.grids.keys()), ['TOMS Level 3'])
 
