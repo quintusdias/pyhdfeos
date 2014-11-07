@@ -21,10 +21,17 @@ class TestClass(unittest.TestCase):
         file = fullpath("TOMS-EP_L3-TOMSEPL3_2000m0101_v8.HDF")
         cls.gridfile = GridFile(file)
         cls.file = file
+
         file = pkg.resource_filename(__name__, os.path.join('data', 'Grid.h5'))
         cls.test_driver_grid_file = file
         file = pkg.resource_filename(__name__, os.path.join('data', 'ZA.he5'))
         cls.test_driver_zonal_average_file = file
+        file = pkg.resource_filename(__name__, os.path.join('data', 'Grid219.hdf'))
+        cls.test_driver_gridfile4 = file
+        file = pkg.resource_filename(__name__, os.path.join('data', 'Swath219.hdf'))
+        cls.test_driver_swathfile4 = file
+        file = pkg.resource_filename(__name__, os.path.join('data', 'Point219.hdf'))
+        cls.test_driver_pointfile4 = file
 
     @classmethod
     def tearDownClass(self):
@@ -43,8 +50,15 @@ class TestClass(unittest.TestCase):
         gdf = GridFile(file)
         self.assertTrue(True)
 
-    def test_sample_file(self):
-        gdf = GridFile(self.test_driver_grid_file)
+    def test_sample_files(self):
+        """should be able to load hdfeos files, whether grid files or not
+
+        Issue 16
+        """
+        GridFile(self.test_driver_grid_file)
+        GridFile(self.test_driver_gridfile4)
+        GridFile(self.test_driver_swathfile4)
+        GridFile(self.test_driver_pointfile4)
         self.assertTrue(True)
 
     def test_zonal_average_file(self):
