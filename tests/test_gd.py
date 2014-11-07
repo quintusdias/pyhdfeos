@@ -61,6 +61,94 @@ class TestClass(unittest.TestCase):
         GridFile(self.test_driver_pointfile4)
         self.assertTrue(True)
 
+    def test_read_he4_2d_single_ellipsis(self):
+        """
+        array-style indexing case of [...]
+        """
+        with GridFile(self.test_driver_gridfile4) as gdf:
+            actual = gdf.grids['UTMGrid'].variables['Vegetation'][:]
+
+        expected = np.zeros((200,120), dtype=np.float32)
+        for j in range(200):
+            expected[j] = j + 10
+        np.testing.assert_array_equal(actual, expected)
+
+    def test_read_he4_2d_full(self):
+        """
+        array-style indexing case of [:]
+        """
+        with GridFile(self.test_driver_gridfile4) as gdf:
+            actual = gdf.grids['UTMGrid'].variables['Vegetation'][:]
+
+        expected = np.zeros((200,120), dtype=np.float32)
+        for j in range(200):
+            expected[j] = j + 10
+        np.testing.assert_array_equal(actual, expected)
+
+    def test_read_he4_2d_full_full(self):
+        """
+        array-style indexing case of [:,:]
+        """
+        with GridFile(self.test_driver_gridfile4) as gdf:
+            actual = gdf.grids['UTMGrid'].variables['Vegetation'][:,:]
+
+        expected = np.zeros((200,120), dtype=np.float32)
+        for j in range(200):
+            expected[j] = j + 10
+        np.testing.assert_array_equal(actual, expected)
+
+    def test_read_he4_2d_row(self):
+        """
+        array-style indexing case of [scalar int]
+        """
+        with GridFile(self.test_driver_gridfile4) as gdf:
+            actual = gdf.grids['UTMGrid'].variables['Vegetation'][1]
+
+        expected = np.ones(120, dtype=np.float32) * 11
+        np.testing.assert_array_equal(actual, expected)
+
+    def test_read_he4_2d_slice_slice(self):
+        """
+        array-style indexing case of [r1;r2, c1:c2]
+        """
+        with GridFile(self.test_driver_gridfile4) as gdf:
+            actual = gdf.grids['UTMGrid'].variables['Vegetation'][3:5, 4:7]
+
+        expected = np.zeros((2,3), dtype=np.float32)
+        for j in range(2):
+            expected[j] = j + 13
+        np.testing.assert_array_equal(actual, expected)
+
+    def test_read_he4_2d_int_ellipsis(self):
+        """
+        array-style indexing case of [scalar, ...]
+        """
+        with GridFile(self.test_driver_gridfile4) as gdf:
+            actual = gdf.grids['UTMGrid'].variables['Vegetation'][3, ...]
+
+        expected = np.ones(120, dtype=np.float32) * 13
+        np.testing.assert_array_equal(actual, expected)
+
+    def test_read_he4_2d_int_slice(self):
+        """
+        array-style indexing case of [scalar, :]
+        """
+        with GridFile(self.test_driver_gridfile4) as gdf:
+            actual = gdf.grids['UTMGrid'].variables['Vegetation'][3, :]
+
+        expected = np.ones(120, dtype=np.float32) * 13
+        np.testing.assert_array_equal(actual, expected)
+
+    def test_read_he4_2d_int_int(self):
+        """
+        array-style indexing case of [scalar, scalar]
+        """
+        with GridFile(self.test_driver_gridfile4) as gdf:
+            actual = gdf.grids['UTMGrid'].variables['Vegetation'][3, 4]
+
+        expected = 13
+        np.testing.assert_array_equal(actual, expected)
+
     def test_zonal_average_file(self):
         """should be able to open zonal average file
 

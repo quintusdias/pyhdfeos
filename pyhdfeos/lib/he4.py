@@ -37,6 +37,8 @@ ffi.cdef("""
         intn  GDprojinfo(int32 gridid, int32 *projcode, int32 *zonecode,
                          int32 *spherecode, float64 projparm[]);
         intn  GDreadattr(int32 gridid, char* attrname, void *buffer);
+        intn  GDreadfield(int32 gridid, char* fieldname, int32 start[],
+                          int32 stride[], int32 edge[], void *buffer);
         """
 )
 
@@ -90,6 +92,20 @@ number_type_dict = {
                     25: np.uint32,
                     26: np.int64,
                     27: np.uint64,
+        }
+cast_string_dict = {
+                    3: "unsigned short *",
+                    4: "signed char *",
+                    5: "float *",
+                    6: "double *",
+                    20: "signed char *",
+                    21: "unsigned char *",
+                    22: "short int *",
+                    23: "unsigned short int *",
+                    24: "int *",
+                    25: "unsigned int *",
+                    26: "long long int",
+                    27: "unsigned long long *",
         }
 
 def gdattach(gdfid, gridname):
@@ -237,7 +253,7 @@ def gdfieldinfo(grid_id, fieldname):
     shape : tuple
         size of the field
     ntype : type
-        numpy datatype of the field
+        datatype of the field
     dimlist : list
         list of dimensions
     """
@@ -255,15 +271,13 @@ def gdfieldinfo(grid_id, fieldname):
                               ntypep, dimlist_buffer)  
     _handle_error(status)
 
-    ntype = number_type_dict[ntypep[0]]
-
     shape = []
     for j in range(rankp[0]):
         shape.append(dims[j])
 
     dimlist = ffi.string(dimlist_buffer).decode('ascii').split(',')
 
-    return tuple(shape), ntype, dimlist
+    return tuple(shape), ntypep[0], dimlist
 
 def gdij2ll(projcode, zonecode, projparm, spherecode, xdimsize, ydimsize, upleft,
           lowright, row, col, pixcen, pixcnr):
@@ -589,6 +603,8 @@ def gdprojinfo(grid_id):
 def gdreadattr(gridid, attrname):
     """read grid attribute
 
+    This function wraps the HDF-EOS library GDreadattr function.
+
     Parameters
     ----------
     grid_id : int
@@ -606,29 +622,67 @@ def gdreadattr(gridid, attrname):
     IOError
         If associated library routine fails.
     """
-    [number_type, count] = gdattrinfo(gridid, attrname)
-    if number_type == 4:
+    [ntype, count] = gdattrinfo(gridid, attrname)
+    if ntype == 4:
         # char8
         buffer = ffi.new("char[]", b'\0' * (count + 1))
         status = _lib.GDreadattr(gridid, attrname.encode(), buffer)
         _handle_error(status)
         return ffi.string(buffer).decode('ascii')
 
-    if number_type == 5:
-        value = np.ones(count, dtype=np.float32)
-        pvalue = ffi.cast("float *", value.ctypes.data)
-    elif number_type == 6:
-        value = np.ones(count, dtype=np.float64)
-        pvalue = ffi.cast("double *", value.ctypes.data)
-    elif number_type == 24:
-        value = np.ones(count, dtype=np.int32)
-        pvalue = ffi.cast("int32 *", value.ctypes.data)
-    else:
-        raise RuntimeError("unhandled datatype")
+    buffer = np.zeros(count, dtype=number_type_dict[ntype])
+    pbuffer = ffi.cast(cast_string_dict[ntype], buffer.ctypes.data)
 
-    status = _lib.GDreadattr(gridid, attrname.encode(), pvalue)
+    status = _lib.GDreadattr(gridid, attrname.encode(), pbuffer)
     _handle_error(status)
-    return value
+    return buffer
+
+def gdreadfield(gridid, fieldname, start, stride, edge):
+    """read data from grid field
+
+    This function wraps the HDF-EOS library GDreadfield function.
+
+    Parameters
+    ----------
+    grid_id : int
+        grid identifier
+    fieldname : str
+        attribute name
+    start : array-like
+        specifies starting location within each dimension
+    stride : array-like
+        specifies number of values to skip along each dimension
+    edge : array-like
+        specifies number of values to read along each dimension
+
+    Returns
+    -------
+    data : ndarray
+        data read from field
+
+    Raises
+    ------
+    IOError
+        If associated library routine fails.
+    """
+    _, ntype, _  = gdfieldinfo(gridid, fieldname)
+    shape = tuple([int(x) for x in edge])
+    buffer = np.zeros(shape, dtype=number_type_dict[ntype])
+    pbuffer = ffi.cast(cast_string_dict[ntype], buffer.ctypes.data)
+
+    startp = ffi.new("int32 []", len(shape))
+    stridep = ffi.new("int32 []", len(shape))
+    edgep = ffi.new("int32 []", len(shape))
+
+    for j in range(len(shape)):
+        startp[j] = int(start[j])
+        stridep[j] = int(stride[j])
+        edgep[j] = int(edge[j])
+
+    status = _lib.GDreadfield(gridid, fieldname.encode(), startp, stridep,
+                              edgep, pbuffer)
+    _handle_error(status)
+    return buffer
 
 
 
