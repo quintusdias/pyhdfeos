@@ -22,7 +22,9 @@ class TestClass(unittest.TestCase):
         cls.gridfile = GridFile(file)
         cls.file = file
         file = pkg.resource_filename(__name__, os.path.join('data', 'Grid.h5'))
-        cls.test_driver_file = file
+        cls.test_driver_grid_file = file
+        file = pkg.resource_filename(__name__, os.path.join('data', 'ZA.he5'))
+        cls.test_driver_zonal_average_file = file
 
     @classmethod
     def tearDownClass(self):
@@ -42,7 +44,15 @@ class TestClass(unittest.TestCase):
         self.assertTrue(True)
 
     def test_sample_file(self):
-        gdf = GridFile(self.test_driver_file)
+        gdf = GridFile(self.test_driver_grid_file)
+        self.assertTrue(True)
+
+    def test_zonal_average_file(self):
+        """should be able to open zonal average file
+
+        Issue #15
+        """
+        gdf = GridFile(self.test_driver_zonal_average_file)
         self.assertTrue(True)
 
     def test_aura_datatype(self):
