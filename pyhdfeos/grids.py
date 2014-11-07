@@ -54,6 +54,7 @@ class _Grid(object):
         self.projcode = projcode
         self.zonecode = zonecode
         self.spherecode = spherecode
+        self._sphere = _SPHERE[spherecode]
         self.projparms = projparms
 
         self.origincode = self._he.gdorigininfo(self.gridid)
@@ -85,6 +86,7 @@ class _Grid(object):
 
         msg += "    Upper Left (x,y):  {0}\n".format(self.upleft)
         msg += "    Lower Right (x,y):  {0}\n".format(self.lowright)
+        msg += "    Sphere:  {0}\n".format(self._sphere)
         if self.projcode == 0:
             msg += "    Projection:  Geographic\n"
         elif self.projcode == 1:
@@ -353,3 +355,28 @@ class GridFile(object):
         self._he.gdclose(self.gdfid)
 
 
+_SPHERE = {
+        -1: 'Unspecified',
+        0: 'Clarke 1866',
+        1: 'Clarke 1880',
+        2: 'Bessel',
+        3: 'International 1967',
+        4: 'International 1909',
+        5: 'WGS 72',
+        6: 'Everest',
+        7: 'WGS 66',
+        8: 'GRS 1980',
+        9: 'Airy',
+        10: 'Modified Airy',
+        11: 'Modified Everest',
+        12: 'WGS 84',
+        13: 'Southeast Asia',
+        14: 'Australian National',
+        15: 'Krassovsky',
+        16: 'Hough',
+        17: 'Mercury 1960',
+        18: 'Modified Mercury 1968',
+        19: 'Sphere of Radius 6370997m',
+        20: 'Sphere of Radius 6371228m',
+        21: 'Sphere of Radius 6371007.181'
+}
