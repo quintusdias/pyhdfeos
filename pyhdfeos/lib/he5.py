@@ -361,6 +361,9 @@ def gdinqfields(gridid):
         List of numbertypes corresponding to the fields
     """
     nfields, strbufsize = gdnentries(gridid, HE5_HDFE_NENTDFLD)
+    if nfields == 0:
+        return [], None, None
+
     fieldlist_buffer = ffi.new("char[]", b'\0' * (strbufsize + 1))
     ranks = np.zeros(nfields, dtype=np.int32)
     rankp = ffi.cast("int *", ranks.ctypes.data)

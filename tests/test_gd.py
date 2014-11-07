@@ -1,8 +1,8 @@
 import os
+import pkg_resources as pkg
 import tempfile
 import unittest
 
-import matplotlib.pyplot as plt
 import numpy as np
 
 from pyhdfeos.lib import he4
@@ -21,6 +21,8 @@ class TestClass(unittest.TestCase):
         file = fullpath("TOMS-EP_L3-TOMSEPL3_2000m0101_v8.HDF")
         cls.gridfile = GridFile(file)
         cls.file = file
+        file = pkg.resource_filename(__name__, os.path.join('data', 'Grid.h5'))
+        cls.test_driver_file = file
 
     @classmethod
     def tearDownClass(self):
@@ -37,6 +39,10 @@ class TestClass(unittest.TestCase):
         """
         file = fullpath('TES-Aura_L3-CH4_r0000010410_F01_07.he5')
         gdf = GridFile(file)
+        self.assertTrue(True)
+
+    def test_sample_file(self):
+        gdf = GridFile(self.test_driver_file)
         self.assertTrue(True)
 
     def test_inqgrid(self):

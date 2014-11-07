@@ -338,6 +338,9 @@ def gdinqfields(gridid):
         If associated library routine fails.
     """
     nfields, strbufsize = gdnentries(gridid, HDFE_NENTFLD)
+    if nfields == 0:
+        return [], None, None
+
     fieldlist_buffer = ffi.new("char[]", b'\0' * (strbufsize + 1))
     rank_buffer = ffi.new("int[]", nfields)
     numbertype_buffer = ffi.new("int[]", nfields)
