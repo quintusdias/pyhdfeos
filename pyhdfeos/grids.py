@@ -94,6 +94,12 @@ class _Grid(object):
             msg += self._projection_longitude_of_central_meridian()
             msg += self._projection_latitude_of_projection_origin()
             msg += self._projection_false_easting_northing()
+        elif self.projcode == 6:
+            msg += "    Projection:  Polar Stereographic\n"
+            msg += self._projection_semi_major_semi_minor()
+            msg += self._projection_longitude_pole()
+            msg += self._projection_true_scale()
+            msg += self._projection_false_easting_northing()
         elif self.projcode == 11:
             msg += "    Projection:  Lambert Azimuthal\n"
             msg += self._projection_sphere()
@@ -115,6 +121,20 @@ class _Grid(object):
 
         
         return msg
+
+    def _projection_longitude_pole(self):
+        """
+        __str__ helper method for projections with longitude below pole of map
+        """
+        longpole = self.projparms[4] / 1e6
+        return "        Longitude below pole of map:  {0}\n".format(longpole)
+
+    def _projection_true_scale(self):
+        """
+        __str__ helper method for projections with latitude of true scale
+        """
+        truescale = self.projparms[5] / 1e6
+        return "        Latitude of true scale:  {0}\n".format(truescale)
 
     def _projection_sphere(self):
         """

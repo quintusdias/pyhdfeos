@@ -103,6 +103,24 @@ lambert_azimuthal_grid = """Grid:  MOD_Grid_Seaice_1km
         Ice_Surface_Temperature_Spatial_QA[YDim, XDim]:
     Grid Attributes:"""
 
+polar_stereographic_grid = """Grid:  PolarGrid
+    Shape:  (100, 100)
+    Dimensions:
+        Bands:  3
+    Upper Left (x,y):  [ 0.  0.]
+    Lower Right (x,y):  [ 0.  0.]
+    Projection:  Polar Stereographic
+        Semi-major axis(km):  6378.2064
+        Semi-minor axis(km):  6378.2064
+        Longitude below pole of map:  0.0
+        Latitude of true scale:  90.0
+        False Easting:  0.0
+        False Northing:  0.0
+    Fields:
+        Temperature[YDim, XDim]:
+        Pressure[YDim, XDim]:
+    Grid Attributes:"""
+
 sinusoidal_grid = """Grid:  MOD_Grid_Snow_500m
     Shape:  (2400, 2400)
     Dimensions:
