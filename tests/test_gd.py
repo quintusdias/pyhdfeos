@@ -35,7 +35,7 @@ class TestRead(unittest.TestCase):
         array-style indexing case of [...]
         """
         with GridFile(self.test_driver_gridfile4) as gdf:
-            actual = gdf.grids['UTMGrid'].variables['Vegetation'][:]
+            actual = gdf.grids['UTMGrid'].fields['Vegetation'][:]
 
         expected = np.zeros((200,120), dtype=np.float32)
         for j in range(200):
@@ -47,7 +47,7 @@ class TestRead(unittest.TestCase):
         array-style indexing case of [...]
         """
         with GridFile(self.test_driver_gridfile5) as gdf:
-            actual = gdf.grids['UTMGrid'].variables['Vegetation'][:]
+            actual = gdf.grids['UTMGrid'].fields['Vegetation'][:]
         
         expected = np.array([[10, 0], [0, 76]], dtype=np.float32)
         np.testing.assert_array_equal(actual[0:280:279, 0:180:179], expected)
@@ -57,7 +57,7 @@ class TestRead(unittest.TestCase):
         array-style indexing case of [:]
         """
         with GridFile(self.test_driver_gridfile4) as gdf:
-            actual = gdf.grids['UTMGrid'].variables['Vegetation'][:]
+            actual = gdf.grids['UTMGrid'].fields['Vegetation'][:]
 
         expected = np.zeros((200,120), dtype=np.float32)
         for j in range(200):
@@ -69,7 +69,7 @@ class TestRead(unittest.TestCase):
         array-style indexing case of [:]
         """
         with GridFile(self.test_driver_gridfile5) as gdf:
-            actual = gdf.grids['UTMGrid'].variables['Vegetation'][:]
+            actual = gdf.grids['UTMGrid'].fields['Vegetation'][:]
         
         expected = np.array([[10, 0], [0, 76]], dtype=np.float32)
         np.testing.assert_array_equal(actual[0:280:279, 0:180:179], expected)
@@ -79,7 +79,7 @@ class TestRead(unittest.TestCase):
         array-style indexing case of [:,:]
         """
         with GridFile(self.test_driver_gridfile4) as gdf:
-            actual = gdf.grids['UTMGrid'].variables['Vegetation'][:,:]
+            actual = gdf.grids['UTMGrid'].fields['Vegetation'][:,:]
 
         expected = np.zeros((200,120), dtype=np.float32)
         for j in range(200):
@@ -91,7 +91,7 @@ class TestRead(unittest.TestCase):
         array-style indexing case of [scalar int]
         """
         with GridFile(self.test_driver_gridfile4) as gdf:
-            actual = gdf.grids['UTMGrid'].variables['Vegetation'][1]
+            actual = gdf.grids['UTMGrid'].fields['Vegetation'][1]
 
         expected = np.ones(120, dtype=np.float32) * 11
         np.testing.assert_array_equal(actual, expected)
@@ -101,7 +101,7 @@ class TestRead(unittest.TestCase):
         array-style indexing case of [scalar int]
         """
         with GridFile(self.test_driver_gridfile5) as gdf:
-            actual = gdf.grids['UTMGrid'].variables['Vegetation'][1]
+            actual = gdf.grids['UTMGrid'].fields['Vegetation'][1]
 
         expected = np.ones(180, dtype=np.float32) * 11
         expected[120:180] = 0
@@ -112,7 +112,7 @@ class TestRead(unittest.TestCase):
         array-style indexing case of [r1;r2, c1:c2]
         """
         with GridFile(self.test_driver_gridfile4) as gdf:
-            actual = gdf.grids['UTMGrid'].variables['Vegetation'][3:5, 4:7]
+            actual = gdf.grids['UTMGrid'].fields['Vegetation'][3:5, 4:7]
 
         expected = np.zeros((2,3), dtype=np.float32)
         for j in range(2):
@@ -124,7 +124,7 @@ class TestRead(unittest.TestCase):
         array-style indexing case of [r1;r2, c1:c2]
         """
         with GridFile(self.test_driver_gridfile5) as gdf:
-            actual = gdf.grids['UTMGrid'].variables['Vegetation'][3:5, 4:7]
+            actual = gdf.grids['UTMGrid'].fields['Vegetation'][3:5, 4:7]
 
         expected = np.zeros((2,3), dtype=np.float32)
         for j in range(2):
@@ -136,7 +136,7 @@ class TestRead(unittest.TestCase):
         array-style indexing case of [scalar, ...]
         """
         with GridFile(self.test_driver_gridfile4) as gdf:
-            actual = gdf.grids['UTMGrid'].variables['Vegetation'][3, ...]
+            actual = gdf.grids['UTMGrid'].fields['Vegetation'][3, ...]
 
         expected = np.ones(120, dtype=np.float32) * 13
         np.testing.assert_array_equal(actual, expected)
@@ -146,7 +146,7 @@ class TestRead(unittest.TestCase):
         array-style indexing case of [scalar, :]
         """
         with GridFile(self.test_driver_gridfile4) as gdf:
-            actual = gdf.grids['UTMGrid'].variables['Vegetation'][3, :]
+            actual = gdf.grids['UTMGrid'].fields['Vegetation'][3, :]
 
         expected = np.ones(120, dtype=np.float32) * 13
         np.testing.assert_array_equal(actual, expected)
@@ -156,7 +156,7 @@ class TestRead(unittest.TestCase):
         array-style indexing case of [scalar, scalar]
         """
         with GridFile(self.test_driver_gridfile4) as gdf:
-            actual = gdf.grids['UTMGrid'].variables['Vegetation'][3, 4]
+            actual = gdf.grids['UTMGrid'].fields['Vegetation'][3, 4]
 
         expected = 13
         np.testing.assert_array_equal(actual, expected)
@@ -213,7 +213,7 @@ class TestClass(unittest.TestCase):
         array-style indexing case of [...]
         """
         with GridFile(self.test_driver_gridfile4) as gdf:
-            actual = gdf.grids['UTMGrid'].variables['Vegetation'][:]
+            actual = gdf.grids['UTMGrid'].fields['Vegetation'][:]
 
         expected = np.zeros((200,120), dtype=np.float32)
         for j in range(200):
@@ -225,7 +225,7 @@ class TestClass(unittest.TestCase):
         array-style indexing case of [:]
         """
         with GridFile(self.test_driver_gridfile4) as gdf:
-            actual = gdf.grids['UTMGrid'].variables['Vegetation'][:]
+            actual = gdf.grids['UTMGrid'].fields['Vegetation'][:]
 
         expected = np.zeros((200,120), dtype=np.float32)
         for j in range(200):
@@ -237,7 +237,7 @@ class TestClass(unittest.TestCase):
         array-style indexing case of [:,:]
         """
         with GridFile(self.test_driver_gridfile4) as gdf:
-            actual = gdf.grids['UTMGrid'].variables['Vegetation'][:,:]
+            actual = gdf.grids['UTMGrid'].fields['Vegetation'][:,:]
 
         expected = np.zeros((200,120), dtype=np.float32)
         for j in range(200):
@@ -249,7 +249,7 @@ class TestClass(unittest.TestCase):
         array-style indexing case of [scalar int]
         """
         with GridFile(self.test_driver_gridfile4) as gdf:
-            actual = gdf.grids['UTMGrid'].variables['Vegetation'][1]
+            actual = gdf.grids['UTMGrid'].fields['Vegetation'][1]
 
         expected = np.ones(120, dtype=np.float32) * 11
         np.testing.assert_array_equal(actual, expected)
@@ -259,7 +259,7 @@ class TestClass(unittest.TestCase):
         array-style indexing case of [r1;r2, c1:c2]
         """
         with GridFile(self.test_driver_gridfile4) as gdf:
-            actual = gdf.grids['UTMGrid'].variables['Vegetation'][3:5, 4:7]
+            actual = gdf.grids['UTMGrid'].fields['Vegetation'][3:5, 4:7]
 
         expected = np.zeros((2,3), dtype=np.float32)
         for j in range(2):
@@ -271,7 +271,7 @@ class TestClass(unittest.TestCase):
         array-style indexing case of [scalar, ...]
         """
         with GridFile(self.test_driver_gridfile4) as gdf:
-            actual = gdf.grids['UTMGrid'].variables['Vegetation'][3, ...]
+            actual = gdf.grids['UTMGrid'].fields['Vegetation'][3, ...]
 
         expected = np.ones(120, dtype=np.float32) * 13
         np.testing.assert_array_equal(actual, expected)
@@ -281,7 +281,7 @@ class TestClass(unittest.TestCase):
         array-style indexing case of [scalar, :]
         """
         with GridFile(self.test_driver_gridfile4) as gdf:
-            actual = gdf.grids['UTMGrid'].variables['Vegetation'][3, :]
+            actual = gdf.grids['UTMGrid'].fields['Vegetation'][3, :]
 
         expected = np.ones(120, dtype=np.float32) * 13
         np.testing.assert_array_equal(actual, expected)
@@ -291,7 +291,7 @@ class TestClass(unittest.TestCase):
         array-style indexing case of [scalar, scalar]
         """
         with GridFile(self.test_driver_gridfile4) as gdf:
-            actual = gdf.grids['UTMGrid'].variables['Vegetation'][3, 4]
+            actual = gdf.grids['UTMGrid'].fields['Vegetation'][3, 4]
 
         expected = 13
         np.testing.assert_array_equal(actual, expected)

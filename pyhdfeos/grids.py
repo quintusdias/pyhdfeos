@@ -152,11 +152,11 @@ class _Grid(object):
         self.origincode = self._he.gdorigininfo(self.gridid)
         self.pixregcode = self._he.gdpixreginfo(self.gridid)
 
-        # collect the fieldnames (netcdf calls these "variables"
+        # collect the fieldnames
         self._fields, _, _ = self._he.gdinqfields(self.gridid)
-        self.variables = collections.OrderedDict()
+        self.fields = collections.OrderedDict()
         for fieldname in self._fields:
-            self.variables[fieldname] = _GridVariable(self.gridid,
+            self.fields[fieldname] = _GridVariable(self.gridid,
                                                       fieldname,
                                                       self._he)
 
@@ -209,8 +209,8 @@ class _Grid(object):
             msg += self._projection_false_easting_northing()
 
         msg += "    Fields:\n"
-        for field in self.variables.keys():
-            msg += textwrap.indent(str(self.variables[field]), ' ' * 8)
+        for field in self.fields.keys():
+            msg += textwrap.indent(str(self.fields[field]), ' ' * 8)
 
         msg += "    Grid Attributes:\n"
         for attr in self.attrs.keys():
