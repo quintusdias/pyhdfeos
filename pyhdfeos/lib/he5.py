@@ -292,8 +292,8 @@ def gdgridinfo(grid_id):
 
     return shape, upleft, lowright
 
-def ij2ll(projcode, zonecode, projparm, spherecode, xdimsize, ydimsize, upleft,
-          lowright, row, col, pixcen, pixcnr):
+def gdij2ll(projcode, zonecode, projparm, spherecode, xdimsize, ydimsize,
+            upleft, lowright, row, col, pixcen, pixcnr):
     """Convert coordinates (i, j) to (longitude, latitude).
 
     This function wraps the HDF-EOS5 HE5_GDij2ll library function.
@@ -321,15 +321,19 @@ def ij2ll(projcode, zonecode, projparm, spherecode, xdimsize, ydimsize, upleft,
     longitude, latitude : ndarray
         Longitude and latitude in decimal degrees.
     """
+    # This might be wrong on 32-bit machines.
+    _rows = rows.astype(np.int64)
+    _cols = cols.astype(np.int64)
+
     longitude = np.zeros(col.shape, dtype=np.float64)
     latitude = np.zeros(col.shape, dtype=np.float64)
-    upleftp = ffi.cast("float64 *", upleft.ctypes.data)
-    lowrightp = ffi.cast("float64 *", lowright.ctypes.data)
-    projparmp = ffi.cast("float64 *", projparm.ctypes.data)
-    colp = ffi.cast("int32 *", col.ctypes.data)
-    rowp = ffi.cast("int32 *", row.ctypes.data)
-    longitudep = ffi.cast("float64 *", longitude.ctypes.data)
-    latitudep = ffi.cast("float64 *", latitude.ctypes.data)
+    upleftp = ffi.cast("double *", upleft.ctypes.data)
+    lowrightp = ffi.cast("double *", lowright.ctypes.data)
+    projparmp = ffi.cast("double *", projparm.ctypes.data)
+    colp = ffi.cast("long *", col.ctypes.data)
+    rowp = ffi.cast("long *", row.ctypes.data)
+    longitudep = ffi.cast("double *", longitude.ctypes.data)
+    latitudep = ffi.cast("double *", latitude.ctypes.data)
     status = _lib.HE5_GDij2ll(projcode, zonecode, projparmp, spherecode,
                               xdimsize, ydimsize, upleftp, lowrightp, col.size,
                               rowp, colp, longitudep, latitudep, pixcen, pixcnr)

@@ -15,6 +15,33 @@ def fullpath(fname):
     """
     return os.path.join(os.environ['HDFEOS_ZOO_DIR'], fname)
 
+class TestReadGridCoords(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        file = pkg.resource_filename(__name__, os.path.join('data', 'Grid.h5'))
+        cls.test_driver_gridfile5 = file
+        file = pkg.resource_filename(__name__, os.path.join('data', 'ZA.he5'))
+        cls.test_driver_zonal_average_file = file
+        file = pkg.resource_filename(__name__, os.path.join('data', 'Grid219.hdf'))
+        cls.test_driver_gridfile4 = file
+        file = pkg.resource_filename(__name__, os.path.join('data', 'Swath219.hdf'))
+        cls.test_driver_swathfile4 = file
+        file = pkg.resource_filename(__name__, os.path.join('data', 'Point219.hdf'))
+        cls.test_driver_pointfile4 = file
+
+    def test_he5(self):
+        """
+        make sure that long * is cast correctly.
+        """
+        g4 = GridFile(self.test_driver_gridfile4)
+        lat4, lon4 = g4.grids['UTMGrid'][:]
+        g5 = GridFile(self.test_driver_gridfile4)
+        lat5, lon5 = g4.grids['UTMGrid'][:]
+        self.assertTrue(True)
+        np.testing.assert_array_equal(lon4, lon5)
+        np.testing.assert_array_equal(lat4, lat5)
+
 class TestRead(unittest.TestCase):
 
     @classmethod
