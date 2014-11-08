@@ -258,6 +258,7 @@ def gdfieldinfo(grid_id, fieldname):
         list of dimensions
     """
     _, strbufsize = gdnentries(grid_id, HDFE_NENTDIM)
+    strbufsize = max(1000, strbufsize)
     dimlist_buffer = ffi.new("char[]", b'\0' * (strbufsize + 1))
 
     rankp = ffi.new("int32 *")

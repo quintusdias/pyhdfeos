@@ -43,6 +43,11 @@ ffi.cdef("""
         herr_t HE5_GDprojinfo(hid_t gridID, int *projcode, int *zonecode,
                               int *spherecode, double projparm[]);
         herr_t HE5_GDreadattr(hid_t gridID, const char* attrname, void *buffer);
+        herr_t HE5_GDreadfield(hid_t gridid, const char* fieldname,
+                               const hsize_t start[],
+                               const hsize_t stride[],
+                               const hsize_t edge[],
+                               void *buffer);
         herr_t HE5_GDreadlocattr(hid_t gridID, const char *fieldname,
                                  const char *attrname, void *databuf);
         /*int HE5_EHHEisHE5(char *filename);*/
@@ -316,12 +321,14 @@ def gdinqattrs(gridid):
     attrlist : list
         list of attributes defined for the grid
     """
-    strbufsize = ffi.new("long *")
-    nattrs = _lib.HE5_GDinqattrs(gridid, ffi.NULL, strbufsize)
+    strbufsizep = ffi.new("long *")
+    nattrs = _lib.HE5_GDinqattrs(gridid, ffi.NULL, strbufsizep)
     if nattrs == 0:
         return []
-    attr_buffer = ffi.new("char[]", b'\0' * (strbufsize[0] + 1))
-    nattrs = _lib.HE5_GDinqattrs(gridid, attr_buffer, strbufsize)
+    strbufsize = strbufsizep[0]
+    strbufsize = max(strbufsize, 1000)
+    attr_buffer = ffi.new("char[]", b'\0' * (strbufsize + 1))
+    nattrs = _lib.HE5_GDinqattrs(gridid, attr_buffer, strbufsizep)
     _handle_error(nattrs)
     attr_list = ffi.string(attr_buffer).decode('ascii').split(',')
     return attr_list
@@ -401,11 +408,11 @@ def gdinqgrid(filename):
     gridlist : list
         List of grids defined in HDF-EOS file.
     """
-    strbufsize = ffi.new("long *")
-    ngrids = _lib.HE5_GDinqgrid(filename.encode(), ffi.NULL, strbufsize)
+    strbufsizep = ffi.new("long *")
+    ngrids = _lib.HE5_GDinqgrid(filename.encode(), ffi.NULL, strbufsizep)
     if ngrids == 0:
         return []
-    gridbuffer = ffi.new("char[]", b'\0' * (strbufsize[0] + 1))
+    gridbuffer = ffi.new("char[]", b'\0' * (strbufsizep[0] + 1))
     ngrids = _lib.HE5_GDinqgrid(filename.encode(), gridbuffer, ffi.NULL)
     _handle_error(ngrids)
     gridlist = ffi.string(gridbuffer).decode('ascii').split(',')
@@ -610,7 +617,8 @@ def gdreadattr(gridid, attrname):
     """
     [ntype, count] = gdattrinfo(gridid, attrname)
     if ntype == 57:
-        buffer = ffi.new("char[]", b'\0' * (count + 1))
+        #buffer = ffi.new("char[]", b'\0' * (count + 1))
+        buffer = ffi.new("char[]", b'\0' * (1000 + 1))
         status = _lib.HE5_GDreadattr(gridid, attrname.encode(), buffer)
         _handle_error(status)
         return ffi.string(buffer).decode('ascii')
@@ -648,8 +656,10 @@ def gdreadlocattr(gridid, fieldname, attrname):
         grid field attribute value
     """
     [ntype, count] = gdlocattrinfo(gridid, fieldname, attrname)
+    #print(ntype, count, number_type_dict[ntype],  attrname, cast_string_dict[ntype])
     if ntype == 57:
-        buffer = ffi.new("char[]", b'\0' * (count + 1))
+        #buffer = ffi.new("char[]", b'\0' * (count + 1))
+        buffer = ffi.new("char[]", b'\0' * (1000 + 1))
         status = _lib.HE5_GDreadlocattr(gridid,
                                         fieldname.encode(), attrname.encode(),
                                         buffer)
@@ -693,18 +703,19 @@ def gdreadfield(gridid, fieldname, start, stride, edge):
     data : ndarray
         data read from field
     """
-    shape, ntype, _  = gdfieldinfo(gridid, fieldname)
-    buffer = np.zeros(tuple(edge), dtype=number_type_dict[ntype])
+    _, ntype, _, _  = gdfieldinfo(gridid, fieldname)
+    shape = tuple([int(x) for x in edge])
+    buffer = np.zeros(shape, dtype=number_type_dict[ntype])
     pbuffer = ffi.cast(cast_string_dict[ntype], buffer.ctypes.data)
 
-    startp = ffi.new(len(shape), "hsize_t *")
-    stridep = ffi.new(len(shape), "hsize_t *")
-    edgep = ffi.new(len(shape), "hsize_t *")
+    startp = ffi.new("hsize_t []", len(shape))
+    stridep = ffi.new("hsize_t []", len(shape))
+    edgep = ffi.new("hsize_t []", len(shape))
 
     for j in range(len(shape)):
-        startp[j] = start[j]
-        stridep[j] = stride[j]
-        edgep[j] = edge[j]
+        startp[j] = int(start[j])
+        stridep[j] = int(stride[j])
+        edgep[j] = int(edge[j])
 
     status = _lib.HE5_GDreadfield(gridid, fieldname.encode(), startp, stridep,
                                   edgep, pbuffer)

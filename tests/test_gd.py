@@ -3,6 +3,7 @@ import pkg_resources as pkg
 import tempfile
 import unittest
 
+import h5py
 import numpy as np
 
 from pyhdfeos.lib import he4
@@ -13,6 +14,152 @@ def fullpath(fname):
     Short cut for creating the full path.
     """
     return os.path.join(os.environ['HDFEOS_ZOO_DIR'], fname)
+
+class TestRead(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        file = pkg.resource_filename(__name__, os.path.join('data', 'Grid.h5'))
+        cls.test_driver_gridfile5 = file
+        file = pkg.resource_filename(__name__, os.path.join('data', 'ZA.he5'))
+        cls.test_driver_zonal_average_file = file
+        file = pkg.resource_filename(__name__, os.path.join('data', 'Grid219.hdf'))
+        cls.test_driver_gridfile4 = file
+        file = pkg.resource_filename(__name__, os.path.join('data', 'Swath219.hdf'))
+        cls.test_driver_swathfile4 = file
+        file = pkg.resource_filename(__name__, os.path.join('data', 'Point219.hdf'))
+        cls.test_driver_pointfile4 = file
+
+    def test_read_he4_2d_single_ellipsis(self):
+        """
+        array-style indexing case of [...]
+        """
+        with GridFile(self.test_driver_gridfile4) as gdf:
+            actual = gdf.grids['UTMGrid'].variables['Vegetation'][:]
+
+        expected = np.zeros((200,120), dtype=np.float32)
+        for j in range(200):
+            expected[j] = j + 10
+        np.testing.assert_array_equal(actual, expected)
+
+    def test_read_he5_2d_single_ellipsis(self):
+        """
+        array-style indexing case of [...]
+        """
+        with GridFile(self.test_driver_gridfile5) as gdf:
+            actual = gdf.grids['UTMGrid'].variables['Vegetation'][:]
+        
+        expected = np.array([[10, 0], [0, 76]], dtype=np.float32)
+        np.testing.assert_array_equal(actual[0:280:279, 0:180:179], expected)
+
+    def test_read_he4_2d_full(self):
+        """
+        array-style indexing case of [:]
+        """
+        with GridFile(self.test_driver_gridfile4) as gdf:
+            actual = gdf.grids['UTMGrid'].variables['Vegetation'][:]
+
+        expected = np.zeros((200,120), dtype=np.float32)
+        for j in range(200):
+            expected[j] = j + 10
+        np.testing.assert_array_equal(actual, expected)
+
+    def test_read_he5_2d_full(self):
+        """
+        array-style indexing case of [:]
+        """
+        with GridFile(self.test_driver_gridfile5) as gdf:
+            actual = gdf.grids['UTMGrid'].variables['Vegetation'][:]
+        
+        expected = np.array([[10, 0], [0, 76]], dtype=np.float32)
+        np.testing.assert_array_equal(actual[0:280:279, 0:180:179], expected)
+
+    def test_read_he4_2d_full_full(self):
+        """
+        array-style indexing case of [:,:]
+        """
+        with GridFile(self.test_driver_gridfile4) as gdf:
+            actual = gdf.grids['UTMGrid'].variables['Vegetation'][:,:]
+
+        expected = np.zeros((200,120), dtype=np.float32)
+        for j in range(200):
+            expected[j] = j + 10
+        np.testing.assert_array_equal(actual, expected)
+
+    def test_read_he4_2d_row(self):
+        """
+        array-style indexing case of [scalar int]
+        """
+        with GridFile(self.test_driver_gridfile4) as gdf:
+            actual = gdf.grids['UTMGrid'].variables['Vegetation'][1]
+
+        expected = np.ones(120, dtype=np.float32) * 11
+        np.testing.assert_array_equal(actual, expected)
+
+    def test_read_he5_2d_row(self):
+        """
+        array-style indexing case of [scalar int]
+        """
+        with GridFile(self.test_driver_gridfile5) as gdf:
+            actual = gdf.grids['UTMGrid'].variables['Vegetation'][1]
+
+        expected = np.ones(180, dtype=np.float32) * 11
+        expected[120:180] = 0
+        np.testing.assert_array_equal(actual, expected)
+
+    def test_read_he4_2d_slice_slice(self):
+        """
+        array-style indexing case of [r1;r2, c1:c2]
+        """
+        with GridFile(self.test_driver_gridfile4) as gdf:
+            actual = gdf.grids['UTMGrid'].variables['Vegetation'][3:5, 4:7]
+
+        expected = np.zeros((2,3), dtype=np.float32)
+        for j in range(2):
+            expected[j] = j + 13
+        np.testing.assert_array_equal(actual, expected)
+
+    def test_read_he5_2d_slice_slice(self):
+        """
+        array-style indexing case of [r1;r2, c1:c2]
+        """
+        with GridFile(self.test_driver_gridfile5) as gdf:
+            actual = gdf.grids['UTMGrid'].variables['Vegetation'][3:5, 4:7]
+
+        expected = np.zeros((2,3), dtype=np.float32)
+        for j in range(2):
+            expected[j] = j + 13
+        np.testing.assert_array_equal(actual, expected)
+
+    def test_read_he4_2d_int_ellipsis(self):
+        """
+        array-style indexing case of [scalar, ...]
+        """
+        with GridFile(self.test_driver_gridfile4) as gdf:
+            actual = gdf.grids['UTMGrid'].variables['Vegetation'][3, ...]
+
+        expected = np.ones(120, dtype=np.float32) * 13
+        np.testing.assert_array_equal(actual, expected)
+
+    def test_read_he4_2d_int_slice(self):
+        """
+        array-style indexing case of [scalar, :]
+        """
+        with GridFile(self.test_driver_gridfile4) as gdf:
+            actual = gdf.grids['UTMGrid'].variables['Vegetation'][3, :]
+
+        expected = np.ones(120, dtype=np.float32) * 13
+        np.testing.assert_array_equal(actual, expected)
+
+    def test_read_he4_2d_int_int(self):
+        """
+        array-style indexing case of [scalar, scalar]
+        """
+        with GridFile(self.test_driver_gridfile4) as gdf:
+            actual = gdf.grids['UTMGrid'].variables['Vegetation'][3, 4]
+
+        expected = 13
+        np.testing.assert_array_equal(actual, expected)
 
 class TestClass(unittest.TestCase):
 
@@ -159,8 +306,9 @@ class TestClass(unittest.TestCase):
 
     def test_aura_datatype(self):
         file = fullpath('OMI-Aura_L2G-OMCLDO2G_2007m0129_v002-2007m0130t174603.he5')
-        with GridFile(file) as gdf:
-            pass
+        gdf = GridFile(file)
+        #with GridFile(file) as gdf:
+        #    pass
         self.assertTrue(True)
 
     def test_inqgrid(self):
