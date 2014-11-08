@@ -1,4 +1,5 @@
 import os
+import pkg_resources as pkg
 import sys
 import tempfile
 import unittest
@@ -10,8 +11,8 @@ else:
     from io import StringIO
     from unittest.mock import patch
 
+import pyhdfeos
 from pyhdfeos import GridFile
-from pyhdfeos import core
 
 from . import fixtures
 
@@ -22,6 +23,11 @@ def fullpath(fname):
     return os.path.join(os.environ['HDFEOS_ZOO_DIR'], fname)
 
 class TestPrinting(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        file = pkg.resource_filename(__name__, os.path.join('data', 'Grid.h5'))
+        cls.test_driver_file = file
 
     def setUp(self):
         self.file = fullpath("TOMS-EP_L3-TOMSEPL3_2000m0101_v8.HDF")
@@ -34,6 +40,14 @@ class TestPrinting(unittest.TestCase):
 
         self.assertEqual(actual, fixtures.geographic_grid)
 
+    def test_geo_grid_console_script(self):
+        with patch('sys.stdout', new=StringIO()) as fake_out:
+            with patch('sys.argv', new=['', self.file]):
+                pyhdfeos.command_line.dump_metadata()
+                actual = fake_out.getvalue().strip()
+
+        self.assertEqual(actual, fixtures.geographic_grid)
+
     def test_geo_grid_he5(self):
         hdffile = fullpath('GSSTFYC.3.Year.1988_2008.he5')
         with GridFile(hdffile) as gdf:
@@ -42,6 +56,24 @@ class TestPrinting(unittest.TestCase):
                 actual = fake_out.getvalue().strip()
 
         expected = fixtures.geographic_grids_he5
+        self.assertEqual(actual, expected)
+
+    def test_utm_grid_he5(self):
+        with GridFile(self.test_driver_file) as gdf:
+            with patch('sys.stdout', new=StringIO()) as fake_out:
+                print(gdf.grids['UTMGrid'])
+                actual = fake_out.getvalue().strip()
+
+        expected = fixtures.utm_grid
+        self.assertEqual(actual, expected)
+
+    def test_ps_grid_he5(self):
+        with GridFile(self.test_driver_file) as gdf:
+            with patch('sys.stdout', new=StringIO()) as fake_out:
+                print(gdf.grids['PolarGrid'])
+                actual = fake_out.getvalue().strip()
+
+        expected = fixtures.polar_stereographic_grid
         self.assertEqual(actual, expected)
 
     def test_lamaz_grid(self):

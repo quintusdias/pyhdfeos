@@ -11,10 +11,14 @@ kwargs = {'name': 'pyhdfeos',
           'author': 'John Evans',
           'author_email': 'john.g.evans.ne@gmail.com',
           'url': 'http://hdfeos.org',
-          'packages': ['pyhdfeos'],
-          'version': '0.1.0',
+          'packages': ['pyhdfeos', 'pyhdfeos.lib'],
+          'version': '0.1.0rc1',
           'zip_safe':  False,
-          'ext_modules': [pyhdfeos.gd.ffi.verifier.get_extension()],
+          'ext_modules': [pyhdfeos.lib.he4.ffi.verifier.get_extension(),
+                          pyhdfeos.lib.he5.ffi.verifier.get_extension()],
+          'entry_points': {
+              'console_scripts': ['eosdump=pyhdfeos.command_line:dump_metadata'],
+              },
           'license': 'MIT'}
 
 clssfrs = ["Programming Language :: Python",

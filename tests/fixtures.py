@@ -6,6 +6,7 @@ Grid:  TOMS Level 3
         YDim:  180
     Upper Left (x,y):  [ -1.80000000e+08   9.00000000e+07]
     Lower Right (x,y):  [  1.80000000e+08  -9.00000000e+07]
+    Sphere:  Clarke 1866
     Projection:  Geographic
     Fields:
         Ozone[YDim, XDim]:
@@ -23,12 +24,25 @@ Grid:  NCEP
         Ydim:  720
     Upper Left (x,y):  [ -1.80000000e+08  -9.00000000e+07]
     Lower Right (x,y):  [  1.80000000e+08   9.00000000e+07]
+    Sphere:  Clarke 1866
     Projection:  Geographic
     Fields:
         SST[YDim, XDim]:
+            _FillValue:  -999.0 ;
+            LongName:  sea surface skin temperature ;
+            units:  C ;
         Psea_level[YDim, XDim]:
+            _FillValue:  -999.0 ;
+            LongName:  sea level pressure ;
+            units:  hPa ;
         Tair_2m[YDim, XDim]:
+            _FillValue:  -999.0 ;
+            LongName:  2m air temperature ;
+            units:  C ;
         Qsat[YDim, XDim]:
+            _FillValue:  -999.0 ;
+            LongName:  sea surface saturation humidity ;
+            units:  g/kg ;
     Grid Attributes:
 Grid:  SET1
     Shape:  (720, 1440)
@@ -37,16 +51,41 @@ Grid:  SET1
         Ydim:  720
     Upper Left (x,y):  [ -1.80000000e+08  -9.00000000e+07]
     Lower Right (x,y):  [  1.80000000e+08   9.00000000e+07]
+    Sphere:  Clarke 1866
     Projection:  Geographic
     Fields:
         E[YDim, XDim]:
+            _FillValue:  -999.0 ;
+            long_name:  latent heat flux ;
+            units:  W/m^^2 ;
         STu[YDim, XDim]:
+            _FillValue:  -999.0 ;
+            long_name:  zonal wind stress ;
+            units:  N/m^^2 ;
         STv[YDim, XDim]:
+            _FillValue:  -999.0 ;
+            long_name:  meridional wind stress ;
+            units:  N/m^^2 ;
         H[YDim, XDim]:
+            _FillValue:  -999.0 ;
+            long_name:  sensible heat flux ;
+            units:  W/m^^2 ;
         Qair[YDim, XDim]:
+            _FillValue:  -999.0 ;
+            long_name:  surface air (~10-m) specific humidity ;
+            units:  g/kg ;
         U[YDim, XDim]:
+            _FillValue:  -999.0 ;
+            long_name:  10-m wind speed ;
+            units:  m/s ;
         DQ[YDim, XDim]:
+            _FillValue:  -999.0 ;
+            long_name:  sea-air humidity difference ;
+            units:  g/kg ;
         Tot_Precip_Water[YDim, XDim]:
+            _FillValue:  -999.0 ;
+            long_name:  total precipitable water ;
+            units:  g/cm^^2 ;
     Grid Attributes:"""
 
 lambert_azimuthal_grid = """Grid:  MOD_Grid_Seaice_1km
@@ -54,6 +93,7 @@ lambert_azimuthal_grid = """Grid:  MOD_Grid_Seaice_1km
     Dimensions:
     Upper Left (x,y):  [ -476784.3255  2383921.6275]
     Lower Right (x,y):  [  476784.3255  1430352.9765]
+    Sphere:  Unspecified
     Projection:  Lambert Azimuthal
         Radius of reference sphere(km):  6371.228
         Center Longitude:  0.0
@@ -67,11 +107,46 @@ lambert_azimuthal_grid = """Grid:  MOD_Grid_Seaice_1km
         Ice_Surface_Temperature_Spatial_QA[YDim, XDim]:
     Grid Attributes:"""
 
+utm_grid = """Grid:  UTMGrid
+    Shape:  (200, 120)
+    Dimensions:
+        Time:  10
+        ExtDim:  60
+        Unlim:  18446744073709551615
+    Upper Left (x,y):  [  210584.50041  3322395.95445]
+    Lower Right (x,y):  [  813931.10959  2214162.53278]
+    Sphere:  Clarke 1866
+    Projection:  UTM
+        UTM zone:  40
+    Fields:
+        Vegetation[YDim, XDim]:
+    Grid Attributes:"""
+
+polar_stereographic_grid = """Grid:  PolarGrid
+    Shape:  (100, 100)
+    Dimensions:
+        Bands:  3
+    Upper Left (x,y):  [ 0.  0.]
+    Lower Right (x,y):  [ 0.  0.]
+    Sphere:  International 1967
+    Projection:  Polar Stereographic
+        Semi-major axis(km):  6378.2064
+        Semi-minor axis(km):  6378.2064
+        Longitude below pole of map:  0.0
+        Latitude of true scale:  90.0
+        False Easting:  0.0
+        False Northing:  0.0
+    Fields:
+        Temperature[YDim, XDim]:
+        Pressure[YDim, XDim]:
+    Grid Attributes:"""
+
 sinusoidal_grid = """Grid:  MOD_Grid_Snow_500m
     Shape:  (2400, 2400)
     Dimensions:
     Upper Left (x,y):  [-20015109.354      1111950.519667]
     Lower Right (x,y):  [-18903158.834333        -0.      ]
+    Sphere:  Unspecified
     Projection:  Sinusoidal
         Radius of reference sphere(km):  6371.007181
         Longitude of Central Meridian:  0.0
@@ -89,6 +164,7 @@ albers_grid = """Grid:  WELD_GRID
     Dimensions:
     Upper Left (x,y):  [-2415600.  2414800.]
     Lower Right (x,y):  [-2265600.  2264800.]
+    Sphere:  WGS 84
     Projection:  Albers Conical Equal Area
         Semi-major axis(km):  6378.2064
         Semi-minor axis(km):  6378.2064

@@ -1,5 +1,12 @@
+========
+Overview
+========
+
+pyhdfeos is a wrapper for the HDF-EOS and HDF-EOS5 libraries.  
+
+
 ============
-INSTALLATION
+Installation
 ============
 
 Prerequisites

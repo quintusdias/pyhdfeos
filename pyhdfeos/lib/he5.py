@@ -11,6 +11,8 @@ ffi.cdef("""
         typedef int herr_t;
 
         hid_t  HE5_GDattach(hid_t fid, char *gridname);
+        long   HE5_GDattrinfo(hid_t gridID, const char *attrname,
+                                 hid_t *ntype, hsize_t *count);
         herr_t HE5_GDclose(hid_t fid);
         herr_t HE5_GDdetach(hid_t gridid);
         herr_t HE5_GDfieldinfo(hid_t gridID, const char *fieldname, int *rank,
@@ -30,12 +32,24 @@ ffi.cdef("""
                                hid_t ntype[]);
         long   HE5_GDinqgrid(const char *filename, char *gridlist,
                              long *strbufsize);
+        long   HE5_GDinqlocattrs(hid_t gridID, char *fieldname, char *attrnames,
+                                 long *strbufsize);
+        long   HE5_GDlocattrinfo(hid_t gridID, char *fieldname, char *attrname,
+                                 hid_t *ntype, hsize_t *count);
         long   HE5_GDnentries(hid_t gridID, int entrycode, long *strbufsize);
         hid_t  HE5_GDopen(const char *filename, uintn access);
         herr_t HE5_GDorigininfo(hid_t gridID, int *origincode);
         herr_t HE5_GDpixreginfo(hid_t gridID, int *pixregcode);
         herr_t HE5_GDprojinfo(hid_t gridID, int *projcode, int *zonecode,
                               int *spherecode, double projparm[]);
+        herr_t HE5_GDreadattr(hid_t gridID, const char* attrname, void *buffer);
+        herr_t HE5_GDreadfield(hid_t gridid, const char* fieldname,
+                               const hsize_t start[],
+                               const hsize_t stride[],
+                               const hsize_t edge[],
+                               void *buffer);
+        herr_t HE5_GDreadlocattr(hid_t gridID, const char *fieldname,
+                                 const char *attrname, void *databuf);
         /*int HE5_EHHEisHE5(char *filename);*/
         """)
 
@@ -76,7 +90,22 @@ number_type_dict = {0: np.int32,
                     8: np.int64,
                     9: np.uint64,
                     10: np.float32,
-                    11: np.float64
+                    11: np.float64,
+                    57: np.str
+        }
+
+    
+cast_string_dict = {0: "int *",
+                    1: "unsigned int *",
+                    2: "short int *",
+                    3: "unsigned short int *",
+                    4: "signed char *",
+                    5: "unsigned char *",
+                    8: "long long int *",
+                    9: "unsigned long long int *",
+                    10: "float *",
+                    11: "double *",
+                    57: "char *"
         }
 
     
@@ -102,6 +131,31 @@ def gdattach(gdfid, gridname):
         grid identifier
     """
     return _lib.HE5_GDattach(gdfid, gridname.encode())
+
+def gdattrinfo(grid_id, attrname):
+    """return information about a grid attribute
+
+    Parameters
+    ----------
+    grid_id : int
+        grid identifier
+    attrname : str
+        attribute name
+
+    Returns
+    -------
+    ntype : int
+        number type of attribute, see Appendix A in "HDF-EOS Interface Based
+        on HDF5, Volume 2: Function Reference Guide"
+    count : int
+        number of attribute elements
+    """
+    ntypep = ffi.new("hid_t *")
+    countp = ffi.new("hsize_t *")
+    status = _lib.HE5_GDattrinfo(grid_id, attrname.encode(), ntypep, countp)
+    _handle_error(status)
+
+    return ntypep[0], countp[0]
 
 def gdclose(fid):
     """Closes the HDF-EOS grid file.
@@ -146,7 +200,7 @@ def gdfieldinfo(grid_id, fieldname):
     shape : tuple
         size of the field
     ntype : type
-        numpy datatype of the field
+        datatype of the field
     dimlist, maxdimlist : list
         list of dimensions
     """
@@ -170,12 +224,10 @@ def gdfieldinfo(grid_id, fieldname):
     for j in range(rankp[0]):
         shape.append(dimsp[j])
 
-    ntype = number_type_dict[ntypep[0]]
-
     dimlist = ffi.string(dimlist_buffer).decode('ascii').split(',')
     maxdimlist = ffi.string(max_dimlist_buffer).decode('ascii').split(',')
 
-    return tuple(shape), ntype, dimlist, maxdimlist
+    return tuple(shape), ntypep[0], dimlist, maxdimlist
 
 def gdgridinfo(grid_id):
     """Return information about a grid structure.
@@ -269,12 +321,14 @@ def gdinqattrs(gridid):
     attrlist : list
         list of attributes defined for the grid
     """
-    strbufsize = ffi.new("long *")
-    nattrs = _lib.HE5_GDinqattrs(gridid, ffi.NULL, strbufsize)
+    strbufsizep = ffi.new("long *")
+    nattrs = _lib.HE5_GDinqattrs(gridid, ffi.NULL, strbufsizep)
     if nattrs == 0:
         return []
-    attr_buffer = ffi.new("char[]", b'\0' * (strbufsize[0] + 1))
-    nattrs = _lib.HE5_GDinqattrs(gridid, attr_buffer, strbufsize)
+    strbufsize = strbufsizep[0]
+    strbufsize = max(strbufsize, 1000)
+    attr_buffer = ffi.new("char[]", b'\0' * (strbufsize + 1))
+    nattrs = _lib.HE5_GDinqattrs(gridid, attr_buffer, strbufsizep)
     _handle_error(nattrs)
     attr_list = ffi.string(attr_buffer).decode('ascii').split(',')
     return attr_list
@@ -325,6 +379,9 @@ def gdinqfields(gridid):
         List of numbertypes corresponding to the fields
     """
     nfields, strbufsize = gdnentries(gridid, HE5_HDFE_NENTDFLD)
+    if nfields == 0:
+        return [], None, None
+
     fieldlist_buffer = ffi.new("char[]", b'\0' * (strbufsize + 1))
     ranks = np.zeros(nfields, dtype=np.int32)
     rankp = ffi.cast("int *", ranks.ctypes.data)
@@ -351,13 +408,72 @@ def gdinqgrid(filename):
     gridlist : list
         List of grids defined in HDF-EOS file.
     """
-    strbufsize = ffi.new("long *")
-    ngrids = _lib.HE5_GDinqgrid(filename.encode(), ffi.NULL, strbufsize)
-    gridbuffer = ffi.new("char[]", b'\0' * (strbufsize[0] + 1))
+    strbufsizep = ffi.new("long *")
+    ngrids = _lib.HE5_GDinqgrid(filename.encode(), ffi.NULL, strbufsizep)
+    if ngrids == 0:
+        return []
+    gridbuffer = ffi.new("char[]", b'\0' * (strbufsizep[0] + 1))
     ngrids = _lib.HE5_GDinqgrid(filename.encode(), gridbuffer, ffi.NULL)
     _handle_error(ngrids)
     gridlist = ffi.string(gridbuffer).decode('ascii').split(',')
     return gridlist
+
+def gdinqlocattrs(gridid, fieldname):
+    """Retrieve information about grid field attributes.
+
+    This function wraps the HDF-EOS5 HE5_GDinqlocattrs library function.
+
+    Parameters
+    ----------
+    grid_id : int
+        grid identifier
+    fieldname : str
+        retrieve attribute names for this field
+
+    Returns
+    -------
+    attrlist : list
+        list of attributes defined for the grid
+    """
+    strbufsize = ffi.new("long *")
+    nattrs = _lib.HE5_GDinqlocattrs(gridid, fieldname.encode(), 
+                                    ffi.NULL, strbufsize)
+    if nattrs == 0:
+        return []
+    attr_buffer = ffi.new("char[]", b'\0' * (strbufsize[0] + 1))
+    nattrs = _lib.HE5_GDinqlocattrs(gridid, fieldname.encode(),
+                                    attr_buffer, strbufsize)
+    _handle_error(nattrs)
+    attr_list = ffi.string(attr_buffer).decode('ascii').split(',')
+    return attr_list
+
+def gdlocattrinfo(grid_id, fieldname, attrname):
+    """return information about a grid field attribute
+
+    Parameters
+    ----------
+    grid_id : int
+        grid identifier
+    fieldname : str
+        attribute name
+    attrname : str
+        attribute name
+
+    Returns
+    -------
+    numbertype : type
+        numpy datatype of the attribute
+    count : int
+        number of attribute elements
+    """
+    ntypep = ffi.new("hid_t *")
+    countp = ffi.new("hsize_t *")
+    status = _lib.HE5_GDlocattrinfo(grid_id,
+                                    fieldname.encode(), attrname.encode(),
+                                    ntypep, countp)
+    _handle_error(status)
+
+    return ntypep[0], countp[0]
 
 def gdnentries(gridid, entry_code):
     """Return number of specified objects in a grid.
@@ -376,9 +492,18 @@ def gdnentries(gridid, entry_code):
     nentries, strbufsize : int
        Number of specified entries, number of bytes in descriptive strings. 
     """
-    strbufsize = ffi.new("long *")
-    nentries = _lib.HE5_GDnentries(gridid, entry_code, strbufsize)
-    return nentries, strbufsize[0]
+    strbufsizep = ffi.new("long *")
+    nentries = _lib.HE5_GDnentries(gridid, entry_code, strbufsizep)
+
+    # Sometimes running this with HDFE_NENTDIM results in too small a value.
+    # Since there's no real reason for a python user to be directly interested
+    # in this value, we'll make it a minimum size of 100.
+    if entry_code == HE5_HDFE_NENTDIM:
+        strbufsize = max(100, strbufsizep[0])
+    else:
+        strbufsize = strbufsizep[0]
+    #print(entry_code, nentries, strbufsize)
+    return nentries, strbufsize
 
 def gdopen(filename, access=H5F_ACC_RDONLY):
     """Opens or creates HDF file in order to create, read, or write a grid.
@@ -472,4 +597,128 @@ def gdprojinfo(grid_id):
     _handle_error(status)
 
     return projcode[0], zonecode[0], spherecode[0], projparm
+
+def gdreadattr(gridid, attrname):
+    """read grid attribute
+
+    This function wraps the HDF-EOS5 HE5_GDreadattr library function.
+
+    Parameters
+    ----------
+    grid_id : int
+        grid identifier
+    attrname : str
+        attribute name
+
+    Returns
+    -------
+    value : object
+        grid field attribute value
+    """
+    [ntype, count] = gdattrinfo(gridid, attrname)
+    if ntype == 57:
+        #buffer = ffi.new("char[]", b'\0' * (count + 1))
+        buffer = ffi.new("char[]", b'\0' * (1000 + 1))
+        status = _lib.HE5_GDreadattr(gridid, attrname.encode(), buffer)
+        _handle_error(status)
+        return ffi.string(buffer).decode('ascii')
+
+    buffer = np.zeros(count, dtype=number_type_dict[ntype])
+    bufferp = ffi.cast(cast_string_dict[ntype], buffer.ctypes.data)
+
+    status = _lib.HE5_GDreadattr(gridid, attrname.encode(), bufferp)
+    _handle_error(status)
+
+    if count == 1:
+        # present as a scalar rather than an array.
+        buffer = buffer[0]
+    return buffer
+
+
+
+def gdreadlocattr(gridid, fieldname, attrname):
+    """read grid field attribute
+
+    This function wraps the HDF-EOS5 library HE5_GDreadlocattr function.
+
+    Parameters
+    ----------
+    grid_id : int
+        grid identifier
+    fieldname : str
+        name of grid field
+    attrname : str
+        attribute name
+
+    Returns
+    -------
+    value : object
+        grid field attribute value
+    """
+    [ntype, count] = gdlocattrinfo(gridid, fieldname, attrname)
+    #print(ntype, count, number_type_dict[ntype],  attrname, cast_string_dict[ntype])
+    if ntype == 57:
+        #buffer = ffi.new("char[]", b'\0' * (count + 1))
+        buffer = ffi.new("char[]", b'\0' * (1000 + 1))
+        status = _lib.HE5_GDreadlocattr(gridid,
+                                        fieldname.encode(), attrname.encode(),
+                                        buffer)
+        _handle_error(status)
+        return ffi.string(buffer).decode('ascii')
+
+    buffer = np.zeros(count, dtype=number_type_dict[ntype])
+    bufferp = ffi.cast(cast_string_dict[ntype], buffer.ctypes.data)
+
+    status = _lib.HE5_GDreadlocattr(gridid,
+                                    fieldname.encode(), attrname.encode(),
+                                    bufferp)
+    _handle_error(status)
+
+    if count == 1:
+        # present as a scalar rather than an array.
+        buffer = buffer[0]
+    return buffer
+
+
+def gdreadfield(gridid, fieldname, start, stride, edge):
+    """read data from grid field
+
+    This function wraps the HDF-EOS5 library HE5_GDreadfield function.
+
+    Parameters
+    ----------
+    grid_id : int
+        grid identifier
+    fieldname : str
+        attribute name
+    start : array-like
+        specifies starting location within each dimension
+    stride : array-like
+        specifies number of values to skip along each dimension
+    edge : array-like
+        specifies number of values to read along each dimension
+
+    Returns
+    -------
+    data : ndarray
+        data read from field
+    """
+    _, ntype, _, _  = gdfieldinfo(gridid, fieldname)
+    shape = tuple([int(x) for x in edge])
+    buffer = np.zeros(shape, dtype=number_type_dict[ntype])
+    pbuffer = ffi.cast(cast_string_dict[ntype], buffer.ctypes.data)
+
+    startp = ffi.new("hsize_t []", len(shape))
+    stridep = ffi.new("hsize_t []", len(shape))
+    edgep = ffi.new("hsize_t []", len(shape))
+
+    for j in range(len(shape)):
+        startp[j] = int(start[j])
+        stridep[j] = int(stride[j])
+        edgep[j] = int(edge[j])
+
+    status = _lib.HE5_GDreadfield(gridid, fieldname.encode(), startp, stridep,
+                                  edgep, pbuffer)
+    _handle_error(status)
+    return buffer
 
