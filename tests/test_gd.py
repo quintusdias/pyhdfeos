@@ -30,6 +30,15 @@ class TestRead(unittest.TestCase):
         file = pkg.resource_filename(__name__, os.path.join('data', 'Point219.hdf'))
         cls.test_driver_pointfile4 = file
 
+    def test_strides(self):
+        """
+        array-style indexing case of [::rs, ::cs]
+        """
+        with GridFile(self.test_driver_gridfile4) as gdf:
+            actual = gdf.grids['UTMGrid'].fields['Vegetation'][::10, ::10]
+
+        self.assertEqual(actual.shape, (20, 12))
+
     def test_read_he4_2d_single_ellipsis(self):
         """
         array-style indexing case of [...]

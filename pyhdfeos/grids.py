@@ -120,8 +120,10 @@ class _GridVariable(object):
             if index[j].step is not None:
                 stride[j] = index[j].step
 
-            if index[j].stop is not None:
-                edge[j] = np.floor((index[j].stop - index[j].start) / stride[j])
+            if index[j].stop is None:
+                edge[j] = np.floor((self.shape[j] - start[j]) / stride[j])
+            else:
+                edge[j] = np.floor((index[j].stop - start[j]) / stride[j])
 
         return self._he.gdreadfield(self.gridid, self.fieldname,
                                      start, stride, edge)
