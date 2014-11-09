@@ -17,7 +17,7 @@ kwargs = {'name': 'pyhdfeos',
           'ext_modules': [pyhdfeos.lib.he4.ffi.verifier.get_extension(),
                           pyhdfeos.lib.he5.ffi.verifier.get_extension()],
           'entry_points': {
-              'console_scripts': ['eosdump=pyhdfeos.command_line:dump_metadata'],
+              'console_scripts': ['hedump=pyhdfeos.command_line:dump_metadata'],
               },
           'license': 'MIT'}
 
