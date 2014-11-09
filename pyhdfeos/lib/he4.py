@@ -10,6 +10,7 @@ ffi.cdef("""
         typedef int intn;
         typedef double float64;
 
+        intn  EHidinfo(int32 fid, int32 *hdfid, int32 *sdid);
         int32 GDattach(int32 gdfid, char *grid);
         intn  GDattrinfo(int32 gdfid, char *attrname, int32 *nbyte, int32
                          *count);
@@ -108,6 +109,33 @@ cast_string_dict = {
                     26: "long long int",
                     27: "unsigned long long *",
         }
+
+def ehidinfo(fid):
+    """Get HDF file IDs.
+
+    This function wraps the HDF-EOS EHidinfo library function.
+
+    Parameters
+    ----------
+    gdfid : int
+        Grid file id.
+    
+    Returns
+    -------
+    hdfid : int
+        HDF file ID as returned by Hopen
+    sdid : int
+        SD interface ID as returned by SDstart
+
+    Raises
+    ------
+    IOError
+        If associated library routine fails.
+    """
+    hdfidp = ffi.new("int32 *")
+    sdidp = ffi.new("int32 *")
+    status = _lib.EHidinfo(fid, hdfidp, sdidp)
+    return hdfidp[0], sdidp[0]
 
 def gdattach(gdfid, gridname):
     """Attach to an existing grid structure.

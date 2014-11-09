@@ -322,8 +322,8 @@ def gdij2ll(projcode, zonecode, projparm, spherecode, xdimsize, ydimsize,
         Longitude and latitude in decimal degrees.
     """
     # This might be wrong on 32-bit machines.
-    _rows = rows.astype(np.int64)
-    _cols = cols.astype(np.int64)
+    _rows = row.astype(np.int64)
+    _cols = col.astype(np.int64)
 
     longitude = np.zeros(col.shape, dtype=np.float64)
     latitude = np.zeros(col.shape, dtype=np.float64)
