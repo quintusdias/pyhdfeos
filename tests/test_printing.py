@@ -16,7 +16,6 @@ from pyhdfeos import GridFile
 
 from . import fixtures
 
-@unittest.skipIf(sys.hexversion < 0x03000000, "glitches on 2.7")
 class TestPrinting(unittest.TestCase):
 
     @classmethod
