@@ -36,11 +36,11 @@ class _GridVariable(object):
 
     def __str__(self):
         dimstr = ", ".join(self.dimlist)
-        msg = "{0}[{1}]:\n".format(self.fieldname, dimstr)
+        lst = ["{0}[{1}]:".format(self.fieldname, dimstr)]
 
         for name, value in self.attrs.items():
-            msg += "    {0}:  {1} ;\n".format(name, value)
-        return msg
+            lst.append("    {0}:  {1} ;".format(name, value))
+        return '\n'.join(lst)
 
     def __getitem__(self, index):
         nrows = self.shape[0]
@@ -176,72 +176,72 @@ class _Grid(object):
         self._he.gddetach(self.gridid)
 
     def __str__(self):
-        msg = "Grid:  {0}\n".format(self.gridname)
-        msg += "    Shape:  {0}\n".format(self.shape)
+        lst = ["Grid:  {0}".format(self.gridname)]
+        lst.append("    Shape:  {0}".format(self.shape))
 
-        msg += "    Dimensions:\n"
+        lst.append("    Dimensions:")
         for dimname, dimlen in self.dims.items():
-            msg += "        {0}:  {1}\n".format(dimname, dimlen)
+            lst.append("        {0}:  {1}".format(dimname, dimlen))
 
-        msg += "    Upper Left (x,y):  {0}\n".format(self.upleft)
-        msg += "    Lower Right (x,y):  {0}\n".format(self.lowright)
-        msg += "    Sphere:  {0}\n".format(self._sphere)
+        lst.append("    Upper Left (x,y):  {0}".format(self.upleft))
+        lst.append("    Lower Right (x,y):  {0}".format(self.lowright))
+        lst.append("    Sphere:  {0}".format(self._sphere))
         if self.projcode == 0:
-            msg += "    Projection:  Geographic\n"
+            lst.append("    Projection:  Geographic")
         elif self.projcode == 1:
-            msg += "    Projection:  UTM\n"
-            msg += self._projection_lonz_latz()
+            lst.append("    Projection:  UTM")
+            lst.append(self._projection_lonz_latz())
         elif self.projcode == 3:
-            msg += "    Projection:  Albers Conical Equal Area\n"
-            msg += self._projection_semi_major_semi_minor()
-            msg += self._projection_latitudes_of_standard_parallels()
-            msg += self._projection_longitude_of_central_meridian()
-            msg += self._projection_latitude_of_projection_origin()
-            msg += self._projection_false_easting_northing()
+            lst.append("    Projection:  Albers Conical Equal Area")
+            lst.append(self._projection_semi_major_semi_minor())
+            lst.append(self._projection_latitudes_of_standard_parallels())
+            lst.append(self._projection_longitude_of_central_meridian())
+            lst.append(self._projection_latitude_of_projection_origin())
+            lst.append(self._projection_false_easting_northing())
         elif self.projcode == 6:
-            msg += "    Projection:  Polar Stereographic\n"
-            msg += self._projection_semi_major_semi_minor()
-            msg += self._projection_longitude_pole()
-            msg += self._projection_true_scale()
-            msg += self._projection_false_easting_northing()
+            lst.append("    Projection:  Polar Stereographic")
+            lst.append(self._projection_semi_major_semi_minor())
+            lst.append(self._projection_longitude_pole())
+            lst.append(self._projection_true_scale())
+            lst.append(self._projection_false_easting_northing())
         elif self.projcode == 11:
-            msg += "    Projection:  Lambert Azimuthal\n"
-            msg += self._projection_sphere()
-            msg += self._projection_center_lon_lat()
-            msg += self._projection_false_easting_northing()
+            lst.append("    Projection:  Lambert Azimuthal")
+            lst.append(self._projection_sphere())
+            lst.append(self._projection_center_lon_lat())
+            lst.append(self._projection_false_easting_northing())
         elif self.projcode == 16:
-            msg += "    Projection:  Sinusoidal\n"
-            msg += self._projection_sphere()
-            msg += self._projection_longitude_of_central_meridian()
-            msg += self._projection_false_easting_northing()
+            lst.append("    Projection:  Sinusoidal")
+            lst.append(self._projection_sphere())
+            lst.append(self._projection_longitude_of_central_meridian())
+            lst.append(self._projection_false_easting_northing())
 
-        msg += "    Fields:\n"
+        lst.append("    Fields:")
         for field in self.fields.keys():
             if sys.hexversion <= 0x03000000:
                 textstr = str(self.fields[field])
-                lst = [(' ' * 8 + line) for line in textstr.split('\n')]
-                msg += '\n'.join(lst)
+                field_lst = [(' ' * 8 + line) for line in textstr.split('\n')]
+                lst.extend(field_lst)
             else:
-                msg += textwrap.indent(str(self.fields[field]), ' ' * 8)
+                lst.append(textwrap.indent(str(self.fields[field]), ' ' * 8))
 
-        msg += "    Grid Attributes:\n"
+        lst.append("    Grid Attributes:")
         for attr in self.attrs.keys():
-            msg += "        {0}:  {1}\n".format(attr, self.attrs[attr])
+            lst.append("        {0}:  {1}".format(attr, self.attrs[attr]))
 
         
-        return msg
+        return '\n'.join(lst)
 
     def _projection_lonz_latz(self):
         """
         __str__ helper method for utm projections
         """
         if self.projparms[0] == 0 and self.projparms[1] == 0:
-            msg = "        UTM zone:  {0}\n".format(self.zonecode)
+            msg = "        UTM zone:  {0}".format(self.zonecode)
         else:
             lonz = self.projparms[0] / 1e6
             latz = self.projparms[1] / 1e6
             msg = "        UTM zone longitude:  {0}\n".format(lonz)
-            msg += "        UTM zone latitude:  {0}\n".format(latz)
+            msg += "        UTM zone latitude:  {0}".format(latz)
         return msg
 
     def _projection_longitude_pole(self):
@@ -249,14 +249,14 @@ class _Grid(object):
         __str__ helper method for projections with longitude below pole of map
         """
         longpole = self.projparms[4] / 1e6
-        return "        Longitude below pole of map:  {0}\n".format(longpole)
+        return "        Longitude below pole of map:  {0}".format(longpole)
 
     def _projection_true_scale(self):
         """
         __str__ helper method for projections with latitude of true scale
         """
         truescale = self.projparms[5] / 1e6
-        return "        Latitude of true scale:  {0}\n".format(truescale)
+        return "        Latitude of true scale:  {0}".format(truescale)
 
     def _projection_sphere(self):
         """
@@ -265,7 +265,7 @@ class _Grid(object):
         sphere = self.projparms[0] / 1000
         if sphere == 0:
             sphere = 6370.997
-        return "        Radius of reference sphere(km):  {0}\n".format(sphere)
+        return "        Radius of reference sphere(km):  {0}".format(sphere)
 
     def _projection_semi_major_semi_minor(self):
         """
@@ -286,7 +286,7 @@ class _Grid(object):
             # semi minor axis
             semi_minor = self.projparms[1]
         msg = "        Semi-major axis(km):  {0}\n".format(semi_major)
-        msg += "        Semi-minor axis(km):  {0}\n".format(semi_minor)
+        msg += "        Semi-minor axis(km):  {0}".format(semi_minor)
         return msg
 
     def _projection_latitudes_of_standard_parallels(self):
@@ -294,7 +294,7 @@ class _Grid(object):
         __str__ helper method for projections with 1st, 2nd standard parallels
         """
         msg = "        Latitude of 1st Standard Parallel:  {0}\n"
-        msg += "        Latitude of 2nd Standard Parallel:  {1}\n"
+        msg += "        Latitude of 2nd Standard Parallel:  {1}"
         msg = msg.format(self.projparms[2]/1e6, self.projparms[3]/1e6)
         return msg
 
@@ -303,7 +303,7 @@ class _Grid(object):
         __str__ helper method for projections center of projection lat and lon
         """
         msg = "        Center Longitude:  {0}\n".format(self.projparms[4]/1e6)
-        msg += "        Center Latitude:  {0}\n".format(self.projparms[5]/1e6)
+        msg += "        Center Latitude:  {0}".format(self.projparms[5]/1e6)
         return msg
 
     def _projection_latitude_of_projection_origin(self):
@@ -311,7 +311,7 @@ class _Grid(object):
         __str__ helper method for latitude of projection origin
         """
         val = self.projparms[5]/1e6
-        msg = "        Latitude of Projection Origin:  {0}\n".format(val)
+        msg = "        Latitude of Projection Origin:  {0}".format(val)
         return msg
 
     def _projection_longitude_of_central_meridian(self):
@@ -319,7 +319,7 @@ class _Grid(object):
         __str__ helper method for longitude of central meridian
         """
         val = self.projparms[4]/1e6
-        msg = "        Longitude of Central Meridian:  {0}\n".format(val)
+        msg = "        Longitude of Central Meridian:  {0}".format(val)
         return msg
 
     def _projection_false_easting_northing(self):
@@ -327,7 +327,7 @@ class _Grid(object):
         __str__ helper method for projections with false easting and northing
         """
         msg = "        False Easting:  {0}\n".format(self.projparms[6])
-        msg += "        False Northing:  {0}\n".format(self.projparms[7])
+        msg += "        False Northing:  {0}".format(self.projparms[7])
         return msg
 
     def __getitem__(self, index):
