@@ -4,12 +4,8 @@ import sys
 import tempfile
 import unittest
 
-if sys.hexversion < 0x03000000:
-    from StringIO import StringIO
-    from mock import patch
-else:
-    from io import StringIO
-    from unittest.mock import patch
+from io import StringIO
+from unittest.mock import patch
 
 import pyhdfeos
 from pyhdfeos import GridFile
@@ -22,6 +18,14 @@ class TestPrinting(unittest.TestCase):
     def setUpClass(cls):
         file = pkg.resource_filename(__name__, os.path.join('data', 'Grid.h5'))
         cls.test_driver_file = file
+
+    def test_repr_gridfile(self):
+        with GridFile(self.test_driver_file) as gdf1:
+            gdf2 = eval(repr(gdf1))
+            self.assertEqual(gdf1.filename, gdf2.filename)
+            glist1 = [grid for grid in gdf1.grids.keys()]
+            glist2 = [grid for grid in gdf2.grids.keys()]
+            self.assertEqual(glist1, glist2)
 
     def test_utm_grid_he5(self):
         with GridFile(self.test_driver_file) as gdf:

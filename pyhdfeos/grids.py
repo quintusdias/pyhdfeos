@@ -411,6 +411,13 @@ class _Grid(object):
 class GridFile(object):
     """
     Access to HDF-EOS grid files.
+
+    Attributes
+    ----------
+    filename : str
+        HDF-EOS2 or HDF-EOS5 grid file
+    grids : dictionary
+        collection of grids 
     """
     def __init__(self, filename):
         self.filename = filename
@@ -455,6 +462,9 @@ class GridFile(object):
         finally:
             sd.endaccess(sds_id)
         return attrs
+
+    def __repr__(self):
+        return "GridFile('{0}')".format(self.filename)
 
     def __str__(self):
         msg = "{0}\n".format(os.path.basename(self.filename))
