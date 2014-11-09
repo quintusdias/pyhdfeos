@@ -1,9 +1,14 @@
 import collections
-from itertools import filterfalse
 import os
 import platform
 import struct
+import sys
 import textwrap
+
+if sys.hexversion < 0x03000000:
+    from itertools import ifilterfalse as filterfalse
+else:
+    from itertools import filterfalse
 
 import numpy as np
 
@@ -212,7 +217,12 @@ class _Grid(object):
 
         msg += "    Fields:\n"
         for field in self.fields.keys():
-            msg += textwrap.indent(str(self.fields[field]), ' ' * 8)
+            if sys.hexversion <= 0x03000000:
+                textstr = str(self.fields[field])
+                lst = [(' ' * 8 + line) for line in textstr.split('\n')]
+                msg += '\n'.join(lst)
+            else:
+                msg += textwrap.indent(str(self.fields[field]), ' ' * 8)
 
         msg += "    Grid Attributes:\n"
         for attr in self.attrs.keys():
