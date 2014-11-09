@@ -36,8 +36,8 @@ class TestReadGridCoords(unittest.TestCase):
         """
         g4 = GridFile(self.test_driver_gridfile4)
         lat4, lon4 = g4.grids['UTMGrid'][:]
-        g5 = GridFile(self.test_driver_gridfile4)
-        lat5, lon5 = g4.grids['UTMGrid'][:]
+        g5 = GridFile(self.test_driver_gridfile5)
+        lat5, lon5 = g5.grids['UTMGrid'][:]
         self.assertTrue(True)
         np.testing.assert_array_equal(lon4, lon5)
         np.testing.assert_array_equal(lat4, lat5)
