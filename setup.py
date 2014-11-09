@@ -21,6 +21,11 @@ kwargs = {'name': 'pyhdfeos',
               },
           'license': 'MIT'}
 
+install_requires = ['numpy>=1.8.0']
+if sys.hexversion < 0x03000000:
+    install_requires.append('mock>=1.0.1')
+kwargs['install_requires'] = install_requires
+
 clssfrs = ["Programming Language :: Python",
            "Programming Language :: Python :: 2.7",
            "Programming Language :: Python :: 3.3",

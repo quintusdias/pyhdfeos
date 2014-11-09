@@ -4,14 +4,19 @@ import sys
 import tempfile
 import unittest
 
-from io import StringIO
-from unittest.mock import patch
+if sys.hexversion < 0x03000000:
+    from StringIO import StringIO
+    from mock import patch
+else:
+    from io import StringIO
+    from unittest.mock import patch
 
 import pyhdfeos
 from pyhdfeos import GridFile
 
 from . import fixtures
 
+@unittest.skipIf(sys.hexversion < 0x03000000, "glitches on 2.7")
 class TestPrinting(unittest.TestCase):
 
     @classmethod
