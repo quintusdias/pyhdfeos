@@ -7,7 +7,7 @@ import textwrap
 
 import numpy as np
 
-from .lib import he4, he5
+from .lib import he4, he5, sd
 
 class _GridVariable(object):
     """
@@ -425,6 +425,36 @@ class GridFile(object):
         self.grids = collections.OrderedDict()
         for gridname in gridlist:
             self.grids[gridname] = _Grid(self.gdfid, gridname, self._he)
+        
+            if not hasattr(self._he, 'gdinqlocattrs'):
+                # Inquire about hdf4 attributes using SD interface
+                _, sdid = he4.ehidinfo(self.gdfid)
+                for fieldname in self.grids[gridname].fields.keys():
+                    attrs = self._hdf4_attrs(sdid, fieldname) 
+                    self.grids[gridname].fields[fieldname].attrs = attrs
+
+    def _hdf4_attrs(self, sdid, fieldname):
+        attrs = collections.OrderedDict()
+        try:
+            idx = sd.nametoindex(sdid, fieldname)
+        except:
+            return attrs
+
+        try:
+            sds_id = sd.select(sdid, idx)
+        except:
+            return attrs
+
+        try:
+            _, _, _, _, nattrs = sd.getinfo(sds_id)
+            for idx in range(nattrs):
+                name, _, _ = sd.attrinfo(sds_id, idx)
+                attrs[name] = sd.readattr(sds_id, idx)
+        except:
+            pass
+        finally:
+            sd.endaccess(sds_id)
+        return attrs
 
     def __str__(self):
         msg = "{0}\n".format(os.path.basename(self.filename))
