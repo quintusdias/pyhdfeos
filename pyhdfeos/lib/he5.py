@@ -1,4 +1,5 @@
 import platform
+import sys
 
 from cffi import FFI
 import numpy as np
@@ -321,9 +322,13 @@ def gdij2ll(projcode, zonecode, projparm, spherecode, xdimsize, ydimsize,
     longitude, latitude : ndarray
         Longitude and latitude in decimal degrees.
     """
-    # This might be wrong on 32-bit machines.
-    row = row.astype(np.int64)
-    col = col.astype(np.int64)
+    if sys.maxsize < 2**32 and platform.system().startswith('Linux'):
+        # "long" on 32-bit linux is int32
+        row = row.astype(np.int32)
+        col = col.astype(np.int32)
+    else:
+        row = row.astype(np.int64)
+        col = col.astype(np.int64)
 
     longitude = np.zeros(col.shape, dtype=np.float64)
     latitude = np.zeros(col.shape, dtype=np.float64)
