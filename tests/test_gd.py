@@ -3,7 +3,6 @@ import pkg_resources as pkg
 import tempfile
 import unittest
 
-import h5py
 import numpy as np
 
 from pyhdfeos.lib import he4
