@@ -56,7 +56,7 @@ ffi.cdef("""
 
 if platform.system().startswith('Linux'):
     if platform.linux_distribution() == ('Fedora', '20', 'Heisenbug'):
-        libraries=['hdfeos', 'Gctp', 'mfhdf', 'df', 'jpeg', 'z']
+        libraries=['he5_hdfeos', 'Gctp', 'hdf5_hl', 'hdf5', 'z']
     else:
         # Linux Mint 17?
         libraries=['he5_hdfeos', 'gctp', 'hdf5_hl', 'hdf5', 'z']
