@@ -58,10 +58,14 @@ _lib = ffi.verify("""
         """,
         libraries=libraries,
         include_dirs=['/usr/include/hdf',
+                      '/usr/include/i386-linux-gnu/hdf',
                       '/usr/include/x86_64-linux-gnu/hdf',
                       '/opt/local/include',
                       '/usr/local/include'],
-        library_dirs=['/usr/lib/hdf', '/opt/local/lib', '/usr/local/lib'])
+        library_dirs=['/usr/lib/hdf',
+                      '/usr/lib/i386-linux-gnu',
+                      '/opt/local/lib',
+                       '/usr/local/lib'])
 
 
 def _handle_error(status):
