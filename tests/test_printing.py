@@ -15,6 +15,9 @@ import pyhdfeos
 from pyhdfeos import GridFile
 
 from . import fixtures
+from .fixtures import test_file_exists, test_file_path
+
+somfile = 'MISR_AM1_GRP_ELLIPSOID_GM_P117_O058421_BA_F03_0024.hdf'
 
 class TestPrinting(unittest.TestCase):
 
@@ -22,6 +25,17 @@ class TestPrinting(unittest.TestCase):
     def setUpClass(cls):
         file = pkg.resource_filename(__name__, os.path.join('data', 'Grid.h5'))
         cls.test_driver_file = file
+
+    @unittest.skipIf(not test_file_exists(somfile), 'test file not available')
+    def test_som_grid(self):
+        file = test_file_path(somfile)
+        gdf = GridFile(file)
+        with patch('sys.stdout', new=StringIO()) as fake_out:
+            print(gdf.grids['GeometricParameters'])
+            actual = fake_out.getvalue().strip()
+
+        expected = fixtures.som_grid
+        self.assertEqual(actual, expected)
 
     def test_repr_gridfile(self):
         with GridFile(self.test_driver_file) as gdf1:
@@ -45,6 +59,6 @@ class TestPrinting(unittest.TestCase):
             with patch('sys.stdout', new=StringIO()) as fake_out:
                 print(gdf.grids['PolarGrid'])
                 actual = fake_out.getvalue().strip()
-
         expected = fixtures.polar_stereographic_grid
         self.assertEqual(actual, expected)
+

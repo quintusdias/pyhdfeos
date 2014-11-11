@@ -168,7 +168,7 @@ class _Grid(object):
                                                       self._he)
 
         attr_list = self._he.gdinqattrs(self.gridid)
-        self.attrs = {}
+        self.attrs = collections.OrderedDict()
         for attr in attr_list:
             self.attrs[attr] = self._he.gdreadattr(self.gridid, attr)
 
@@ -214,6 +214,21 @@ class _Grid(object):
             lst.append(self._projection_sphere())
             lst.append(self._projection_longitude_of_central_meridian())
             lst.append(self._projection_false_easting_northing())
+        elif self.projcode == 22:
+            if self.projparms[12] == 0:
+                lst.append("    Projection:  Space Oblique Mercator A")
+                lst.append(self._projection_incang())
+                lst.append(self._projection_asclong())
+                lst.append(self._projection_false_easting_northing())
+                lst.append(self._projection_psrev())
+                lst.append(self._projection_srat())
+                lst.append(self._projection_pflag())
+            else:
+                lst.append("    Projection:  Space Oblique Mercator B")
+                lst.append(self._projection_semi_major_semi_minor())
+                lst.append(self._projection_satnum())
+                lst.append(self._projection_path())
+                lst.append(self._projection_false_easting_northing())
 
         lst.append("    Fields:")
         for field in self.fields.keys():
@@ -243,6 +258,41 @@ class _Grid(object):
             msg = "        UTM zone longitude:  {0}\n".format(lonz)
             msg += "        UTM zone latitude:  {0}".format(latz)
         return msg
+
+    def _projection_pflag(self):
+        """
+        __str__ helper method for PFlag SOM parameter
+        """
+        item = self.projparms[10]
+        return "        End of path flag (0 = start, 1 = end):  {0}".format(item)
+
+    def _projection_srat(self):
+        """
+        __str__ helper method for SRat SOM parameter
+        """
+        item = self.projparms[9]
+        return "        Satellite ratio start/end:  {0}".format(item)
+
+    def _projection_asclong(self):
+        """
+        __str__ helper method for AscLong SOM parameter
+        """
+        item = self.projparms[4] / 1e6
+        return "        Longitude of ascending orbit at equator:  {:.6f}".format(item)
+
+    def _projection_psrev(self):
+        """
+        __str__ helper method for PSRev SOM parameter
+        """
+        item = self.projparms[8]
+        return "        Period of satellite revolution:  {0} (min)".format(item)
+
+    def _projection_incang(self):
+        """
+        __str__ helper method for IncAng SOM parameter
+        """
+        item = self.projparms[3] / 1e6
+        return "        Inclination of orbit at ascending node:  {:.6f}".format(item)
 
     def _projection_longitude_pole(self):
         """
