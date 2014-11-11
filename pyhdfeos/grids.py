@@ -527,10 +527,13 @@ class GridFile(object):
         return "GridFile('{0}')".format(self.filename)
 
     def __str__(self):
-        msg = "{0}\n".format(os.path.basename(self.filename))
+        orig_printoptions = np.get_printoptions()
+        np.set_printoptions(precision=6)
+        lst = ["{0}".format(os.path.basename(self.filename))]
         for grid in self.grids.keys():
-            msg += str(self.grids[grid])
-        return msg
+            lst.append(str(self.grids[grid]))
+        np.set_printoptions(**orig_printoptions)
+        return '\n'.join(lst)
 
     def __enter__(self):
         return self
