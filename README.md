@@ -30,23 +30,19 @@ described.
 Linux
 -----
 
-Linux Mint (other Ubuntu variants as well)
----------------------------------------------
-Linux Mint 17 uses HDF-EOS5 version 1.14, so it works out of the box.  Prerequisites include
+Linux Mint, Ubuntu 14.04 (other Ubuntu variants as well?)
+---------------------------------------------------------
+Linux Mint 17 uses HDF-EOS5 version 1.14, so it works out of the box.
+Prerequisites include
 
-* python-all-dev
+* python-dev
+* python-numpy
 * python-cffi
 * libhdf4-dev
 * libhdf5-dev
-* libhe5-hdfeos0
-* libhe5-hdfeos0-dev
-* libhdfeos0
-* libhdfeos0-dev
-
-Fedora 20
----------
-There's no hdfeos or hdfeos5 RPMs specifically for Fedora, so you must compile
-the libraries from source.  You may install it into ```/usr/local```.
+* libhe5-hdfeos-dev
+* libhdfeos-dev
+* libgctp-dev
 
 Package Installation
 ====================
