@@ -16,6 +16,7 @@ from .lib import he4, he5, sd
 
 class _GridVariable(object):
     """
+    Grid field object (data, dimensions, attributes)
     """
     def __init__(self, gridid, fieldname, he_module):
         self.gridid = gridid
@@ -39,7 +40,7 @@ class _GridVariable(object):
         lst = ["{0}[{1}]:".format(self.fieldname, dimstr)]
 
         for name, value in self.attrs.items():
-            lst.append("    {0}:  {1} ;".format(name, value))
+            lst.append("    {0}:  {1}".format(name, value))
         return '\n'.join(lst)
 
     def __getitem__(self, index):

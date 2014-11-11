@@ -43,9 +43,9 @@ som_grid = """Grid:  GeometricParameters
         End of path flag (0 = start, 1 = end):  0.0
     Fields:
         SolarAzimuth[SOMBlockDim, XDim, YDim]:
-            _FillValue:  -555.0 ;
+            _FillValue:  -555.0
         SolarZenith[SOMBlockDim, XDim, YDim]:
-            _FillValue:  -555.0 ;
+            _FillValue:  -555.0
     Grid Attributes:
         Block_size.resolution_x:  [17600     0     0     0]
         Block_size.resolution_y:  [17600     0     0     0]
@@ -83,7 +83,7 @@ Grid:  UTMGrid
         UTM zone:  40
     Fields:
         Pollution[Time, YDim, XDim]:
-            _FillValue:  -7.0 ;
+            _FillValue:  -7.0
         Vegetation[YDim, XDim]:
         Extern[YDim, XDim]:
     Grid Attributes:
@@ -117,5 +117,5 @@ Grid:  GEOGrid
     Projection:  Geographic
     Fields:
         GeoSpectra[YDim, XDim]:
-            _FillValue:  1.7800604005220194e-307 ;
+            _FillValue:  1.7800604005220194e-307
     Grid Attributes:"""
