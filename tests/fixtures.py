@@ -70,3 +70,52 @@ polar_stereographic_grid = """Grid:  PolarGrid
         Temperature[YDim, XDim]:
         Pressure[YDim, XDim]:
     Grid Attributes:"""
+
+geo_polar_utm_4 = """Grid219.hdf
+Grid:  UTMGrid
+    Shape:  (200, 120)
+    Dimensions:
+        Time:  10
+    Upper Left (x,y):  [  210584.50041  3322395.95445]
+    Lower Right (x,y):  [  813931.10959  2214162.53278]
+    Sphere:  Clarke 1866
+    Projection:  UTM
+        UTM zone:  40
+    Fields:
+        Pollution[Time, YDim, XDim]:
+            _FillValue:  -7.0 ;
+        Vegetation[YDim, XDim]:
+        Extern[YDim, XDim]:
+    Grid Attributes:
+        float32:  [ 1.  0.  0.  0.]
+Grid:  PolarGrid
+    Shape:  (100, 100)
+    Dimensions:
+        Bands:  3
+    Upper Left (x,y):  [ 0.  0.]
+    Lower Right (x,y):  [ 0.  0.]
+    Sphere:  International 1967
+    Projection:  Polar Stereographic
+        Semi-major axis(km):  6378.2064
+        Semi-minor axis(km):  6378.2064
+        Longitude below pole of map:  0.0
+        Latitude of true scale:  90.0
+        False Easting:  0.0
+        False Northing:  0.0
+    Fields:
+        Temperature[YDim, XDim]:
+        Pressure[YDim, XDim]:
+        Soil Dryness[YDim, XDim]:
+        Spectra[Bands, YDim, XDim]:
+    Grid Attributes:
+Grid:  GEOGrid
+    Shape:  (40, 60)
+    Dimensions:
+    Upper Left (x,y):  [        0.  30000000.]
+    Lower Right (x,y):  [ 15000000.  20000000.]
+    Sphere:  Clarke 1866
+    Projection:  Geographic
+    Fields:
+        GeoSpectra[YDim, XDim]:
+            _FillValue:  1.7800604005220194e-307 ;
+    Grid Attributes:"""
