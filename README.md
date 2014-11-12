@@ -44,6 +44,21 @@ Prerequisites include
 * libhdfeos-dev
 * libgctp-dev
 
+Fedora
+------
+RPM prerequisites include
+
+* python-setuptools
+* python-numpy
+* python-cffi
+* python-mock
+* python-devel
+* hdf-devel
+
+There are no RPMs for HFDEOS, so the libraries must be compiled from source.
+Assuming that the installation directory is ``/usr/local``.  The header files
+must be manually installed.
+
 Package Installation
 ====================
 
