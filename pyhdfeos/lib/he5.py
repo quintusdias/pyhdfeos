@@ -56,7 +56,7 @@ ffi.cdef("""
 
 if platform.system().startswith('Linux'):
     if platform.linux_distribution() == ('Fedora', '20', 'Heisenbug'):
-        libraries=['hdfeos', 'Gctp', 'mfhdf', 'df', 'jpeg', 'z']
+        libraries=['he5_hdfeos', 'Gctp', 'hdf5_hl', 'hdf5', 'z']
     else:
         # Linux Mint 17?
         libraries=['he5_hdfeos', 'gctp', 'hdf5_hl', 'hdf5', 'z']
@@ -71,7 +71,7 @@ _lib = ffi.verify("""
                       #'/opt/local/lib/hdfeos5/include',
                       '/opt/local/include',
                       '/usr/local/include'],
-        library_dirs=['/usr/lib',
+        library_dirs=['/usr/lib', '/usr/lib64/hdf',
                       #'/opt/local/lib/hdfeos5/lib',
                       '/opt/local/lib',
                       '/usr/local/lib',
