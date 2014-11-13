@@ -12,6 +12,11 @@ else:
 
 import numpy as np
 
+from pyhdf.HDF import *
+from pyhdf.V   import *
+from pyhdf.VS  import *
+from pyhdf.SD  import *
+
 from .lib import he4, he5, sd
 
 class _GridVariable(object):
@@ -493,35 +498,50 @@ class GridFile(object):
         self.grids = collections.OrderedDict()
         for gridname in gridlist:
             self.grids[gridname] = _Grid(self.gdfid, gridname, self._he)
-        
             if not hasattr(self._he, 'gdinqlocattrs'):
                 # Inquire about hdf4 attributes using SD interface
-                _, sdid = he4.ehidinfo(self.gdfid)
                 for fieldname in self.grids[gridname].fields.keys():
-                    attrs = self._hdf4_attrs(sdid, fieldname) 
+                    attrs = self._hdf4_attrs(filename, gridname, fieldname) 
                     self.grids[gridname].fields[fieldname].attrs = attrs
 
-    def _hdf4_attrs(self, sdid, fieldname):
-        attrs = collections.OrderedDict()
-        try:
-            idx = sd.nametoindex(sdid, fieldname)
-        except:
-            return attrs
+    def _hdf4_attrs(self, filename, gridname, fieldname):
 
-        try:
-            sds_id = sd.select(sdid, idx)
-        except:
-            return attrs
+        attrs = None
 
-        try:
-            _, _, _, _, nattrs = sd.getinfo(sds_id)
-            for idx in range(nattrs):
-                name, _, _ = sd.attrinfo(sds_id, idx)
-                attrs[name] = sd.readattr(sds_id, idx)
-        except:
-            pass
-        finally:
-            sd.endaccess(sds_id)
+        hdf = HDF(filename)
+        sd = SD(filename)
+        v = hdf.vgstart()
+
+        grid_ref = v.find(gridname)
+        grid_vg = v.attach(grid_ref)
+        members = grid_vg.tagrefs()
+        for tag_i, ref_i in members:
+            if tag_i == HC.DFTAG_VG:
+                vg0 = v.attach(ref_i)
+                if vg0._name == 'Data Fields':
+                    df_members = vg0.tagrefs()
+                    for tag_j, ref_j in df_members:
+                        if tag_j == HC.DFTAG_NDG:
+                            sds = sd.select(sd.reftoindex(ref_j))
+                            name, rank, dims, ntype, nattrs = sds.info()
+                            if name == fieldname:
+                                attrs = collections.OrderedDict(sds.attributes())
+                                # sort it for consistency.
+                                attrs = collections.OrderedDict(
+                                        sorted(
+                                            attrs.items(), key=lambda x: x[0]))
+                            sds.endaccess()
+                vg0.detach()
+        grid_vg.detach()
+
+        v.end()
+        sd.end()
+
+        hdf.close()
+
+        if attrs is None:
+            # No attributes.
+            attrs = collections.OrderedDict()
         return attrs
 
     def __repr__(self):
