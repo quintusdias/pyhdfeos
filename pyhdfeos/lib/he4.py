@@ -14,7 +14,6 @@ ffi.cdef("""
         int32 GDattach(int32 gdfid, char *grid);
         intn  GDattrinfo(int32 gdfid, char *attrname, int32 *nbyte, int32
                          *count);
-        intn  GDblkSOMoffset(int32 fid, int32 [], int32 count, char *code);
         intn  GDdetach(int32 gid);
         intn  GDclose(int32 fid);
         intn  GDfieldinfo(int32 gridid, char *fieldname, int32 *rank,
@@ -62,7 +61,7 @@ _lib = ffi.verify("""
                       '/usr/include/x86_64-linux-gnu/hdf',
                       '/opt/local/include',
                       '/usr/local/include'],
-        library_dirs=['/usr/lib/hdf',
+        library_dirs=['/usr/lib/hdf', '/usr/lib64/hdf',
                       '/usr/lib/i386-linux-gnu',
                       '/opt/local/lib',
                        '/usr/local/lib'])
@@ -194,34 +193,6 @@ def gdattrinfo(grid_id, attr_name):
     _handle_error(status)
 
     return number_type_p[0], count_p[0]
-
-def gdblksomoffset(grid_id):
-    """read SOM block offsets
-
-    Parameters
-    ----------
-    grid_id : int
-        grid identifier
-
-    Returns
-    -------
-    offsets : ndarray
-        SOM block offsets
-
-    Raises
-    ------
-    IOError
-        If associated library routine fails.
-    """
-    _, _, _, projparms = gdprojinfo(gridid)
-    num_offsets = projparms[11]
-    offset = np.zeros(num_offsets - 1, dtype=np.int32)
-    offsetp = ffi.cast("int32 *", offset.ctypes.data)
-    status = _lib.GDblkSOMoffset(grid_id, offsetp, num_offsets - 1,
-                                 'r'.encode())
-    _handle_error(status)
-
-    return offset
 
 def gdclose(gdfid):
     """Close an HDF-EOS file.

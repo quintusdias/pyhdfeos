@@ -21,7 +21,7 @@ kwargs = {'name': 'pyhdfeos',
               },
           'license': 'MIT'}
 
-install_requires = ['numpy>=1.8.0']
+install_requires = ['numpy>=1.8.0', 'cffi>=0.8.2']
 if sys.hexversion < 0x03000000:
     install_requires.append('mock>=1.0.1')
 kwargs['install_requires'] = install_requires

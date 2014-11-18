@@ -34,7 +34,8 @@ _lib = ffi.verify("""
                       '/usr/include/x86_64-linux-gnu/hdf',
                       '/opt/local/include',
                       '/usr/local/include'],
-        library_dirs=['/usr/lib/hdf', '/opt/local/lib', '/usr/local/lib'])
+        library_dirs=['/usr/lib/hdf', '/usr/lib64/hdf',
+                      '/opt/local/lib', '/usr/local/lib'])
 
 
 def _handle_error(status):

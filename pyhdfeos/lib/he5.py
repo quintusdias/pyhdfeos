@@ -14,7 +14,6 @@ ffi.cdef("""
         hid_t  HE5_GDattach(hid_t fid, char *gridname);
         long   HE5_GDattrinfo(hid_t gridID, const char *attrname,
                                  hid_t *ntype, hsize_t *count);
-        herr_t HE5_GDblkSOMoffset(hid_t fid, long *, hsize_t count, char *code);
         herr_t HE5_GDclose(hid_t fid);
         herr_t HE5_GDdetach(hid_t gridid);
         herr_t HE5_GDfieldinfo(hid_t gridID, const char *fieldname, int *rank,
@@ -57,7 +56,7 @@ ffi.cdef("""
 
 if platform.system().startswith('Linux'):
     if platform.linux_distribution() == ('Fedora', '20', 'Heisenbug'):
-        libraries=['hdfeos', 'Gctp', 'mfhdf', 'df', 'jpeg', 'z']
+        libraries=['he5_hdfeos', 'Gctp', 'hdf5_hl', 'hdf5', 'z']
     else:
         # Linux Mint 17?
         libraries=['he5_hdfeos', 'gctp', 'hdf5_hl', 'hdf5', 'z']
@@ -72,7 +71,7 @@ _lib = ffi.verify("""
                       #'/opt/local/lib/hdfeos5/include',
                       '/opt/local/include',
                       '/usr/local/include'],
-        library_dirs=['/usr/lib',
+        library_dirs=['/usr/lib', '/usr/lib64/hdf',
                       #'/opt/local/lib/hdfeos5/lib',
                       '/opt/local/lib',
                       '/usr/local/lib',
@@ -158,34 +157,6 @@ def gdattrinfo(grid_id, attrname):
     _handle_error(status)
 
     return ntypep[0], countp[0]
-
-def gdblksomoffset(grid_id):
-    """read SOM block offsets
-
-    Parameters
-    ----------
-    grid_id : int
-        grid identifier
-
-    Returns
-    -------
-    offsets : ndarray
-        SOM block offsets
-
-    Raises
-    ------
-    IOError
-        If associated library routine fails.
-    """
-    _, _, _, projparms = gdprojinfo(gridid)
-    num_offsets = projparms[11]
-    offset = np.zeros(num_offsets - 1, dtype=np.int64)
-    offsetp = ffi.cast("long *", offset.ctypes.data)
-    status = _lib.GDblkSOMoffset(grid_id, offsetp, num_offsets - 1,
-                                 'r'.encode())
-    _handle_error(status)
-
-    return offset
 
 def gdclose(fid):
     """Closes the HDF-EOS grid file.
