@@ -43,13 +43,21 @@ ffi.cdef("""
         """
 )
 
+library_dirs=['/usr/lib/hdf',
+              '/usr/lib64/hdf',
+              '/usr/lib/i386-linux-gnu',
+              '/opt/local/lib',
+              '/usr/local/lib']
+libraries=['hdfeos', 'Gctp', 'mfhdf', 'df', 'jpeg', 'z']
+
+# On Fedora, gctp is named libGctp, but on ubuntu variants, it is libgctp.
 if platform.system().startswith('Linux'):
-    if platform.linux_distribution() == ('Fedora', '20', 'Heisenbug'):
-        libraries=['hdfeos', 'Gctp', 'mfhdf', 'df', 'jpeg', 'z']
-    else:
-        libraries=['hdfeos', 'gctp', 'mfhdf', 'df', 'jpeg', 'z']
-else:
-    libraries=['hdfeos', 'Gctp', 'mfhdf', 'df', 'jpeg', 'z']
+    for library_dir in library_dirs:
+        if os.path.exists(os.path.join(library_dir, 'libgctp.dylib')):
+            libraries[1] = 'gctp'
+        elif os.path.exists(os.path.join(library_dir, 'libGctp.dylib')):
+            libraries[1] = 'Gctp'
+
 _lib = ffi.verify("""
         #include "mfhdf.h"
         #include "HE2_config.h"
@@ -61,11 +69,7 @@ _lib = ffi.verify("""
                       '/usr/include/x86_64-linux-gnu/hdf',
                       '/opt/local/include',
                       '/usr/local/include'],
-        library_dirs=['/usr/lib/hdf', '/usr/lib64/hdf',
-                      '/usr/lib/i386-linux-gnu',
-                      '/opt/local/lib',
-                       '/usr/local/lib'])
-
+        library_dirs=library_dirs)
 
 def _handle_error(status):
     if status < 0:

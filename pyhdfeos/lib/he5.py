@@ -54,28 +54,30 @@ ffi.cdef("""
         /*int HE5_EHHEisHE5(char *filename);*/
         """)
 
+library_dirs=['/usr/lib/hdf',
+              '/usr/lib64/hdf',
+              '/usr/lib/i386-linux-gnu',
+              '/usr/lib/x64_64-linux-gnu',
+              '/opt/local/lib',
+              '/usr/local/lib']
+libraries=['he5_hdfeos', 'Gctp', 'hdf5_hl', 'hdf5', 'z']
+
+# On Fedora, gctp is named libGctp, but on ubuntu variants, it is libgctp.
 if platform.system().startswith('Linux'):
-    if platform.linux_distribution() == ('Fedora', '20', 'Heisenbug'):
-        libraries=['he5_hdfeos', 'Gctp', 'hdf5_hl', 'hdf5', 'z']
-    else:
-        # Linux Mint 17?
-        libraries=['he5_hdfeos', 'gctp', 'hdf5_hl', 'hdf5', 'z']
-else:
-    libraries=['he5_hdfeos', 'gctp', 'hdf5_hl', 'hdf5', 'z']
+    for library_dir in library_dirs:
+        if os.path.exists(os.path.join(library_dir, 'libgctp.so')):
+            libraries[1] = 'gctp'
+        elif os.path.exists(os.path.join(library_dir, 'libGctp.so')):
+            libraries[1] = 'Gctp'
 
 _lib = ffi.verify("""
         #include "HE5_HdfEosDef.h"
         """,
         libraries=libraries,
         include_dirs=['/usr/include/hdf-eos5',
-                      #'/opt/local/lib/hdfeos5/include',
                       '/opt/local/include',
                       '/usr/local/include'],
-        library_dirs=['/usr/lib', '/usr/lib64/hdf',
-                      #'/opt/local/lib/hdfeos5/lib',
-                      '/opt/local/lib',
-                      '/usr/local/lib',
-                      '/usr/lib/x86_64-linux-gnu'])
+        library_dirs=library_dirs)
 
 H5F_ACC_RDONLY = 0x0000
 
@@ -722,9 +724,9 @@ def gdreadfield(gridid, fieldname, start, stride, edge):
     edgep = ffi.new("const hsize_t []", len(shape))
 
     for j in range(len(shape)):
-        startp[j] = int(start[j])
-        stridep[j] = int(stride[j])
-        edgep[j] = int(edge[j])
+        startp[j] = np.uint64(start[j])
+        stridep[j] = np.uint64(stride[j])
+        edgep[j] = np.uint64(edge[j])
 
     status = _lib.HE5_GDreadfield(gridid, fieldname.encode(), startp, stridep,
                                   edgep, pbuffer)
