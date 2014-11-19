@@ -4,6 +4,8 @@ import platform
 import numpy as np
 from cffi import FFI
 
+from .config import library_config
+
 ffi = FFI()
 ffi.cdef("""
         typedef int int32;
@@ -43,20 +45,12 @@ ffi.cdef("""
         """
 )
 
-library_dirs=['/usr/lib/hdf',
-              '/usr/lib64/hdf',
-              '/usr/lib/i386-linux-gnu',
-              '/opt/local/lib',
-              '/usr/local/lib']
-libraries=['hdfeos', 'Gctp', 'mfhdf', 'df', 'jpeg', 'z']
-
-# On Fedora, gctp is named libGctp, but on ubuntu variants, it is libgctp.
-if platform.system().startswith('Linux'):
-    for library_dir in library_dirs:
-        if os.path.exists(os.path.join(library_dir, 'libgctp.dylib')):
-            libraries[1] = 'gctp'
-        elif os.path.exists(os.path.join(library_dir, 'libGctp.dylib')):
-            libraries[1] = 'Gctp'
+library_dir_candidates = ['/usr/lib/hdf', '/usr/lib64/hdf',
+                          '/usr/lib/i386-linux-gnu', '/usr/local/lib',
+                          '/opt/local/lib']
+library_name_candidates = ['hdfeos', 'Gctp', 'gctp', 'mfhdf', 'df', 'jpeg', 'z']
+library_dirs, libraries = library_config(library_dir_candidates,
+                                         library_name_candidates)
 
 _lib = ffi.verify("""
         #include "mfhdf.h"
