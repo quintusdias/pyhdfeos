@@ -1,8 +1,11 @@
-import sys
+import os
 import platform
+import sys
 
 from cffi import FFI
 import numpy as np
+
+from .config import library_config
 
 ffi = FFI()
 ffi.cdef("""
@@ -54,28 +57,37 @@ ffi.cdef("""
         /*int HE5_EHHEisHE5(char *filename);*/
         """)
 
-if platform.system().startswith('Linux'):
-    if platform.linux_distribution() == ('Fedora', '20', 'Heisenbug'):
-        libraries=['he5_hdfeos', 'Gctp', 'hdf5_hl', 'hdf5', 'z']
-    else:
-        # Linux Mint 17?
-        libraries=['he5_hdfeos', 'gctp', 'hdf5_hl', 'hdf5', 'z']
-else:
-    libraries=['he5_hdfeos', 'gctp', 'hdf5_hl', 'hdf5', 'z']
+library_dir_candidates = ['/usr/lib/hdf', '/usr/lib64/hdf',
+                          '/usr/lib/i386-linux-gnu',
+                          '/usr/lib/x64_64-linux-gnu',
+                          '/opt/local/lib', '/usr/local/lib']
+library_name_candidates = ['he5_hdfeos', 'Gctp', 'gctp', 'hdf5_hl', 'hdf5', 'z']
+library_dirs, libraries = library_config(library_dir_candidates,
+                                         library_name_candidates)
+
+library_dirs = []
+libraries = []
+
+# On Fedora, gctp is named libGctp, but on ubuntu variants, it is libgctp.
+suffix_list = ['a', 'so', 'dylib', 'dll']
+for libname in library_name_candidates:
+    for library_dir in library_dir_candidates:
+        for suffix in suffix_list:
+            path = os.path.join(library_dir, 'lib' + libname + '.' + suffix)
+            if os.path.exists(path):
+                if libname.lower() not in [x.lower() for x in libraries]:
+                    libraries.append(libname)
+                if library_dir not in library_dirs:
+                    library_dirs.append(library_dir)
 
 _lib = ffi.verify("""
         #include "HE5_HdfEosDef.h"
         """,
         libraries=libraries,
         include_dirs=['/usr/include/hdf-eos5',
-                      #'/opt/local/lib/hdfeos5/include',
                       '/opt/local/include',
                       '/usr/local/include'],
-        library_dirs=['/usr/lib', '/usr/lib64/hdf',
-                      #'/opt/local/lib/hdfeos5/lib',
-                      '/opt/local/lib',
-                      '/usr/local/lib',
-                      '/usr/lib/x86_64-linux-gnu'])
+        library_dirs=library_dirs)
 
 H5F_ACC_RDONLY = 0x0000
 
@@ -722,9 +734,9 @@ def gdreadfield(gridid, fieldname, start, stride, edge):
     edgep = ffi.new("const hsize_t []", len(shape))
 
     for j in range(len(shape)):
-        startp[j] = int(start[j])
-        stridep[j] = int(stride[j])
-        edgep[j] = int(edge[j])
+        startp[j] = np.uint64(start[j])
+        stridep[j] = np.uint64(stride[j])
+        edgep[j] = np.uint64(edge[j])
 
     status = _lib.HE5_GDreadfield(gridid, fieldname.encode(), startp, stridep,
                                   edgep, pbuffer)

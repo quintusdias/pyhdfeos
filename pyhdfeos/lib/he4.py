@@ -4,6 +4,8 @@ import platform
 import numpy as np
 from cffi import FFI
 
+from .config import library_config
+
 ffi = FFI()
 ffi.cdef("""
         typedef int int32;
@@ -43,13 +45,13 @@ ffi.cdef("""
         """
 )
 
-if platform.system().startswith('Linux'):
-    if platform.linux_distribution() == ('Fedora', '20', 'Heisenbug'):
-        libraries=['hdfeos', 'Gctp', 'mfhdf', 'df', 'jpeg', 'z']
-    else:
-        libraries=['hdfeos', 'gctp', 'mfhdf', 'df', 'jpeg', 'z']
-else:
-    libraries=['hdfeos', 'Gctp', 'mfhdf', 'df', 'jpeg', 'z']
+library_dir_candidates = ['/usr/lib/hdf', '/usr/lib64/hdf',
+                          '/usr/lib/i386-linux-gnu', '/usr/local/lib',
+                          '/opt/local/lib']
+library_name_candidates = ['hdfeos', 'Gctp', 'gctp', 'mfhdf', 'df', 'jpeg', 'z']
+library_dirs, libraries = library_config(library_dir_candidates,
+                                         library_name_candidates)
+
 _lib = ffi.verify("""
         #include "mfhdf.h"
         #include "HE2_config.h"
@@ -61,11 +63,7 @@ _lib = ffi.verify("""
                       '/usr/include/x86_64-linux-gnu/hdf',
                       '/opt/local/include',
                       '/usr/local/include'],
-        library_dirs=['/usr/lib/hdf', '/usr/lib64/hdf',
-                      '/usr/lib/i386-linux-gnu',
-                      '/opt/local/lib',
-                       '/usr/local/lib'])
-
+        library_dirs=library_dirs)
 
 def _handle_error(status):
     if status < 0:
