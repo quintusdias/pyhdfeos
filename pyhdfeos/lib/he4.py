@@ -8,6 +8,7 @@ from .config import library_config
 
 ffi = FFI()
 ffi.cdef("""
+        typedef float float32;
         typedef int int32;
         typedef int intn;
         typedef double float64;
@@ -16,6 +17,7 @@ ffi.cdef("""
         int32 GDattach(int32 gdfid, char *grid);
         intn  GDattrinfo(int32 gdfid, char *attrname, int32 *nbyte, int32
                          *count);
+        intn  GDblkSOMoffset(int32 fid, float32 [], int32 count, char *code);
         intn  GDdetach(int32 gid);
         intn  GDclose(int32 fid);
         intn  GDfieldinfo(int32 gridid, char *fieldname, int32 *rank,
@@ -191,6 +193,34 @@ def gdattrinfo(grid_id, attr_name):
     _handle_error(status)
 
     return number_type_p[0], count_p[0]
+
+def gdblksomoffset(grid_id):
+    """read SOM block offsets
+
+    Parameters
+    ----------
+    grid_id : int
+        grid identifier
+
+    Returns
+    -------
+    offsets : ndarray
+        SOM block offsets
+
+    Raises
+    ------
+    IOError
+        If associated library routine fails.
+    """
+    _, _, _, projparms = gdprojinfo(grid_id)
+    num_offsets = int(projparms[11])
+    offset = np.zeros(num_offsets - 1, dtype=np.float32)
+    offsetp = ffi.cast("float32 *", offset.ctypes.data)
+    status = _lib.GDblkSOMoffset(grid_id, offsetp, num_offsets - 1,
+                                  'r'.encode())
+    _handle_error(status)
+ 
+    return offset
 
 def gdclose(gdfid):
     """Close an HDF-EOS file.
