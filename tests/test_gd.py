@@ -8,6 +8,8 @@ import numpy as np
 from pyhdfeos.lib import he4
 from pyhdfeos import GridFile
 
+from . import fixtures
+
 class TestReadGridCoords(unittest.TestCase):
 
     @classmethod
@@ -49,6 +51,41 @@ class TestRead(unittest.TestCase):
         cls.test_driver_swathfile4 = file
         file = pkg.resource_filename(__name__, os.path.join('data', 'Point219.hdf'))
         cls.test_driver_pointfile4 = file
+
+    def test_som(self):
+        """
+        """
+        file = 'MISR_AM1_GRP_ELLIPSOID_GM_P117_O058421_BA_F03_0024.hdf'
+        file = fixtures.test_file_path(file)
+        gdfid = he4.gdopen(file)
+        gridid = he4.gdattach(gdfid, 'BlueBand')
+        actual = he4.gdblksomoffset(gridid)
+        he4.gddetach(gridid)
+        he4.gdclose(gdfid)
+        self.assertEqual(len(actual), 179)
+        
+        expected_offset = [0, 16, 0, 16, 0, 0, 0, 16, 0, 0, 0, 0, 16, 0, 0,
+                           0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -16, 0, 0, 0,
+                           -16, 0, 0, -16, 0, 0, -16, 0, -16, 0, -16, 0, -16,
+                           -16, 0,
+                           -16, 0, -16, -16, 0, -16, -16, -16, 0, -16, -16,
+                           -16, -16, 0, -16,
+                           -16, -16, -16, -16, -16, -16, -16, -16, -16, -16,
+                           -16, -16, -16, -16, -16,
+                           -16, -16, -16, -16, -16, -16, -16, -16, -16, -32,
+                           -16, -16, -16, -16, -16,
+                           -16, -16, -16, -16, -16, -32, -16, -16, -16, -16,
+                           -16, -16, -16, -16, -16,
+                           -16, -16, -16, -16, -16, -16, -16, -16, -16, -16,
+                           -16, -16, -16, -16, 0,
+                           -16, -16, -16, -16, -16, 0, -16, -16, -16, 0, -16,
+                           -16, 0, -16, 0,
+                           -16, -16, 0, -16, 0, -16, 0, 0, -16, 0, -16, 0, 0,
+                           -16, 0,
+                           0, 0, 0, -16, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                           0, 0, 0, 0, 0, 0, 16, 0, 0, 16, 0, 0, 16, 0]
+        expected = np.array(expected_offset)
+        np.testing.assert_array_equal(actual, expected)
 
     def test_strides(self):
         """
