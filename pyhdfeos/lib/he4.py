@@ -47,9 +47,9 @@ ffi.cdef("""
         """
 )
 
-library_dir_candidates = ['/usr/lib/hdf', '/usr/lib64/hdf',
-                          '/usr/lib/i386-linux-gnu', '/usr/local/lib',
-                          '/opt/local/lib']
+library_dir_candidates = ['/usr/lib', '/usr/lib/hdf', '/usr/lib64/hdf',
+                          '/usr/lib/i386-linux-gnu', '/usr/lib/x86_64-linux-gnu',
+                          '/usr/local/lib', '/opt/local/lib']
 library_name_candidates = ['hdfeos', 'Gctp', 'gctp', 'mfhdf', 'df', 'jpeg', 'z']
 library_dirs, libraries = library_config(library_dir_candidates,
                                          library_name_candidates)
@@ -266,8 +266,8 @@ def gdgridinfo(grid_id):
 
     Returns
     -------
-    shape : tuple
-        Number of rows, columns in grid.
+    xdimsize, ydimsize : int
+        shape of the grid
     upleft, lowright : np.float64[2]
         Location in meters of upper left, lower right corners.
 
@@ -284,8 +284,6 @@ def gdgridinfo(grid_id):
                              upleft_buffer, lowright_buffer)
     _handle_error(status)
 
-    shape = (ydimsize[0], xdimsize[0])
-
     upleft = np.zeros(2, dtype=np.float64)
     upleft[0] = upleft_buffer[0]
     upleft[1] = upleft_buffer[1]
@@ -294,7 +292,7 @@ def gdgridinfo(grid_id):
     lowright[0] = lowright_buffer[0]
     lowright[1] = lowright_buffer[1]
 
-    return shape, upleft, lowright
+    return xdimsize[0], ydimsize[0], upleft, lowright
 
 def gdfieldinfo(grid_id, fieldname):
     """Return information about a geolocation field or data field in a grid.

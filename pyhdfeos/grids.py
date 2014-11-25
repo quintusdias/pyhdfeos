@@ -18,6 +18,7 @@ from pyhdf.VS  import *
 from pyhdf.SD  import *
 
 from .lib import he4, he5, sd
+from . import _som
 
 class _GridVariable(object):
     """
@@ -143,6 +144,11 @@ class _GridVariable(object):
 
 class _Grid(object):
     """
+    Grid object, concerned only with coordinates of HDF-EOS grids.
+
+    Attributes
+    ----------
+    projcode : scalar
     """
     def __init__(self, gdfid, gridname, he_module):
         self._he = he_module
@@ -153,7 +159,11 @@ class _Grid(object):
         dims = [(k, v) for (k, v) in zip(dimnames, dimlens)]
         self.dims = collections.OrderedDict(dims)
 
-        self.shape, self.upleft, self.lowright = self._he.gdgridinfo(self.gridid)
+        self.xdimsize, self.ydimsize, self.upleft, self.lowright = self._he.gdgridinfo(self.gridid)
+        if 'XDim' not in self.dims:
+            self.dims['XDim'] = self.xdimsize
+        if 'YDim' not in self.dims:
+            self.dims['YDim'] = self.ydimsize
 
         projcode, zonecode, spherecode, projparms = self._he.gdprojinfo(self.gridid)
         self.projcode = projcode
@@ -164,6 +174,10 @@ class _Grid(object):
 
         self.origincode = self._he.gdorigininfo(self.gridid)
         self.pixregcode = self._he.gdpixreginfo(self.gridid)
+
+        if self.projcode == 22:
+            self.offsets = self._he.gdblksomoffset(self.gridid)
+            self.num_offsets = len(self.offsets) + 1
 
         # collect the fieldnames
         self._fields, _, _ = self._he.gdinqfields(self.gridid)
@@ -183,8 +197,6 @@ class _Grid(object):
 
     def __str__(self):
         lst = ["Grid:  {0}".format(self.gridname)]
-        lst.append("    Shape:  {0}".format(self.shape))
-
         lst.append("    Dimensions:")
         for dimname, dimlen in self.dims.items():
             lst.append("        {0}:  {1}".format(dimname, dimlen))
@@ -390,7 +402,14 @@ class _Grid(object):
         """
         Retrieve grid coordinates.
         """
-        numrows, numcols = self.shape
+        if self.projcode == 22:
+            # The grid consists of the NBlocks, XDimSize, YDimSize
+            shape = (self.dims['SOMBlockDim'],
+                     self.dims['XDim'],
+                     self.dims['YDim'])
+        else:
+            # The grid consists of the NBlocks, XDimSize, YDimSize
+            shape = (self.dims['YDim'], self.dims['XDim'])
 
         if isinstance(index, int):
             raise RuntimeError("A scalar integer is not a legal argument.")
@@ -398,41 +417,66 @@ class _Grid(object):
         if index is Ellipsis:
             # Case of [...]
             # Handle it below.
-            rows = cols = slice(None, None, None)
-            return self.__getitem__((rows, cols))
+            if self.projcode == 22:
+                # SOM projection, inherently 3D.
+                bands = rows = cols = slice(None, None, None)
+                return self.__getitem__((bands, rows, cols))
+            else:
+                # Other projections are 2D.
+                rows = cols = slice(None, None, None)
+                return self.__getitem__((rows, cols))
 
         if isinstance(index, slice):
             if index.start is None and index.stop is None and index.step is None:
-                # Case of jp2[:]
-                return self.__getitem__((index,index))
+                # Case of grid[:]
+                if self.projcode == 22:
+                    # SOM projection, inherently 3D.
+                    return self.__getitem__((index,index,index))
+                else:
+                    # Other projections are 2D.
+                    return self.__getitem__((index,index))
 
-            msg = "Single slice argument integer is only legal if ':'"
+            msg = "Single slice argument integer is only legal if providing ':'"
             raise RuntimeError(msg)
 
         if isinstance(index, tuple) and len(index) > 2:
-            msg = "More than two slice arguments are not allowed."
-            raise RuntimeError(msg)
+            if self.projcode != 22:
+                msg = "More than two slice arguments are not allowed unless "
+                msg += "the projection is SOM."
+                raise RuntimeError(msg)
 
         if isinstance(index, tuple) and any(x is Ellipsis for x in index):
             # Remove the first ellipsis we find.
-            rows = slice(0, numrows)
-            cols = slice(0, numcols)
-            if index[0] is Ellipsis:
-                newindex = (rows, index[1])
+            if self.projcode == 22:
+                # SOM projection is 3D
+                rows = slice(0, self.xdimsize)
+                cols = slice(0, self.ydimsize)
+                bands = slice(0, self.dims['SOMBlockDim'])
+                if index[0] is Ellipsis:
+                    newindex = (bands, index[1], index[2])
+                elif index[1] is Ellipsis:
+                    newindex = (index[0], rows, index[2])
+                else:
+                    newindex = (index[0], index[1], cols)
             else:
-                newindex = (index[0], cols)
+                # Non-SOM projections are a lot easier.
+                rows = slice(0, self.ydimsize)
+                cols = slice(0, self.xdimsize)
+                if index[0] is Ellipsis:
+                    newindex = (rows, index[1])
+                else:
+                    newindex = (index[0], cols)
 
-            # Run once again because it is possible that there's another
-            # Ellipsis object.
+            # Easiest to just run it again.
             return self.__getitem__(newindex)
 
         if isinstance(index, tuple) and any(isinstance(x, int) for x in index):
             # Replace the first such integer argument, replace it with a slice.
-            lst = list(pargs)
+            lst = list(index)
             predicate = lambda x: not isinstance(x[1], int)
-            g = filterfalse(predicate, enumerate(pargs))
+            g = filterfalse(predicate, enumerate(index))
             idx = next(g)[0]
-            lst[idx] = slice(pargs[idx], pargs[idx] + 1)
+            lst[idx] = slice(index[idx], index[idx] + 1)
             newindex = tuple(lst)
 
             # Invoke array-based slicing again, as there may be additional
@@ -446,8 +490,18 @@ class _Grid(object):
 
         # Assuming pargs is a tuple of slices from now on.  
         # This is the workhorse section for the general case.
+        if self.projcode == 22:
+            # SOM grids are inherently 3D.  Must handle differently.
+            return _som._get_som_grid(index, shape, self.offsets,
+                                      self.upleft, self.lowright,
+                                      self.projcode, self.projparms, 
+                                      self.spherecode)
+
         rows = index[0]
         cols = index[1]
+
+        numrows = self.dims['YDim']
+        numcols = self.dims['XDim']
 
         rows_start = 0 if rows.start is None else rows.start
         rows_step = 1 if rows.step is None else rows.step
@@ -458,7 +512,7 @@ class _Grid(object):
 
         if (((rows_start < 0) or (rows_stop > numrows) or (cols_start < 0) or
              (cols_stop > numcols))):
-            msg = "Grid index arguments are out of bounds."
+            msg = "Grid index row/col arguments are out of bounds."
             raise RuntimeError(msg)
 
         col = np.arange(cols_start, cols_stop, cols_step)
@@ -467,12 +521,35 @@ class _Grid(object):
         cols = cols.astype(np.int32)
         rows = rows.astype(np.int32)
         lon, lat = self._he.gdij2ll(self.projcode, self.zonecode, self.projparms,
-                             self.spherecode, self.shape[1], self.shape[0],
+                             self.spherecode,
+                             self.xdimsize, self.ydimsize,
                              self.upleft, self.lowright,
                              rows, cols,
                              self.pixregcode, self.origincode)
         return lat, lon
 
+    def _som_grid(self, index):
+        """
+        Compute grid lat/lon coordinates for SOM grid.
+
+        Parameters
+        ----------
+        index : tuple
+            slice arguments
+        """
+        rows = index[0]
+        cols = index[1]
+        blocks = index[2]
+
+        rows_start = 0 if rows.start is None else rows.start
+        rows_step = 1 if rows.step is None else rows.step
+        rows_stop = numrows if rows.stop is None else rows.stop
+        cols_start = 0 if cols.start is None else cols.start
+        cols_step = 1 if cols.step is None else cols.step
+        cols_stop = numcols if cols.stop is None else cols.stop
+        blocks_start = 0 if blocks.start is None else blocks.start
+        blocks_step = 1 if blocks.step is None else blocks.step
+        blocks_stop = self.num_blocks if blocks.stop is None else blocks.stop
 
 class GridFile(object):
     """

@@ -20,6 +20,7 @@ def library_config(library_dir_candidates, library_name_candidates):
         for library_dir in library_dir_candidates:
             for suffix in suffix_list:
                 path = os.path.join(library_dir, 'lib' + libname + '.' + suffix)
+                #print(path)
                 if os.path.exists(path):
                     if libname.lower() not in [x.lower() for x in libraries]:
                         libraries.append(libname)
