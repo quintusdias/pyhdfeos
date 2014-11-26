@@ -1,5 +1,7 @@
 import unittest
 
+import numpy as np
+
 from pyhdfeos import som
 from pyhdfeos.lib import he4
 
@@ -20,6 +22,18 @@ class TestSuite(unittest.TestCase):
         offset = he4.gdblksomoffset(gridid)
         he4.gddetach(gridid)
         he4.gdclose(gdfid)
-        som.misr_init(shape[1], shape[0], offset, upleft, lowright)
-        som.inv_init
+        misr.init(shape[1], shape[0], offset, upleft, lowright)
+        som.inv_init(projcode, projparms, spherecode)
+        lat = np.zeros((nline,nsample, len(offset)+1))
+        lon = np.zeros((nline,nsample, len(offset)+1))
+        for b in range(len(offset) + 1):
+            for j in range(nline):
+                for k in range(nsample):
+                    l = j
+                    s = k
+                    somx, somy = misr.inv(b+1, l, s)
+                    lon_r, lat_r = som.inv(somx, somy)
+                    lon[j,k,b] = lon_r
+                    lat[j,k,b] = lat_r
+
 
