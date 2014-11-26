@@ -27,6 +27,7 @@ class TestSuite(unittest.TestCase):
         lat = np.zeros((nline,nsample, len(offset)+1))
         lon = np.zeros((nline,nsample, len(offset)+1))
         for b in range(len(offset) + 1):
+            print(b)
             for j in range(nline):
                 for k in range(nsample):
                     l = j

@@ -26,6 +26,7 @@ false_northing = 0
 TWO_PI = np.pi * 2
 MAXLONG = 2147483647
 DBLLONG = 4.61168601e18
+MAX_VAL = 4
 
 def sphdz(isph, parms):
     major = [6378206.4, 6378249.145, 6377397.155, 6378157.5,      
@@ -240,7 +241,7 @@ def adjust_lon(x):
             break
         elif np.abs(x / np.pi) < 2:
             x = x - np.sign(x) * TWO_PI
-        elif np.abs(x / TWO_PI) < MAX_LONG:
+        elif np.abs(x / TWO_PI) < MAXLONG:
             x = x - np.floor(x / TWO_PI) * TWO_PI
         elif np.abs(x / (MAXLONG * TWO_PI)) < MAXLONG:
             x = x-((np.floor(x / (MAXLONG * TWO_PI))) * (TWO_PI * MAXLONG))
