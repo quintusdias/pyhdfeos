@@ -57,9 +57,9 @@ ffi.cdef("""
         /*int HE5_EHHEisHE5(char *filename);*/
         """)
 
-library_dir_candidates = ['/usr/lib/hdf', '/usr/lib64/hdf',
+library_dir_candidates = ['/usr/lib', '/usr/lib/hdf', '/usr/lib64/hdf',
                           '/usr/lib/i386-linux-gnu',
-                          '/usr/lib/x64_64-linux-gnu',
+                          '/usr/lib/x86_64-linux-gnu',
                           '/opt/local/lib', '/usr/local/lib']
 library_name_candidates = ['he5_hdfeos', 'Gctp', 'gctp', 'hdf5_hl', 'hdf5', 'z']
 library_dirs, libraries = library_config(library_dir_candidates,

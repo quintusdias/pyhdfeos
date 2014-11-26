@@ -20,6 +20,13 @@ ca = 0
 es = 0
 s = 0
 
+false_easting = 0
+false_northing = 0
+
+TWO_PI = np.pi * 2
+MAXLONG = 2147483647
+DBLLONG = 4.61168601e18
+
 def sphdz(isph, parms):
     major = [6378206.4, 6378249.145, 6377397.155, 6378157.5,      
              6378388.0, 6378135.0, 6377276.3452, 6378145.0, 
@@ -53,6 +60,8 @@ def paksz(ang):
 
 def inv_init(projcode, parms, datum):
 
+    global false_easting, false_northing
+
     r_major, r_minor, radius = sphdz(datum, parms)
 
     false_easting = parms[6]
@@ -74,6 +83,7 @@ def sominvint(r_major, r_minor, satnum, path, alf_in, lon, false_east,
               false_north, time, flag, sat_ratio):
     
     global p21, lon_center, a, b, a2, a4, c1, c3, q, t, u, w, xj, p21, sa, ca, es, s
+    global false_easting, false_northing
 
     false_easting = false_east
     false_northing = false_north
@@ -152,3 +162,96 @@ def som_series(dlam):
     fc1 = fc * np.cos(dlam)
     fc3 = fc * np.cos(3.0 * dlam)
     return fb, fa2, fa4, fc1, fc3, dlam
+
+def inv(y, x):
+
+    global false_easting, false_northing
+
+    # Inverse equations. Begin inverse computation with approximation for tlon. 
+    # Solve for transformed long.
+    temp=y
+    y=x - false_easting
+    x= temp - false_northing
+    tlon= x/(a*b)
+    conv=1.e-9
+    for inumb in range(50):
+       sav = tlon
+       sd = np.sin(tlon)
+       sdsq = sd*sd;
+       s = p21 * sa * np.cos(tlon) * np.sqrt((1.0+t*sdsq)/((1.0+w*sdsq)*(1.0+q*sdsq)))
+       blon = (x/a)+(y/a)*s/xj-a2*np.sin(2.0*tlon)-a4*np.sin(4.0*tlon)-(s/xj)*(c1*np.sin(tlon)+c3*np.sin(3.0*tlon))
+       tlon = blon/b
+       dif = tlon-sav
+       if np.abs(dif) < conv:
+           break;
+    
+    # Compute transformed lat.
+    # ------------------------
+    st = np.sin(tlon)
+    defac = np.exp(np.sqrt(1.0+s*s/xj/xj)*(y/a-c1*st-c3*np.sin(3.0*tlon)));
+    actan = np.arctan(defac);
+    tlat = 2.0*(actan-(np.pi/4.0));
+    
+    # Compute geodetic longitude
+    # --------------------------*/
+    dd = st*st;
+    if np.abs(np.cos(tlon))<1.e-7:
+        tlon = tlon-1.e-7
+    bigk = np.sin(tlat)
+    bigk2 = bigk*bigk
+    xlamt = np.arctan(((1.0-bigk2/(1.0-es))*np.tan(tlon)*ca-bigk*sa*np.sqrt((1.0+q*dd)*(1.0-bigk2)-bigk2*u)/np.cos(tlon))/(1.0-bigk2*(1.0+u)))
+    
+    # Correct inverse quadrant
+    # ------------------------
+    if xlamt >= 0.0:
+        sl = 1.0
+    if xlamt<0.0:
+        sl =  -1.0;
+    if np.cos(tlon) >= 0.0:
+        scl = 1.0;
+    if np.cos(tlon) < 0.0:
+        scl =  -1.0
+    xlamt = xlamt-((np.pi/2.0)*(1.0-scl)*sl)
+    dlon = xlamt-p21*tlon
+    
+    # Compute geodetic latitude
+    # -------------------------
+    if np.abs(sa)<1.e-7:
+        dlat = np.asin(bigk/np.sqrt((1.0-es)*(1.0-es)+es*bigk2))
+    if np.abs(sa) >= 1.e-7:
+        dlat = np.arctan((np.tan(tlon)*np.cos(xlamt)-ca*np.sin(xlamt))/((1.0-es)*sa))
+
+    lon  =  adjust_lon(dlon+lon_center)
+    lat  =  dlat
+    return lon, lat
+
+def adjust_lon(x):
+    """
+    Function to adjust a longitude angle to range from -180 to 180 radians
+ 
+    Parameters:
+    x : float
+        angle in radians
+    """
+    count = 0
+
+    while True:
+        if np.abs(x) <= np.pi:
+            break
+        elif np.abs(x / np.pi) < 2:
+            x = x - np.sign(x) * TWO_PI
+        elif np.abs(x / TWO_PI) < MAX_LONG:
+            x = x - np.floor(x / TWO_PI) * TWO_PI
+        elif np.abs(x / (MAXLONG * TWO_PI)) < MAXLONG:
+            x = x-((np.floor(x / (MAXLONG * TWO_PI))) * (TWO_PI * MAXLONG))
+        elif np.abs(x / (DBLLONG * TWO_PI)) < MAXLONG:
+            x = x - np.floor(x / (DBLLONG * TWO_PI)) * (TWO_PI * DBLLONG)
+        else:
+            x = x - np.sign(x) * TWO_PI
+
+        count += 1
+        if count > MAX_VAL:
+            break
+
+    return x
+

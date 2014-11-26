@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from pyhdfeos import som
+from pyhdfeos import som, misr
 from pyhdfeos.lib import he4
 
 from . import fixtures

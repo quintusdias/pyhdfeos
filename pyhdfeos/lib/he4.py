@@ -47,9 +47,9 @@ ffi.cdef("""
         """
 )
 
-library_dir_candidates = ['/usr/lib/hdf', '/usr/lib64/hdf',
-                          '/usr/lib/i386-linux-gnu', '/usr/local/lib',
-                          '/opt/local/lib']
+library_dir_candidates = ['/usr/lib', '/usr/lib/hdf', '/usr/lib64/hdf',
+                          '/usr/lib/i386-linux-gnu', '/usr/lib/x86_64-linux-gnu',
+                          '/usr/local/lib', '/opt/local/lib']
 library_name_candidates = ['hdfeos', 'Gctp', 'gctp', 'mfhdf', 'df', 'jpeg', 'z']
 library_dirs, libraries = library_config(library_dir_candidates,
                                          library_name_candidates)
