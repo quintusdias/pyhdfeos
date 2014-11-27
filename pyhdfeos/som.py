@@ -51,12 +51,18 @@ def sphdz(isph, parms):
     return r_major, r_minor, radius
 
 def paksz(ang):
-    i = np.floor(ang / 1e6)
+    if ang < 0:
+        fac = -1
+    else:
+        fac = 1
+    sec = np.abs(ang)
+    tmp = 1e6
+    i = np.floor(sec / tmp)
     deg = i
-    sec = ang - deg * 1e6
+    sec = sec - deg * 1e6
     min = np.floor(sec / 1e3)
     sec = sec - min * 1e3
-    sec = deg * 3600 + min * 60 + sec
+    sec = fac * (deg * 3600 + min * 60 + sec)
     return sec / 3600
 
 def inv_init(projcode, parms, datum):

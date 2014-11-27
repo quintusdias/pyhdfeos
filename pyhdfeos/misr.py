@@ -38,6 +38,6 @@ def init(nline, nsample, offset, ulc_coord, lrc_coord):
 def inv(block, line, sample):
     n = int((block - 1) * nl * sx)
     x = (xc + n + (line * sx))
-    y = yc + ((sample + abs_offset[block-1] * sy))
+    y = yc + ((sample + abs_offset[block-1]) * sy)
     return x, y
 

@@ -10,6 +10,7 @@ from . import fixtures
 class TestSuite(unittest.TestCase):
 
     def test_som(self):
+        R2D = 57.2957795131
         nline = 128
         nsample = 512
         file = 'MISR_AM1_GRP_ELLIPSOID_GM_P117_O058421_BA_F03_0024.hdf'
@@ -24,17 +25,60 @@ class TestSuite(unittest.TestCase):
         he4.gdclose(gdfid)
         misr.init(shape[1], shape[0], offset, upleft, lowright)
         som.inv_init(projcode, projparms, spherecode)
-        lat = np.zeros((nline,nsample, len(offset)+1))
-        lon = np.zeros((nline,nsample, len(offset)+1))
-        for b in range(len(offset) + 1):
-            print(b)
-            for j in range(nline):
-                for k in range(nsample):
-                    l = j
-                    s = k
-                    somx, somy = misr.inv(b+1, l, s)
-                    lon_r, lat_r = som.inv(somx, somy)
-                    lon[j,k,b] = lon_r
-                    lat[j,k,b] = lat_r
+        nblocks = len(offset) + 1
+        nblocks = 2
+        lat = np.zeros((nline,nsample, nblocks))
+        lon = np.zeros((nline,nsample, nblocks))
+
+        # First point of block 0
+        somx, somy = misr.inv(1, 0.0, 0.0)
+        lon, lat = som.inv(somx, somy)
+        lon *= R2D
+        lat *= R2D
+        np.testing.assert_almost_equal(lat, 66.226321, 5)
+        np.testing.assert_almost_equal(lon, -68.775228, 5)
+
+        # 2nd point of block 0
+        somx, somy = misr.inv(1, 0.0, 1.0)
+        lon, lat = som.inv(somx, somy)
+        lon *= R2D
+        lat *= R2D
+        np.testing.assert_almost_equal(lat, 66.224, 3)
+        np.testing.assert_almost_equal(lon, -68.799, 3)
+
+        # Last point of block 0
+        somx, somy = misr.inv(1, nline-1, nsample-1)
+        lon, lat = som.inv(somx, somy)
+        lon *= R2D
+        lat *= R2D
+        np.testing.assert_almost_equal(lat, 65.7503, 3)
+        np.testing.assert_almost_equal(lon, -81.4905, 3)
+
+        # First point of last block
+        somx, somy = misr.inv(180, 0.0, 0.0)
+        lon, lat = som.inv(somx, somy)
+        lon *= R2D
+        lat *= R2D
+        np.testing.assert_almost_equal(lat, -65.7305, 3)
+        np.testing.assert_almost_equal(lon, -46.1594, 3)
+
+        # 2nd to last point of last block
+        somx, somy = misr.inv(180, nline-1, nsample-2)
+        lon, lat = som.inv(somx, somy)
+        lon *= R2D
+        lat *= R2D
+        np.testing.assert_almost_equal(lat, -66.205, 3)
+        np.testing.assert_almost_equal(lon, -58.841, 3)
+
+        #for b in range(nblocks):
+        #    print(b)
+        #    for j in range(nline):
+        #        for k in range(nsample):
+        #            l = j
+        #            s = k
+        #            somx, somy = misr.inv(b+1, l, s)
+        #            lon_r, lat_r = som.inv(somx, somy)
+        #            lon[j,k,b] = lon_r * R2D
+        #            lat[j,k,b] = lat_r * R2D
 
 
