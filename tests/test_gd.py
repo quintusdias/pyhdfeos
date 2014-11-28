@@ -52,8 +52,9 @@ class TestRead(unittest.TestCase):
         file = pkg.resource_filename(__name__, os.path.join('data', 'Point219.hdf'))
         cls.test_driver_pointfile4 = file
 
-    def test_som(self):
+    def test_som_offset(self):
         """
+        test GDblkSOMoffset for hdfeos2
         """
         file = 'MISR_AM1_GRP_ELLIPSOID_GM_P117_O058421_BA_F03_0024.hdf'
         file = fixtures.test_file_path(file)

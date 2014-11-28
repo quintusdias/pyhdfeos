@@ -143,6 +143,11 @@ class _GridVariable(object):
 
 class _Grid(object):
     """
+    Grid object, concerned only with coordinates of HDF-EOS grids.
+
+    Attributes
+    ----------
+    projcode : scalar
     """
     def __init__(self, gdfid, gridname, he_module):
         self._he = he_module
@@ -164,6 +169,10 @@ class _Grid(object):
 
         self.origincode = self._he.gdorigininfo(self.gridid)
         self.pixregcode = self._he.gdpixreginfo(self.gridid)
+
+        if self.projcode == 22:
+            self.offsets = self._he.gdblksomoffset(self.gridid)
+            self.num_offsets = len(self.offsets) + 1
 
         # collect the fieldnames
         self._fields, _, _ = self._he.gdinqfields(self.gridid)
@@ -410,8 +419,10 @@ class _Grid(object):
             raise RuntimeError(msg)
 
         if isinstance(index, tuple) and len(index) > 2:
-            msg = "More than two slice arguments are not allowed."
-            raise RuntimeError(msg)
+            if self.projcode != 22:
+                msg = "More than two slice arguments are not allowed unless "
+                msg += "the projection is SOM."
+                raise RuntimeError(msg)
 
         if isinstance(index, tuple) and any(x is Ellipsis for x in index):
             # Remove the first ellipsis we find.
@@ -428,11 +439,11 @@ class _Grid(object):
 
         if isinstance(index, tuple) and any(isinstance(x, int) for x in index):
             # Replace the first such integer argument, replace it with a slice.
-            lst = list(pargs)
+            lst = list(index)
             predicate = lambda x: not isinstance(x[1], int)
-            g = filterfalse(predicate, enumerate(pargs))
+            g = filterfalse(predicate, enumerate(index))
             idx = next(g)[0]
-            lst[idx] = slice(pargs[idx], pargs[idx] + 1)
+            lst[idx] = slice(index[idx], index[idx] + 1)
             newindex = tuple(lst)
 
             # Invoke array-based slicing again, as there may be additional
@@ -446,6 +457,13 @@ class _Grid(object):
 
         # Assuming pargs is a tuple of slices from now on.  
         # This is the workhorse section for the general case.
+        if self.projcode == 22:
+            # SOM grids are inherently 3D.  Must handle differently.
+            return _get_som_grid(index, self.shape, self.offsets,
+                                 self.upleft, self.lowright,
+                                 self.projcode, self.projparms, 
+                                 self.spherecode)
+
         rows = index[0]
         cols = index[1]
 
@@ -458,7 +476,7 @@ class _Grid(object):
 
         if (((rows_start < 0) or (rows_stop > numrows) or (cols_start < 0) or
              (cols_stop > numcols))):
-            msg = "Grid index arguments are out of bounds."
+            msg = "Grid index row/col arguments are out of bounds."
             raise RuntimeError(msg)
 
         col = np.arange(cols_start, cols_stop, cols_step)
@@ -473,6 +491,28 @@ class _Grid(object):
                              self.pixregcode, self.origincode)
         return lat, lon
 
+    def _som_grid(self, index):
+        """
+        Compute grid lat/lon coordinates for SOM grid.
+
+        Parameters
+        ----------
+        index : tuple
+            slice arguments
+        """
+        rows = index[0]
+        cols = index[1]
+        blocks = index[2]
+
+        rows_start = 0 if rows.start is None else rows.start
+        rows_step = 1 if rows.step is None else rows.step
+        rows_stop = numrows if rows.stop is None else rows.stop
+        cols_start = 0 if cols.start is None else cols.start
+        cols_step = 1 if cols.step is None else cols.step
+        cols_stop = numcols if cols.stop is None else cols.stop
+        blocks_start = 0 if blocks.start is None else blocks.start
+        blocks_step = 1 if blocks.step is None else blocks.step
+        blocks_stop = self.num_blocks if blocks.stop is None else blocks.stop
 
 class GridFile(object):
     """

@@ -2,12 +2,25 @@ import unittest
 
 import numpy as np
 
-from pyhdfeos import som, misr
+from pyhdfeos import GridFile, som, misr
 from pyhdfeos.lib import he4
 
 from . import fixtures
 
 class TestSuite(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        file = 'MISR_AM1_GRP_ELLIPSOID_GM_P117_O058421_BA_F03_0024.hdf'
+        cls.som_file = fixtures.test_file_path(file)
+
+    def test_block_subset(self):
+        gdf = GridFile(self.som_file)
+        lat, lon = gdf.grids['BlueBand'][:, :, 0]
+        self.assertEqual(lat.shape, (512, 128))
+        self.assertEqual(lon.shape, (512, 128))
+        np.testing.assert_almost_equal(lat[0, 0], 66.226321, 5)
+        np.testing.assert_almost_equal(lon[0, 0], -68.775228, 5)
 
     def test_som(self):
         R2D = 57.2957795131

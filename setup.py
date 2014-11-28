@@ -1,7 +1,10 @@
-from setuptools import setup, find_packages
+#from setuptools import setup
+from distutils.core import setup
 import os
 import re
 import sys
+
+from Cython.Build import cythonize
 
 import pyhdfeos
 
@@ -15,7 +18,8 @@ kwargs = {'name': 'pyhdfeos',
           'version': '0.1.0rc3',
           'zip_safe':  False,
           'ext_modules': [pyhdfeos.lib.he4.ffi.verifier.get_extension(),
-                          pyhdfeos.lib.he5.ffi.verifier.get_extension()],
+                          pyhdfeos.lib.he5.ffi.verifier.get_extension(),
+                          cythonize("pyhdfeos/_som.pyx")],
           'entry_points': {
               'console_scripts': ['hedump=pyhdfeos.command_line:dump_metadata'],
               },
