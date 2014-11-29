@@ -19,8 +19,29 @@ class TestSuite(unittest.TestCase):
         lat, lon = gdf.grids['BlueBand'][:, :, 0]
         self.assertEqual(lat.shape, (512, 128))
         self.assertEqual(lon.shape, (512, 128))
+        # First point of last block.
         np.testing.assert_almost_equal(lat[0, 0], 66.226321, 5)
         np.testing.assert_almost_equal(lon[0, 0], -68.775228, 5)
+
+        # 2nd point of block 0
+        np.testing.assert_almost_equal(lat[0, 1], 66.224, 3)
+        np.testing.assert_almost_equal(lon[0, 1], -68.799, 3)
+
+        # last point of first block
+        np.testing.assert_almost_equal(lat[-1, -1], 65.7503, 3)
+        np.testing.assert_almost_equal(lon[-1, -1], -81.4905, 3)
+
+        # First point of last block.
+        lat, lon = gdf.grids['BlueBand'][:, :, 179]
+        self.assertEqual(lat.shape, (512, 128))
+        self.assertEqual(lon.shape, (512, 128))
+        np.testing.assert_almost_equal(lat[0, 0], -65.7305, 3)
+        np.testing.assert_almost_equal(lon[0, 0], -46.1594, 3)
+
+        # 2nd to last point of last block
+        np.testing.assert_almost_equal(lat[-1, -2], -66.205, 3)
+        np.testing.assert_almost_equal(lon[-1, -2], -58.841, 3)
+
 
     def test_som(self):
         R2D = 57.2957795131

@@ -2,8 +2,9 @@ import numpy as np
 
 from pyhdfeos import som, misr
 from pyhdfeos.lib import he4
+from pyhdfeos import GridFile
 
-def run():
+def run_old():
     R2D = 57.2957795131
     nline = 128
     nsample = 512
@@ -33,6 +34,13 @@ def run():
                 lon[j,k,b] = lon_r * R2D
                 lat[j,k,b] = lat_r * R2D
     
+def run():
+    R2D = 57.2957795131
+    nline = 128
+    nsample = 512
+    file = '/opt/data/hdfeos/MISR_AM1_GRP_ELLIPSOID_GM_P117_O058421_BA_F03_0024.hdf'
+    gdf = GridFile(file)
+    lat, lon = gdf.grids['BlueBand'][:,:,0:5]
     
 if __name__ == '__main__':
     import cProfile

@@ -1,5 +1,5 @@
-#from setuptools import setup
-from distutils.core import setup
+from setuptools import setup
+#from distutils.core import setup
 import os
 import re
 import sys
@@ -19,7 +19,7 @@ kwargs = {'name': 'pyhdfeos',
           'zip_safe':  False,
           'ext_modules': [pyhdfeos.lib.he4.ffi.verifier.get_extension(),
                           pyhdfeos.lib.he5.ffi.verifier.get_extension(),
-                          cythonize("pyhdfeos/_som.pyx")],
+                          cythonize("pyhdfeos/_som.pyx")[0]],
           'entry_points': {
               'console_scripts': ['hedump=pyhdfeos.command_line:dump_metadata'],
               },

@@ -18,6 +18,7 @@ from pyhdf.VS  import *
 from pyhdf.SD  import *
 
 from .lib import he4, he5, sd
+from . import _som
 
 class _GridVariable(object):
     """
@@ -459,10 +460,10 @@ class _Grid(object):
         # This is the workhorse section for the general case.
         if self.projcode == 22:
             # SOM grids are inherently 3D.  Must handle differently.
-            return _get_som_grid(index, self.shape, self.offsets,
-                                 self.upleft, self.lowright,
-                                 self.projcode, self.projparms, 
-                                 self.spherecode)
+            return _som._get_som_grid(index, self.shape, self.offsets,
+                                      self.upleft, self.lowright,
+                                      self.projcode, self.projparms, 
+                                      self.spherecode)
 
         rows = index[0]
         cols = index[1]
