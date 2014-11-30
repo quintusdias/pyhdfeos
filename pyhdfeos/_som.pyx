@@ -1,13 +1,17 @@
 # cython: profile=True
 import numpy as np
 
-abs_offset = None
+cdef int _NBLOCK = 180
+cdef double abs_offset[180]
+cdef double relOffset[179]
+#abs_offset = None
 cdef double sx = 0.0
 cdef double sy = 0.0
 cdef double xc = 0.0
 cdef double yc = 0.0
 
-def misr_init(nline, nsample, offset, ulc_coord, lrc_coord):
+cdef misr_init(int nline, int nsample, float[:] relOff,
+              double[:] ulc_coord, double[:] lrc_coord):
     """
     Parameters
     ----------
@@ -22,14 +26,18 @@ def misr_init(nline, nsample, offset, ulc_coord, lrc_coord):
     """
 
     global abs_offset, nl, sx, sy, xc, yc
-
-    nblock = len(offset) + 1
+    cdef int i
 
     # convert relative offsets to absolute offsets
-    abs_offset = np.cumsum(offset)
-    abs_offset = np.pad(abs_offset, (1,0),
-                        mode='constant', constant_values=(0,0))
-    rel_offset = offset
+    abs_offset[0] = 0.0
+    for i in range(_NBLOCK):
+        abs_offset[i] = abs_offset[i-1] + relOff[i-1]
+        relOffset[i-1] = relOff[i-i]
+
+    #abs_offset = np.cumsum(offset)
+    #abs_offset = np.pad(abs_offset, (1,0),
+    #                    mode='constant', constant_values=(0,0))
+    #rel_offset = offset
 
     # set ulc and lrc SOM coordinates.
     # Note:  ulc y and lrc y are reversed in the structural metadata
@@ -37,7 +45,7 @@ def misr_init(nline, nsample, offset, ulc_coord, lrc_coord):
     lrc = np.array([lrc_coord[0], ulc_coord[1]])
 
     # Set number of blocks, lines and samples
-    nb = nblock
+    nb = _NBLOCK
     nl = nline
     ns = nsample
 
@@ -48,11 +56,11 @@ def misr_init(nline, nsample, offset, ulc_coord, lrc_coord):
     xc = ulc[0] + sx / 2
     yc = ulc[1] + sy / 2
 
-def misr_inv(int block, int line, int sample):
+cdef misr_inv(int block, int line, int sample, double *x, double *y):
     n = int((block - 1) * nl * sx)
-    x = (xc + n + (line * sx))
-    y = yc + ((sample + abs_offset[block-1]) * sy)
-    return x, y
+    x[0] = (xc + n + (line * sx))
+    y[0] = yc + ((sample + abs_offset[block-1]) * sy)
+    #return x, y
 
 
 S2R = 4.848136811095359e-6
@@ -325,6 +333,7 @@ def _get_som_grid(index, shape, offsets, upleft, lowright, projcode, projparms,
     index : tuple
        tuple of row, column, and band slices
     """
+    cdef double somx, somy
     rows = index[0]
     cols = index[1]
     bands = index[2]
@@ -358,7 +367,8 @@ def _get_som_grid(index, shape, offsets, upleft, lowright, projcode, projparms,
             for c in range(cols_start, cols_stop, cols_step):
                 l = r
                 s = c
-                somx, somy = misr_inv(b+1, l, s)
+                #somx, somy = misr_inv(b+1, l, s)
+                misr_inv(b+1, l, s, &somx, &somy)
                 lon_r, lat_r = som_inv(somx, somy)
                 lon[j,k,i] = lon_r * R2D
                 lat[j,k,i] = lat_r * R2D
