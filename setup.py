@@ -1,5 +1,4 @@
 from setuptools import setup
-#from distutils.core import setup
 import os
 import re
 import sys

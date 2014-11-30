@@ -1,12 +1,25 @@
+# cython: profile=True
 import numpy as np
 
 abs_offset = None
-sx = 0.0
-sy = 0.0
-xc = 0.0
-yc = 0.0
+cdef double sx = 0.0
+cdef double sy = 0.0
+cdef double xc = 0.0
+cdef double yc = 0.0
 
 def misr_init(nline, nsample, offset, ulc_coord, lrc_coord):
+    """
+    Parameters
+    ----------
+    nline : int
+        number of lines in a block
+    nsample : int
+        number of samples in a block
+    offset : numpy.ndarray
+        block offsets
+    ulc_coord, lrc_coord : numpy.ndarray
+        upper left corner and lower right corner coordinates in meters
+    """
 
     global abs_offset, nl, sx, sy, xc, yc
 
@@ -35,7 +48,7 @@ def misr_init(nline, nsample, offset, ulc_coord, lrc_coord):
     xc = ulc[0] + sx / 2
     yc = ulc[1] + sy / 2
 
-def misr_inv(block, line, sample):
+def misr_inv(int block, int line, int sample):
     n = int((block - 1) * nl * sx)
     x = (xc + n + (line * sx))
     y = yc + ((sample + abs_offset[block-1]) * sy)
