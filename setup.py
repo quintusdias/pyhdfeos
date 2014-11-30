@@ -8,6 +8,11 @@ from Cython.Build import cythonize
 
 import pyhdfeos
 
+ext_modules = [pyhdfeos.lib.he4.ffi.verifier.get_extension(),
+               pyhdfeos.lib.he5.ffi.verifier.get_extension()]
+e = cythonize("pyhdfeos/_som.pyx")
+ext_modules.extend(e)
+
 kwargs = {'name': 'pyhdfeos',
           'description': 'Tools for accessing HDF-EOS grids',
           'long_description': open('README.md').read(),
@@ -17,9 +22,7 @@ kwargs = {'name': 'pyhdfeos',
           'packages': ['pyhdfeos', 'pyhdfeos.lib'],
           'version': '0.1.0rc3',
           'zip_safe':  False,
-          'ext_modules': [pyhdfeos.lib.he4.ffi.verifier.get_extension(),
-                          pyhdfeos.lib.he5.ffi.verifier.get_extension(),
-                          cythonize("pyhdfeos/_som.pyx")[0]],
+          'ext_modules': ext_modules,
           'entry_points': {
               'console_scripts': ['hedump=pyhdfeos.command_line:dump_metadata'],
               },

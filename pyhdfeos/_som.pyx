@@ -6,7 +6,7 @@ sy = 0.0
 xc = 0.0
 yc = 0.0
 
-def misr_init(int nline, int nsample, offset, ulc_coord, lrc_coord):
+def misr_init(nline, nsample, offset, ulc_coord, lrc_coord):
 
     global abs_offset, nl, sx, sy, xc, yc
 
@@ -312,8 +312,6 @@ def _get_som_grid(index, shape, offsets, upleft, lowright, projcode, projparms,
     index : tuple
        tuple of row, column, and band slices
     """
-    cdef int i, j, k
-
     rows = index[0]
     cols = index[1]
     bands = index[2]
@@ -338,15 +336,21 @@ def _get_som_grid(index, shape, offsets, upleft, lowright, projcode, projparms,
     lat = np.zeros((nline,nsample, nblocks))
     lon = np.zeros((nline,nsample, nblocks))
     
+    i = 0
     for b in range(bands_start, bands_stop, bands_step):
         print(b)
-        for j in range(rows_start, rows_stop, rows_step):
-            for k in range(cols_start, cols_stop, cols_step):
-                l = j
-                s = k
+        j = 0
+        for r in range(rows_start, rows_stop, rows_step):
+            k = 0
+            for c in range(cols_start, cols_stop, cols_step):
+                l = r
+                s = c
                 somx, somy = misr_inv(b+1, l, s)
                 lon_r, lat_r = som_inv(somx, somy)
-                lon[j,k,b] = lon_r * R2D
-                lat[j,k,b] = lat_r * R2D
+                lon[j,k,i] = lon_r * R2D
+                lat[j,k,i] = lat_r * R2D
+                k += 1
+            j += 1
+        i += 1
     
     return lat, lon
