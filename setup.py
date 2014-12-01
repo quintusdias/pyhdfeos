@@ -4,6 +4,7 @@ import re
 import sys
 
 from Cython.Build import cythonize
+import numpy
 
 import pyhdfeos
 
@@ -22,6 +23,7 @@ kwargs = {'name': 'pyhdfeos',
           'version': '0.1.0rc3',
           'zip_safe':  False,
           'ext_modules': ext_modules,
+          'include_dirs': [numpy.get_include()],
           'entry_points': {
               'console_scripts': ['hedump=pyhdfeos.command_line:dump_metadata'],
               },
