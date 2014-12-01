@@ -10,7 +10,6 @@ import numpy as np
 cdef int _NBLOCK = 180
 cdef double abs_offset[180]
 cdef double relOffset[179]
-#abs_offset = None
 cdef double sx = 0.0
 cdef double sy = 0.0
 cdef double xc = 0.0
@@ -63,10 +62,19 @@ cdef misr_init(int nline, int nsample, float[:] relOff,
     yc = ulc[1] + sy / 2
 
 cdef misr_inv(int block, int line, int sample, double *x, double *y):
+    """
+    Parameters
+    ----------
+    block, line, sample : int
+        specifies SOM block, line number, and sample number, i.e. the 
+        k, i, and j coordinates of an (i,j,k) triplet
+    x, y : double pointers
+        
+
+    """
     n = int((block - 1) * nl * sx)
     x[0] = (xc + n + (line * sx))
     y[0] = yc + ((sample + abs_offset[block-1]) * sy)
-    #return x, y
 
 def _get_som_grid(index, shape, offsets, upleft, lowright, projcode, projparms, 
                   spherecode):
@@ -98,7 +106,6 @@ def _get_som_grid(index, shape, offsets, upleft, lowright, projcode, projparms,
 
     R2D = 57.2957795131
     misr_init(shape[1], shape[0], offsets, upleft, lowright)
-    #som_inv_init(projcode, projparms, spherecode)
     inv_init_wrapper(projcode, projparms, spherecode)
     lat = np.zeros((nline,nsample, nblocks))
     lon = np.zeros((nline,nsample, nblocks))
@@ -112,7 +119,6 @@ def _get_som_grid(index, shape, offsets, upleft, lowright, projcode, projparms,
             for c in range(cols_start, cols_stop, cols_step):
                 l = r
                 s = c
-                #somx, somy = misr_inv(b+1, l, s)
                 misr_inv(b+1, l, s, &somx, &somy)
                 sominv(somx, somy, &lon_r, &lat_r)
                 lon[j,k,i] = lon_r * R2D

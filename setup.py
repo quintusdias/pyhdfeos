@@ -10,8 +10,12 @@ import pyhdfeos
 
 ext_modules = [pyhdfeos.lib.he4.ffi.verifier.get_extension(),
                pyhdfeos.lib.he5.ffi.verifier.get_extension()]
-e = cythonize("pyhdfeos/_som.pyx")
-ext_modules.extend(e)
+
+from distutils.extension import Extension
+e = Extension("pyhdfeos/_som", ["pyhdfeos/_som.c"],
+        include_dirs = ['/usr/include/hdf-eos5'],
+        libraries = ['gctp'])
+ext_modules.append(e)
 
 kwargs = {'name': 'pyhdfeos',
           'description': 'Tools for accessing HDF-EOS grids',
@@ -23,7 +27,9 @@ kwargs = {'name': 'pyhdfeos',
           'version': '0.1.0rc3',
           'zip_safe':  False,
           'ext_modules': ext_modules,
-          'include_dirs': [numpy.get_include()],
+          'include_dirs': [numpy.get_include(),
+              '/usr/include/hdf-eos5'
+              ],
           'entry_points': {
               'console_scripts': ['hedump=pyhdfeos.command_line:dump_metadata'],
               },
