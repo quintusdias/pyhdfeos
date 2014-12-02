@@ -16,7 +16,7 @@ cythonize("pyhdfeos/_som.pyx")
 # Gctp on opensuse
 e = Extension("pyhdfeos/_som", ["pyhdfeos/_som.c"],
         include_dirs = ['/usr/include/hdf-eos5'],
-        libraries = ['Gctp'])
+        libraries = ['gctp'])
 ext_modules.append(e)
 
 kwargs = {'name': 'pyhdfeos',

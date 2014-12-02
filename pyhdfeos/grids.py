@@ -159,7 +159,11 @@ class _Grid(object):
         dims = [(k, v) for (k, v) in zip(dimnames, dimlens)]
         self.dims = collections.OrderedDict(dims)
 
-        self.shape, self.upleft, self.lowright = self._he.gdgridinfo(self.gridid)
+        self.xdimsize, self.ydimsize, self.upleft, self.lowright = self._he.gdgridinfo(self.gridid)
+        if 'XDim' not in self.dims:
+            self.dims['XDim'] = self.xdimsize
+        if 'YDim' not in self.dims:
+            self.dims['YDim'] = self.ydimsize
 
         projcode, zonecode, spherecode, projparms = self._he.gdprojinfo(self.gridid)
         self.projcode = projcode
@@ -193,8 +197,6 @@ class _Grid(object):
 
     def __str__(self):
         lst = ["Grid:  {0}".format(self.gridname)]
-        lst.append("    Shape:  {0}".format(self.shape))
-
         lst.append("    Dimensions:")
         for dimname, dimlen in self.dims.items():
             lst.append("        {0}:  {1}".format(dimname, dimlen))
@@ -400,7 +402,14 @@ class _Grid(object):
         """
         Retrieve grid coordinates.
         """
-        numrows, numcols = self.shape
+        if self.projcode == 22:
+            # The grid consists of the NBlocks, XDimSize, YDimSize
+            shape = (self.dims['SOMBlockDim'],
+                     self.dims['XDim'],
+                     self.dims['YDim'])
+        else:
+            # The grid consists of the NBlocks, XDimSize, YDimSize
+            shape = (self.dims['XDim'], self.dims['YDim'])
 
         if isinstance(index, int):
             raise RuntimeError("A scalar integer is not a legal argument.")
@@ -427,8 +436,8 @@ class _Grid(object):
 
         if isinstance(index, tuple) and any(x is Ellipsis for x in index):
             # Remove the first ellipsis we find.
-            rows = slice(0, numrows)
-            cols = slice(0, numcols)
+            rows = slice(0, self.ydimsize)
+            cols = slice(0, self.xdimsize)
             if index[0] is Ellipsis:
                 newindex = (rows, index[1])
             else:
@@ -460,13 +469,16 @@ class _Grid(object):
         # This is the workhorse section for the general case.
         if self.projcode == 22:
             # SOM grids are inherently 3D.  Must handle differently.
-            return _som._get_som_grid(index, self.shape, self.offsets,
+            return _som._get_som_grid(index, shape, self.offsets,
                                       self.upleft, self.lowright,
                                       self.projcode, self.projparms, 
                                       self.spherecode)
 
         rows = index[0]
         cols = index[1]
+
+        numrows = self.dims['YDim']
+        numcols = self.dims['XDim']
 
         rows_start = 0 if rows.start is None else rows.start
         rows_step = 1 if rows.step is None else rows.step
@@ -486,7 +498,8 @@ class _Grid(object):
         cols = cols.astype(np.int32)
         rows = rows.astype(np.int32)
         lon, lat = self._he.gdij2ll(self.projcode, self.zonecode, self.projparms,
-                             self.spherecode, self.shape[1], self.shape[0],
+                             self.spherecode,
+                             self.xdimsize, self.ydimsize,
                              self.upleft, self.lowright,
                              rows, cols,
                              self.pixregcode, self.origincode)

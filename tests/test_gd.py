@@ -363,8 +363,8 @@ class TestClass(unittest.TestCase):
 
     def test_gridinfo(self):
         gdf = GridFile(self.test_driver_gridfile4)
-        shape = gdf.grids['UTMGrid'].shape
-        self.assertEqual(shape, (200, 120))
+        self.assertEqual(gdf.grids['UTMGrid'].xdimsize, 120)
+        self.assertEqual(gdf.grids['UTMGrid'].ydimsize, 200)
 
         upleft = gdf.grids['UTMGrid'].upleft
         np.testing.assert_array_equal(upleft,

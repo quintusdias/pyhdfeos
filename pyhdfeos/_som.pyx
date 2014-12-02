@@ -83,7 +83,7 @@ def _get_som_grid(index, shape, offsets, upleft, lowright, projcode, projparms,
     index : tuple
         tuple of row, column, and band slices
     shape : tuple
-        number of rows, columns
+        dimensions of grid, should be SomBlockSize x XDim x YDim
     offsets : numpy.ndarray
         block offsets
     upleft, lowright : 2-element numpy.ndarray
@@ -97,13 +97,13 @@ def _get_som_grid(index, shape, offsets, upleft, lowright, projcode, projparms,
     """
     cdef double somx, somy
     cdef double lon_r, lat_r
-    rows = index[0]
-    cols = index[1]
-    bands = index[2]
+    bands = index[0] # SOMBlocks
+    cols = index[1]  # X
+    rows = index[2]  # Y
 
     rows_start = 0 if rows.start is None else rows.start
     rows_step = 1 if rows.step is None else rows.step
-    rows_stop = shape[0] if rows.stop is None else rows.stop
+    rows_stop = shape[2] if rows.stop is None else rows.stop
     cols_start = 0 if cols.start is None else cols.start
     cols_step = 1 if cols.step is None else cols.step
     cols_stop = shape[1] if cols.stop is None else cols.stop
@@ -116,10 +116,10 @@ def _get_som_grid(index, shape, offsets, upleft, lowright, projcode, projparms,
     nblocks = len(range(bands_start, bands_stop, bands_step))
 
     R2D = 57.2957795131
-    misr_init(shape[1], shape[0], offsets, upleft, lowright)
+    misr_init(shape[1], shape[2], offsets, upleft, lowright)
     inv_init_wrapper(projcode, projparms, spherecode)
-    lat = np.zeros((nline,nsample, nblocks))
-    lon = np.zeros((nline,nsample, nblocks))
+    lat = np.zeros((nblocks, nsample, nline))
+    lon = np.zeros((nblocks, nsample, nline))
     
     i = 0
     for b in range(bands_start, bands_stop, bands_step):
@@ -131,8 +131,8 @@ def _get_som_grid(index, shape, offsets, upleft, lowright, projcode, projparms,
                 s = c
                 misr_inv(b+1, l, s, &somx, &somy)
                 sominv(somx, somy, &lon_r, &lat_r)
-                lon[j,k,i] = lon_r * R2D
-                lat[j,k,i] = lat_r * R2D
+                lon[i,k,j] = lon_r * R2D
+                lat[i,k,j] = lat_r * R2D
                 k += 1
             j += 1
         i += 1

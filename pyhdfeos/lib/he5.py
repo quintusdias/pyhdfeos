@@ -272,9 +272,7 @@ def gdgridinfo(grid_id):
     status = _lib.HE5_GDgridinfo(grid_id, xdimsize, ydimsize, upleftp, lowrightp)
     _handle_error(status)
 
-    shape = (ydimsize[0], xdimsize[0])
-
-    return shape, upleft, lowright
+    return xdimsize[0], ydimsize[0], upleft, lowright
 
 def gdij2ll(projcode, zonecode, projparm, spherecode, xdimsize, ydimsize,
             upleft, lowright, row, col, pixcen, pixcnr):

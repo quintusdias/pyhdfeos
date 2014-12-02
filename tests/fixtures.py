@@ -12,11 +12,12 @@ def test_file_path(file):
     return os.path.join(os.environ['HDFEOS_ZOO_DIR'], file)
 
 utm_grid = """Grid:  UTMGrid
-    Shape:  (200, 120)
     Dimensions:
         Time:  10
         ExtDim:  60
         Unlim:  18446744073709551615
+        XDim:  120
+        YDim:  200
     Upper Left (x,y):  [  210584.50041  3322395.95445]
     Lower Right (x,y):  [  813931.10959  2214162.53278]
     Sphere:  Clarke 1866
@@ -27,9 +28,10 @@ utm_grid = """Grid:  UTMGrid
     Grid Attributes:"""
 
 som_grid = """Grid:  GeometricParameters
-    Shape:  (32, 8)
     Dimensions:
         SOMBlockDim:  180
+        XDim:  8
+        YDim:  32
     Upper Left (x,y):  [ 7460750.  1090650.]
     Lower Right (x,y):  [ 7601550.   527450.]
     Sphere:  WGS 84
@@ -53,9 +55,10 @@ som_grid = """Grid:  GeometricParameters
         Block_size.size_y:  [32  0  0  0]"""
 
 polar_stereographic_grid = """Grid:  PolarGrid
-    Shape:  (100, 100)
     Dimensions:
         Bands:  3
+        XDim:  100
+        YDim:  100
     Upper Left (x,y):  [ 0.  0.]
     Lower Right (x,y):  [ 0.  0.]
     Sphere:  International 1967
@@ -73,9 +76,10 @@ polar_stereographic_grid = """Grid:  PolarGrid
 
 geo_polar_utm_4 = """Grid219.hdf
 Grid:  UTMGrid
-    Shape:  (200, 120)
     Dimensions:
         Time:  10
+        XDim:  120
+        YDim:  200
     Upper Left (x,y):  [  210584.50041  3322395.95445]
     Lower Right (x,y):  [  813931.10959  2214162.53278]
     Sphere:  Clarke 1866
@@ -89,9 +93,10 @@ Grid:  UTMGrid
     Grid Attributes:
         float32:  [ 1.  0.  0.  0.]
 Grid:  PolarGrid
-    Shape:  (100, 100)
     Dimensions:
         Bands:  3
+        XDim:  100
+        YDim:  100
     Upper Left (x,y):  [ 0.  0.]
     Lower Right (x,y):  [ 0.  0.]
     Sphere:  International 1967
@@ -109,8 +114,9 @@ Grid:  PolarGrid
         Spectra[Bands, YDim, XDim]:
     Grid Attributes:
 Grid:  GEOGrid
-    Shape:  (40, 60)
     Dimensions:
+        XDim:  60
+        YDim:  40
     Upper Left (x,y):  [        0.  30000000.]
     Lower Right (x,y):  [ 15000000.  20000000.]
     Sphere:  Clarke 1866

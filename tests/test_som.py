@@ -25,20 +25,20 @@ class TestSuite(unittest.TestCase):
     def test_first_block_subset(self):
         gdf = GridFile(self.som_file)
 
-        lat, lon = gdf.grids['BlueBand'][:, :, 0]
-        self.assertEqual(lat.shape, (512, 128))
-        self.assertEqual(lon.shape, (512, 128))
+        lat, lon = gdf.grids['BlueBand'][0, :, :]
+        self.assertEqual(lat.shape, (128, 512))
+        self.assertEqual(lon.shape, (128, 512))
         # First point of last block.
         np.testing.assert_almost_equal(lat[0, 0], 66.226321, 5)
         np.testing.assert_almost_equal(lon[0, 0], -68.775228, 5)
 
         # 2nd point of block 0
-        np.testing.assert_almost_equal(lat[0, 1], 66.224, 3)
-        np.testing.assert_almost_equal(lon[0, 1], -68.799, 3)
+        np.testing.assert_almost_equal(lat[0, 1], 66.236, 3)
+        np.testing.assert_almost_equal(lon[0, 1], -68.781, 3)
 
         # last point of line 1
-        np.testing.assert_almost_equal(lat[0, -1], 65.907, 3)
-        np.testing.assert_almost_equal(lon[0, -1], -71.757, 3)
+        np.testing.assert_almost_equal(lat[0, -1], 71.093, 3)
+        np.testing.assert_almost_equal(lon[0, -1], -72.336, 3)
 
         # last point of first block
         np.testing.assert_almost_equal(lat[-1, -1], 70.702, 3)
@@ -47,18 +47,20 @@ class TestSuite(unittest.TestCase):
     def test_last_block_subset(self):
         gdf = GridFile(self.som_file)
 
-        lat, lon = gdf.grids['BlueBand'][:, :, 179]
+        lat, lon = gdf.grids['BlueBand'][179, :, :]
+        self.assertEqual(lat.shape, (128, 512))
+
         # First point of last block.
         np.testing.assert_almost_equal(lat[0, 0], -65.731, 3)
         np.testing.assert_almost_equal(lon[0, 0], -46.159, 3)
 
         # 2nd point of block 0
-        np.testing.assert_almost_equal(lat[0, 1], -65.735, 3)
-        np.testing.assert_almost_equal(lon[0, 1], -46.181, 3)
+        np.testing.assert_almost_equal(lat[0, 1], -65.722, 3)
+        np.testing.assert_almost_equal(lon[0, 1], -46.170, 3)
 
         # last point of line 1
-        np.testing.assert_almost_equal(lat[0, -1], -66.234, 3)
-        np.testing.assert_almost_equal(lon[0, -1], -48.973, 3)
+        np.testing.assert_almost_equal(lat[0, -1], -61.088, 3)
+        np.testing.assert_almost_equal(lon[0, -1], -50.539, 3)
 
         # last point of first block
         np.testing.assert_almost_equal(lat[-1, -1], -61.512, 3)
@@ -73,33 +75,17 @@ class TestSuite(unittest.TestCase):
         gdfid = he4.gdopen(file)
         gridid = he4.gdattach(gdfid, 'BlueBand')
         actual = he4.gdblksomoffset(gridid)
-        shape, upleft, lowright = he4.gdgridinfo(gridid)
+        xdim, ydim, upleft, lowright = he4.gdgridinfo(gridid)
         projcode, zonecode, spherecode, projparms = he4.gdprojinfo(gridid)
         offset = he4.gdblksomoffset(gridid)
         he4.gddetach(gridid)
         he4.gdclose(gdfid)
-        misr.init(shape[1], shape[0], offset, upleft, lowright)
+        misr.init(xdim, ydim, offset, upleft, lowright)
         som.inv_init(projcode, projparms, spherecode)
         nblocks = len(offset) + 1
         nblocks = 2
         lat = np.zeros((nline,nsample, nblocks))
         lon = np.zeros((nline,nsample, nblocks))
-
-        # First point of block 0
-        somx, somy = misr.inv(1, 0.0, 0.0)
-        lon, lat = som.inv(somx, somy)
-        lon *= R2D
-        lat *= R2D
-        np.testing.assert_almost_equal(lat, 66.226321, 5)
-        np.testing.assert_almost_equal(lon, -68.775228, 5)
-
-        # 2nd point of block 0
-        somx, somy = misr.inv(1, 0.0, 1.0)
-        lon, lat = som.inv(somx, somy)
-        lon *= R2D
-        lat *= R2D
-        np.testing.assert_almost_equal(lat, 66.224, 3)
-        np.testing.assert_almost_equal(lon, -68.799, 3)
 
         #print_ij(0, 0,   0)
         #print_ij(0, 0,   1)
@@ -115,40 +101,5 @@ class TestSuite(unittest.TestCase):
         #print_ij(179, 0,   127)
         #print_ij(179, 511, 126)
         #print_ij(179, 511, 127)
-
-        # Last point of block 0
-        somx, somy = misr.inv(1, nline-1, nsample-1)
-        lon, lat = som.inv(somx, somy)
-        lon *= R2D
-        lat *= R2D
-        np.testing.assert_almost_equal(lat, 65.7503, 3)
-        np.testing.assert_almost_equal(lon, -81.4905, 3)
-
-        # First point of last block
-        somx, somy = misr.inv(180, 0.0, 0.0)
-        lon, lat = som.inv(somx, somy)
-        lon *= R2D
-        lat *= R2D
-        np.testing.assert_almost_equal(lat, -65.7305, 3)
-        np.testing.assert_almost_equal(lon, -46.1594, 3)
-
-        # 2nd to last point of last block
-        somx, somy = misr.inv(180, nline-1, nsample-2)
-        lon, lat = som.inv(somx, somy)
-        lon *= R2D
-        lat *= R2D
-        np.testing.assert_almost_equal(lat, -66.205, 3)
-        np.testing.assert_almost_equal(lon, -58.841, 3)
-
-        #for b in range(nblocks):
-        #    print(b)
-        #    for j in range(nline):
-        #        for k in range(nsample):
-        #            l = j
-        #            s = k
-        #            somx, somy = misr.inv(b+1, l, s)
-        #            lon_r, lat_r = som.inv(somx, somy)
-        #            lon[j,k,b] = lon_r * R2D
-        #            lat[j,k,b] = lat_r * R2D
 
 
