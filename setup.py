@@ -13,9 +13,10 @@ ext_modules = [pyhdfeos.lib.he4.ffi.verifier.get_extension(),
 
 from distutils.extension import Extension
 cythonize("pyhdfeos/_som.pyx")
+# Gctp on opensuse
 e = Extension("pyhdfeos/_som", ["pyhdfeos/_som.c"],
         include_dirs = ['/usr/include/hdf-eos5'],
-        libraries = ['gctp'])
+        libraries = ['Gctp'])
 ext_modules.append(e)
 
 kwargs = {'name': 'pyhdfeos',
