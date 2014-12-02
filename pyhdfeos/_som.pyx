@@ -1,9 +1,14 @@
+# This file was adapted from routines found in the HDF-EOS2 Dumper project on
+# December 1, 2014
+# 
+# Copyright 2010-2013 by The HDF Group.  
+# All rights reserved.                                                      
+
 cdef extern from "HE5_GctpFunc.h":
     void inv_init(int a,int b,double *c,int d,char *str1,char *str2,int *e,
                   int (**func)(double, double, double*, double*))
     int sominv(double y, double x, double *lon, double *lat)
 
-# cython: profile=True
 cimport numpy as np
 import numpy as np
 
@@ -24,9 +29,9 @@ cdef misr_init(int nline, int nsample, float[:] relOff,
         number of lines in a block
     nsample : int
         number of samples in a block
-    offset : numpy.ndarray
-        block offsets
-    ulc_coord, lrc_coord : numpy.ndarray
+    relOff : memory view of numpy.ndarray
+        block offsets 
+    ulc_coord, lrc_coord : memory view of numpy.ndarray
         upper left corner and lower right corner coordinates in meters
     """
 
@@ -38,11 +43,6 @@ cdef misr_init(int nline, int nsample, float[:] relOff,
     for i in range(_NBLOCK):
         abs_offset[i] = abs_offset[i-1] + relOff[i-1]
         relOffset[i-1] = relOff[i-i]
-
-    #abs_offset = np.cumsum(offset)
-    #abs_offset = np.pad(abs_offset, (1,0),
-    #                    mode='constant', constant_values=(0,0))
-    #rel_offset = offset
 
     # set ulc and lrc SOM coordinates.
     # Note:  ulc y and lrc y are reversed in the structural metadata
@@ -68,9 +68,8 @@ cdef misr_inv(int block, int line, int sample, double *x, double *y):
     block, line, sample : int
         specifies SOM block, line number, and sample number, i.e. the 
         k, i, and j coordinates of an (i,j,k) triplet
-    x, y : double pointers
-        
-
+    x, y : double scalar
+        output SOM X and Y coordinates 
     """
     n = int((block - 1) * nl * sx)
     x[0] = (xc + n + (line * sx))
@@ -82,7 +81,19 @@ def _get_som_grid(index, shape, offsets, upleft, lowright, projcode, projparms,
     Parameters
     ----------
     index : tuple
-       tuple of row, column, and band slices
+        tuple of row, column, and band slices
+    shape : tuple
+        number of rows, columns
+    offsets : numpy.ndarray
+        block offsets
+    upleft, lowright : 2-element numpy.ndarray
+        location in meters of upper left, lower right coordinates of grid
+    projcode : int
+        GCTP projection code
+    projparms : numpy.ndarray
+        projection parameters
+    spherecode : int
+        GCTP spheroid code
     """
     cdef double somx, somy
     cdef double lon_r, lat_r
@@ -112,7 +123,6 @@ def _get_som_grid(index, shape, offsets, upleft, lowright, projcode, projparms,
     
     i = 0
     for b in range(bands_start, bands_stop, bands_step):
-        print(b)
         j = 0
         for r in range(rows_start, rows_stop, rows_step):
             k = 0
@@ -133,6 +143,7 @@ cdef inv_init_wrapper(int projcode,
                       np.ndarray[np.double_t, ndim=1] projparms,
                       int spherecode):
     """
+    Wraps GCTP library call of inv_init.
     """
     #inv_init((long)projcode, (long)zonecode, (double*)projparam,
     #        (long)spherecode, NU     LL, NULL, (int*) &iflg,  inv_trans);

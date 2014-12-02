@@ -12,6 +12,7 @@ ext_modules = [pyhdfeos.lib.he4.ffi.verifier.get_extension(),
                pyhdfeos.lib.he5.ffi.verifier.get_extension()]
 
 from distutils.extension import Extension
+cythonize("pyhdfeos/_som.pyx")
 e = Extension("pyhdfeos/_som", ["pyhdfeos/_som.c"],
         include_dirs = ['/usr/include/hdf-eos5'],
         libraries = ['gctp'])
