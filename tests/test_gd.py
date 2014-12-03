@@ -52,6 +52,8 @@ class TestRead(unittest.TestCase):
         file = pkg.resource_filename(__name__, os.path.join('data', 'Point219.hdf'))
         cls.test_driver_pointfile4 = file
 
+    @unittest.skipIf('HDFEOS_ZOO_DIR' not in os.environ,
+                     'HDFEOS_ZOO_DIR environment variable not set.')
     def test_som_offset(self):
         """
         test GDblkSOMoffset for hdfeos2

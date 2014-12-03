@@ -1,3 +1,4 @@
+import os
 import unittest
 
 import numpy as np
@@ -17,13 +18,13 @@ def print_ij(block, i, j):
 
 class TestSuite(unittest.TestCase):
 
-    @classmethod
-    def setUpClass(cls):
-        file = 'MISR_AM1_GRP_ELLIPSOID_GM_P117_O058421_BA_F03_0024.hdf'
-        cls.som_file = fixtures.test_file_path(file)
 
+    @unittest.skipIf('HDFEOS_ZOO_DIR' not in os.environ,
+                     'HDFEOS_ZOO_DIR environment variable not set.')
     def test_first_block_subset(self):
-        gdf = GridFile(self.som_file)
+        file = 'MISR_AM1_GRP_ELLIPSOID_GM_P117_O058421_BA_F03_0024.hdf'
+        som_file = fixtures.test_file_path(file)
+        gdf = GridFile(som_file)
 
         lat, lon = gdf.grids['BlueBand'][0, :, :]
         self.assertEqual(lat.shape, (128, 512))
@@ -44,8 +45,12 @@ class TestSuite(unittest.TestCase):
         np.testing.assert_almost_equal(lat[-1, -1], 70.702, 3)
         np.testing.assert_almost_equal(lon[-1, -1], -75.966, 3)
 
+    @unittest.skipIf('HDFEOS_ZOO_DIR' not in os.environ,
+                     'HDFEOS_ZOO_DIR environment variable not set.')
     def test_last_block_subset(self):
-        gdf = GridFile(self.som_file)
+        file = 'MISR_AM1_GRP_ELLIPSOID_GM_P117_O058421_BA_F03_0024.hdf'
+        som_file = fixtures.test_file_path(file)
+        gdf = GridFile(som_file)
 
         lat, lon = gdf.grids['BlueBand'][179, :, :]
         self.assertEqual(lat.shape, (128, 512))
@@ -66,6 +71,8 @@ class TestSuite(unittest.TestCase):
         np.testing.assert_almost_equal(lat[-1, -1], -61.512, 3)
         np.testing.assert_almost_equal(lon[-1, -1], -52.990, 3)
 
+    @unittest.skipIf('HDFEOS_ZOO_DIR' not in os.environ,
+                     'HDFEOS_ZOO_DIR environment variable not set.')
     def test_som(self):
         R2D = 57.2957795131
         nline = 128

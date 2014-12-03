@@ -9,7 +9,7 @@ import numpy
 # We need to locate libGctp (libgctp if on a debian variant) in order to 
 # compile the som grid extension module.
 try:
-    include_dirs = os.environ['INCLUDE_DIRS']
+    include_dirs = os.environ['INCLUDE_DIRS'].split(':')
 except KeyError:
     include_dirs = ['/usr/include', '/usr/local/include', '/opt/local/include']
 
@@ -47,7 +47,7 @@ ext_modules = [pyhdfeos.lib.he4.ffi.verifier.get_extension(),
 from distutils.extension import Extension
 cythonize("pyhdfeos/_som.pyx")
 e = Extension("pyhdfeos/_som", ["pyhdfeos/_som.c"],
-        include_dirs = include_dirs.split(':'),
+        include_dirs = include_dirs,
         libraries    = [true_gctp_lib],
         library_dirs = library_dirs)
 ext_modules.append(e)
