@@ -8,7 +8,7 @@ from pyhdfeos.lib import he4
 
 from . import fixtures
 
-def print_ij(block, i, j):
+def print_kij(block, i, j):
     R2D = 57.2957795131
     somx, somy = misr.inv(block+1, i, j)
     lon, lat = som.inv(somx, somy)
@@ -16,37 +16,34 @@ def print_ij(block, i, j):
     lat *= R2D
     print("({0} {1} {2}):  {3:.3f} {4:.3f}".format(block, i, j, lat, lon))
 
+@unittest.skipIf('HDFEOS_ZOO_DIR' not in os.environ,
+                 'HDFEOS_ZOO_DIR environment variable not set.')
 class TestSuite(unittest.TestCase):
 
+    @classmethod
+    def setUpClass(cls):
+        file = 'MISR_AM1_GRP_ELLIPSOID_GM_P117_O058421_BA_F03_0024.hdf'
+        cls.som_file = fixtures.test_file_path(file)
 
-    @unittest.skipIf('HDFEOS_ZOO_DIR' not in os.environ,
-                     'HDFEOS_ZOO_DIR environment variable not set.')
+    def test_point(self):
+        """
+        retrieve a single point from SOM grid.
+        """
+        gdf = GridFile(self.som_file)
+
     def test_first_block_subset(self):
         file = 'MISR_AM1_GRP_ELLIPSOID_GM_P117_O058421_BA_F03_0024.hdf'
         som_file = fixtures.test_file_path(file)
         gdf = GridFile(som_file)
 
-        lat, lon = gdf.grids['BlueBand'][0, :, :]
-        self.assertEqual(lat.shape, (128, 512))
-        self.assertEqual(lon.shape, (128, 512))
-        # First point of last block.
-        np.testing.assert_almost_equal(lat[0, 0], 66.226321, 5)
-        np.testing.assert_almost_equal(lon[0, 0], -68.775228, 5)
+        lat, lon = gdf.grids['BlueBand'][0, 0, 0]
+        np.testing.assert_almost_equal(lat, 66.226321, 5)
+        np.testing.assert_almost_equal(lon, -68.775228, 5)
 
-        # 2nd point of block 0
-        np.testing.assert_almost_equal(lat[0, 1], 66.236, 3)
-        np.testing.assert_almost_equal(lon[0, 1], -68.781, 3)
+        lat, lon = gdf.grids['BlueBand'][179, 127, 511]
+        np.testing.assert_almost_equal(lat, 65.75, 3)
+        np.testing.assert_almost_equal(lon, -58.865, 3)
 
-        # last point of line 1
-        np.testing.assert_almost_equal(lat[0, -1], 71.093, 3)
-        np.testing.assert_almost_equal(lon[0, -1], -72.336, 3)
-
-        # last point of first block
-        np.testing.assert_almost_equal(lat[-1, -1], 70.702, 3)
-        np.testing.assert_almost_equal(lon[-1, -1], -75.966, 3)
-
-    @unittest.skipIf('HDFEOS_ZOO_DIR' not in os.environ,
-                     'HDFEOS_ZOO_DIR environment variable not set.')
     def test_last_block_subset(self):
         file = 'MISR_AM1_GRP_ELLIPSOID_GM_P117_O058421_BA_F03_0024.hdf'
         som_file = fixtures.test_file_path(file)
@@ -71,8 +68,6 @@ class TestSuite(unittest.TestCase):
         np.testing.assert_almost_equal(lat[-1, -1], -61.512, 3)
         np.testing.assert_almost_equal(lon[-1, -1], -52.990, 3)
 
-    @unittest.skipIf('HDFEOS_ZOO_DIR' not in os.environ,
-                     'HDFEOS_ZOO_DIR environment variable not set.')
     def test_som(self):
         R2D = 57.2957795131
         nline = 128
@@ -107,6 +102,6 @@ class TestSuite(unittest.TestCase):
         #print_ij(179, 0,   1)
         #print_ij(179, 0,   127)
         #print_ij(179, 511, 126)
-        #print_ij(179, 511, 127)
+        print_kij(179, 127, 511)
 
 

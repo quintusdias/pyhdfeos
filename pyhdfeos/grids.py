@@ -409,7 +409,7 @@ class _Grid(object):
                      self.dims['YDim'])
         else:
             # The grid consists of the NBlocks, XDimSize, YDimSize
-            shape = (self.dims['XDim'], self.dims['YDim'])
+            shape = (self.dims['YDim'], self.dims['XDim'])
 
         if isinstance(index, int):
             raise RuntimeError("A scalar integer is not a legal argument.")
