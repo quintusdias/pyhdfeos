@@ -11,6 +11,8 @@ Installation
 
 Prerequisites
 =============
+Currently, the version of Python must be 3.4.
+
 Both HDF-EOS and HDF-EOS5 are required.  On some systems, such as Linux Mint,
 this is pretty easy, just make sure you have the devel packages installed as
 well.
