@@ -1,5 +1,6 @@
 import os
 import platform
+import sys
 
 import numpy as np
 from cffi import FFI
@@ -59,6 +60,7 @@ _lib = ffi.verify("""
         #include "HE2_config.h"
         #include "HdfEosDef.h"
         """,
+        ext_package='pyhdfeos',
         libraries=libraries,
         include_dirs=['/usr/include/hdf',
                       '/usr/include/i386-linux-gnu/hdf',
@@ -334,7 +336,10 @@ def gdfieldinfo(grid_id, fieldname):
     for j in range(rankp[0]):
         shape.append(dims[j])
 
-    dimlist = ffi.string(dimlist_buffer).decode('ascii').split(',')
+    if sys.hexversion < 0x03000000:
+        dimlist = ffi.string(dimlist_buffer).split(',')
+    else:
+        dimlist = ffi.string(dimlist_buffer).decode('ascii').split(',')
 
     return tuple(shape), ntypep[0], dimlist
 
@@ -420,6 +425,10 @@ def gdinqfields(gridid):
     nfields2 = _lib.GDinqfields(gridid, fieldlist_buffer,
                                 rank_buffer, numbertype_buffer)
     fieldlist = ffi.string(fieldlist_buffer).decode('ascii').split(',')
+    if sys.hexversion < 0x03000000:
+        fieldlist = ffi.string(fieldlist_buffer).split(',')
+    else:
+        fieldlist = ffi.string(fieldlist_buffer).decode('ascii').split(',')
 
     ranks = []
     numbertypes = []
@@ -454,7 +463,10 @@ def gdinqattrs(gridid):
     attr_buffer = ffi.new("char[]", b'\0' * (strbufsize[0] + 1))
     nattrs = _lib.GDinqattrs(gridid, attr_buffer, strbufsize)
     _handle_error(nattrs)
-    attr_list = ffi.string(attr_buffer).decode('ascii').split(',')
+    if sys.hexversion < 0x03000000:
+        attr_list = ffi.string(attr_buffer).split(',')
+    else:
+        attr_list = ffi.string(attr_buffer).decode('ascii').split(',')
     return attr_list
 
 def gdinqdims(gridid):
@@ -515,7 +527,10 @@ def gdinqgrid(filename):
     gridbuffer = ffi.new("char[]", b'\0' * (strbufsize[0] + 1))
     ngrids = _lib.GDinqgrid(filename.encode(), gridbuffer, ffi.NULL)
     _handle_error(ngrids)
-    gridlist = ffi.string(gridbuffer).decode('ascii').split(',')
+    if sys.hexversion < 0x03000000:
+        gridlist = ffi.string(gridbuffer).split(',')
+    else:
+        gridlist = ffi.string(gridbuffer).decode('ascii').split(',')
     return gridlist
 
 def gdnentries(gridid, entry_code):

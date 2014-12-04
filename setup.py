@@ -52,7 +52,7 @@ e = Extension("pyhdfeos/_som", ["pyhdfeos/_som.c"],
         library_dirs = library_dirs)
 ext_modules.append(e)
 
-install_requires = ['numpy>=1.8.0', 'cffi>=0.8.2']
+install_requires = ['numpy>=1.8.0', 'cffi>=0.8.2', 'pyhdf>=0.9']
 if sys.hexversion < 0x03000000:
     install_requires.append('mock>=1.0.1')
 
@@ -80,6 +80,7 @@ setup(name             = 'pyhdfeos',
       packages         = ['pyhdfeos', 'pyhdfeos.lib'],
       version          = '0.1.0rc3',
       zip_safe         =  False,
+      ext_package      = 'pyhdfeos',
       ext_modules      = ext_modules,
       include_dirs     = [numpy.get_include(), '/usr/include/hdf-eos5'],
       entry_points     = entry_points,
