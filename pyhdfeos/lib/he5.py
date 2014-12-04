@@ -408,7 +408,10 @@ def gdinqfields(gridid):
     numbertypep = ffi.cast("hid_t *", numbertypes.ctypes.data)
     nfields2 = _lib.HE5_GDinqfields(gridid, fieldlist_buffer,
                                     rankp, numbertypep)
-    fieldlist = ffi.string(fieldlist_buffer).decode('ascii').split(',')
+    if sys.hexversion < 0x03000000:
+        fieldlist = ffi.string(fieldlist_buffer).split(',')
+    else:
+        fieldlist = ffi.string(fieldlist_buffer).decode('ascii').split(',')
 
     return fieldlist, ranks, numbertypes
 
@@ -434,7 +437,10 @@ def gdinqgrid(filename):
     gridbuffer = ffi.new("char[]", b'\0' * (strbufsizep[0] + 1))
     ngrids = _lib.HE5_GDinqgrid(filename.encode(), gridbuffer, ffi.NULL)
     _handle_error(ngrids)
-    gridlist = ffi.string(gridbuffer).decode('ascii').split(',')
+    if sys.hexversion < 0x03000000:
+        gridlist = ffi.string(gridbuffer).split(',')
+    else:
+        gridlist = ffi.string(gridbuffer).decode('ascii').split(',')
     return gridlist
 
 def gdinqlocattrs(gridid, fieldname):
