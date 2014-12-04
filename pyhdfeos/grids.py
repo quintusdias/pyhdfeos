@@ -17,7 +17,7 @@ from pyhdf.V   import *
 from pyhdf.VS  import *
 from pyhdf.SD  import *
 
-from .lib import he4, he5, sd
+from .lib import he4, he5, hdf
 from . import _som
 
 class _GridVariable(object):
@@ -584,6 +584,15 @@ class GridFile(object):
     def _hdf4_attrs(self, filename, gridname, fieldname):
 
         attrs = None
+
+        fid = hdf.hopen(filename)
+        sd_id = hdf.sdstart(filename)
+        hdf.vstart(fid)
+
+        hdf.vend(fid)
+        hdf.sdend(sd_id)
+        hdf.hclose(fid)
+
 
         hdf = HDF(filename)
         sd = SD(filename)

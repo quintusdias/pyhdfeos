@@ -1,6 +1,8 @@
 import numpy as np
 from cffi import FFI
 
+DFACC_READ = 1
+
 DFNT_CHAR = 4
 DFNT_FLOAT = 5
 DFNT_FLOAT64 = 6
@@ -13,8 +15,11 @@ DFNT_UINT32 = 25
 
 ffi = FFI()
 ffi.cdef("""
+        typedef short int int16;
         typedef int int32;
         typedef int intn;
+        int32 Hopen(const char *path, intn acc_mode, int16 ndds);
+        intn Hclose(int32 file_id);
         intn SDattrinfo(int obj_id, int32 idx, char *name, int32 *dtype,
                         int32 *count);
         intn SDendaccess(int32 sds_id);
@@ -23,10 +28,15 @@ ffi.cdef("""
         int32 SDnametoindex(int32 sdid, char *sds_name);
         int32 SDselect(int32 sdid, int32 idx);
         intn SDreadattr(int32 obj_id, int32 idx, void *buffer);
+        intn SDend(int32 fid);
+        int32 SDstart(char *filename, int32 access_mode);
+        intn Vstart(int32 fid);
+        intn Vend(int32 fid);
         """
 )
 
 _lib = ffi.verify("""
+        #include "hdf.h"
         #include "mfhdf.h"
         """,
         libraries=['mfhdf', 'df', 'jpeg', 'z'],
@@ -141,6 +151,32 @@ def getinfo(sdsid):
     dimsizes = dimsizes[0:rank]
     return name, rank, dimsizes, datatypep[0], numattrsp[0]
 
+def hclose(fid):
+    """Closes HDF data file.
+
+    Parameters
+    ----------
+    fid : int
+        file identifier
+    """
+    status = _lib.Hclose(fid)
+    _handle_error(status)
+
+def hopen(filename):
+    """Open or create HDF data file.
+
+    Parameters
+    ----------
+    filename : str
+        file name
+
+    Returns
+    -------
+    fid : int32
+        file identifier
+    """
+    return _lib.Hopen(filename.encode(), DFACC_READ, 0)
+
 def readattr(obj_id, idx):
     """read attribute
 
@@ -213,3 +249,52 @@ def select(sdid, idx):
     _handle_error(sds_id)
     return sds_id
 
+def sdend(sd_id):
+    """
+    close scientific dataset
+
+    Parameters
+    ----------
+    sd_id : int
+        dataset (file) identifier
+    """
+    status = _lib.SDend(sd_id)
+    _handle_error(status)
+
+def sdstart(filename):
+    """
+    Parameters
+    ----------
+    filename : str
+        file name
+
+    Returns
+    -------
+    sd_id : int
+        dataset (file) identifier
+    """
+    return _lib.SDstart(filename.encode(), DFACC_READ)
+
+def vend(fid):
+    """
+    close vgroup interface
+
+    Parameters
+    ----------
+    fid : int
+        file identifier
+    """
+    status = _lib.Vend(fid)
+    _handle_error(status)
+
+def vstart(fid):
+    """
+    start Vgroup interface
+
+    Parameters
+    ----------
+    fid : int
+        file identifier
+    """
+    status = _lib.Vstart(fid)
+    _handle_error(status)
