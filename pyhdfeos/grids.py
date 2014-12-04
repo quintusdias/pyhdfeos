@@ -417,15 +417,26 @@ class _Grid(object):
         if index is Ellipsis:
             # Case of [...]
             # Handle it below.
-            rows = cols = slice(None, None, None)
-            return self.__getitem__((rows, cols))
+            if self.projcode == 22:
+                # SOM projection, inherently 3D.
+                bands = rows = cols = slice(None, None, None)
+                return self.__getitem__((bands, rows, cols))
+            else:
+                # Other projections are 2D.
+                rows = cols = slice(None, None, None)
+                return self.__getitem__((rows, cols))
 
         if isinstance(index, slice):
             if index.start is None and index.stop is None and index.step is None:
-                # Case of jp2[:]
-                return self.__getitem__((index,index))
+                # Case of grid[:]
+                if self.projcode == 22:
+                    # SOM projection, inherently 3D.
+                    return self.__getitem__((index,index,index))
+                else:
+                    # Other projections are 2D.
+                    return self.__getitem__((index,index))
 
-            msg = "Single slice argument integer is only legal if ':'"
+            msg = "Single slice argument integer is only legal if providing ':'"
             raise RuntimeError(msg)
 
         if isinstance(index, tuple) and len(index) > 2:
@@ -436,15 +447,27 @@ class _Grid(object):
 
         if isinstance(index, tuple) and any(x is Ellipsis for x in index):
             # Remove the first ellipsis we find.
-            rows = slice(0, self.ydimsize)
-            cols = slice(0, self.xdimsize)
-            if index[0] is Ellipsis:
-                newindex = (rows, index[1])
+            if self.projcode == 22:
+                # SOM projection is 3D
+                rows = slice(0, self.xdimsize)
+                cols = slice(0, self.ydimsize)
+                bands = slice(0, self.dims['SOMBlockDim'])
+                if index[0] is Ellipsis:
+                    newindex = (bands, index[1], index[2])
+                elif index[1] is Ellipsis:
+                    newindex = (index[0], rows, index[2])
+                else:
+                    newindex = (index[0], index[1], cols)
             else:
-                newindex = (index[0], cols)
+                # Non-SOM projections are a lot easier.
+                rows = slice(0, self.ydimsize)
+                cols = slice(0, self.xdimsize)
+                if index[0] is Ellipsis:
+                    newindex = (rows, index[1])
+                else:
+                    newindex = (index[0], cols)
 
-            # Run once again because it is possible that there's another
-            # Ellipsis object.
+            # Easiest to just run it again.
             return self.__getitem__(newindex)
 
         if isinstance(index, tuple) and any(isinstance(x, int) for x in index):

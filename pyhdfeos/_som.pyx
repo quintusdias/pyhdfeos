@@ -34,7 +34,6 @@ cdef misr_init(int nline, int nsample, float[:] relOff,
     ulc_coord, lrc_coord : memory view of numpy.ndarray
         upper left corner and lower right corner coordinates in meters
     """
-
     global abs_offset, nl, sx, sy, xc, yc
     cdef int i
 
@@ -98,15 +97,18 @@ def _get_som_grid(index, shape, offsets, upleft, lowright, projcode, projparms,
     cdef double somx, somy
     cdef double lon_r, lat_r
     bands = index[0] # SOMBlocks
-    cols = index[1]  # X
-    rows = index[2]  # Y
+    rows = index[1]  # X
+    cols = index[2]  # Y
+
+    numrows = shape[1]
+    numcols = shape[2]
 
     rows_start = 0 if rows.start is None else rows.start
     rows_step = 1 if rows.step is None else rows.step
-    rows_stop = shape[2] if rows.stop is None else rows.stop
+    rows_stop = shape[1] if rows.stop is None else rows.stop
     cols_start = 0 if cols.start is None else cols.start
     cols_step = 1 if cols.step is None else cols.step
-    cols_stop = shape[1] if cols.stop is None else cols.stop
+    cols_stop = shape[2] if cols.stop is None else cols.stop
     bands_start = 0 if bands.start is None else bands.start
     bands_step = 1 if bands.step is None else bands.step
     bands_stop = (len(offsets) + 1) if bands.stop is None else bands.stop
@@ -116,10 +118,10 @@ def _get_som_grid(index, shape, offsets, upleft, lowright, projcode, projparms,
     nblocks = len(range(bands_start, bands_stop, bands_step))
 
     R2D = 57.2957795131
-    misr_init(shape[1], shape[2], offsets, upleft, lowright)
+    misr_init(numrows, numcols, offsets, upleft, lowright)
     inv_init_wrapper(projcode, projparms, spherecode)
-    lat = np.zeros((nblocks, nsample, nline))
-    lon = np.zeros((nblocks, nsample, nline))
+    lat = np.zeros((nblocks, nline, nsample))
+    lon = np.zeros((nblocks, nline, nsample))
     
     i = 0
     for b in range(bands_start, bands_stop, bands_step):
@@ -131,8 +133,8 @@ def _get_som_grid(index, shape, offsets, upleft, lowright, projcode, projparms,
                 s = c
                 misr_inv(b+1, l, s, &somx, &somy)
                 sominv(somx, somy, &lon_r, &lat_r)
-                lon[i,k,j] = lon_r * R2D
-                lat[i,k,j] = lat_r * R2D
+                lon[i,j,k] = lon_r * R2D
+                lat[i,j,k] = lat_r * R2D
                 k += 1
             j += 1
         i += 1
