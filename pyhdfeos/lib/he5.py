@@ -83,6 +83,7 @@ for libname in library_name_candidates:
 _lib = ffi.verify("""
         #include "HE5_HdfEosDef.h"
         """,
+        ext_package='pyhdfeos',
         libraries=libraries,
         include_dirs=['/usr/include/hdf-eos5',
                       '/opt/local/include',

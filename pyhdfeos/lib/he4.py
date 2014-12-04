@@ -60,6 +60,7 @@ _lib = ffi.verify("""
         #include "HE2_config.h"
         #include "HdfEosDef.h"
         """,
+        ext_package='pyhdfeos',
         libraries=libraries,
         include_dirs=['/usr/include/hdf',
                       '/usr/include/i386-linux-gnu/hdf',
