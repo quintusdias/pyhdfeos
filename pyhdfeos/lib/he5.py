@@ -349,7 +349,10 @@ def gdinqattrs(gridid):
     attr_buffer = ffi.new("char[]", b'\0' * (strbufsize + 1))
     nattrs = _lib.HE5_GDinqattrs(gridid, attr_buffer, strbufsizep)
     _handle_error(nattrs)
-    attr_list = ffi.string(attr_buffer).decode('ascii').split(',')
+    if sys.hexversion < 0x03000000:
+        attr_list = ffi.string(attr_buffer).split(',')
+    else:
+        attr_list = ffi.string(attr_buffer).decode('ascii').split(',')
     return attr_list
 
 def gdinqdims(gridid):
@@ -469,7 +472,10 @@ def gdinqlocattrs(gridid, fieldname):
     nattrs = _lib.HE5_GDinqlocattrs(gridid, fieldname.encode(),
                                     attr_buffer, strbufsize)
     _handle_error(nattrs)
-    attr_list = ffi.string(attr_buffer).decode('ascii').split(',')
+    if sys.hexversion < 0x03000000:
+        attr_list = ffi.string(attr_buffer).split(',')
+    else:
+        attr_list = ffi.string(attr_buffer).decode('ascii').split(',')
     return attr_list
 
 def gdlocattrinfo(grid_id, fieldname, attrname):
