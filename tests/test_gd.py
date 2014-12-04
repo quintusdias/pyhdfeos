@@ -52,8 +52,11 @@ class TestRead(unittest.TestCase):
         file = pkg.resource_filename(__name__, os.path.join('data', 'Point219.hdf'))
         cls.test_driver_pointfile4 = file
 
-    def test_som(self):
+    @unittest.skipIf('HDFEOS_ZOO_DIR' not in os.environ,
+                     'HDFEOS_ZOO_DIR environment variable not set.')
+    def test_som_offset(self):
         """
+        test GDblkSOMoffset for hdfeos2
         """
         file = 'MISR_AM1_GRP_ELLIPSOID_GM_P117_O058421_BA_F03_0024.hdf'
         file = fixtures.test_file_path(file)
@@ -362,8 +365,8 @@ class TestClass(unittest.TestCase):
 
     def test_gridinfo(self):
         gdf = GridFile(self.test_driver_gridfile4)
-        shape = gdf.grids['UTMGrid'].shape
-        self.assertEqual(shape, (200, 120))
+        self.assertEqual(gdf.grids['UTMGrid'].xdimsize, 120)
+        self.assertEqual(gdf.grids['UTMGrid'].ydimsize, 200)
 
         upleft = gdf.grids['UTMGrid'].upleft
         np.testing.assert_array_equal(upleft,

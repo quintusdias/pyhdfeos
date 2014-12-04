@@ -1,3 +1,3 @@
 from . import lib
 from .grids import GridFile
-from . import command_line
+from . import command_line, som, misr, _som
