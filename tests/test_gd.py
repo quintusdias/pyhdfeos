@@ -480,6 +480,11 @@ class TestMetadata(unittest.TestCase):
         self.assertEqual(list(gdf.grids['UTMGrid'].attrs.keys()),
                          ['float32'])
 
+    def test_fieldattrs_4(self):
+        gdf = GridFile(self.test_driver_gridfile4)
+        self.assertEqual(list(gdf.grids['GEOGrid'].fields['GeoSpectra'].attrs.keys()),
+                         ['_FillValue'])
+
     def test_gridinfo(self):
         gdf = GridFile(self.test_driver_gridfile4)
         self.assertEqual(gdf.grids['UTMGrid'].xdimsize, 120)
