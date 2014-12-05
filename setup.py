@@ -7,7 +7,7 @@ import sys
 try:
     from Cython.Build import cythonize
 except ImportError:
-    msg = "Requires cython >= 0.21"
+    msg = "Requires cython >= 0.20"
     raise RuntimeError(msg)
 
 try:
@@ -73,7 +73,7 @@ e = Extension("pyhdfeos/_som", ["pyhdfeos/_som.c"],
         library_dirs = library_dirs)
 ext_modules.append(e)
 
-install_requires = ['numpy>=1.8.0', 'cffi>=0.8.2', 'cython>=0.21']
+install_requires = ['numpy>=1.8.0', 'cffi>=0.8.2', 'cython>=0.20']
 if sys.hexversion < 0x03000000:
     install_requires.append('mock>=1.0.1')
 
