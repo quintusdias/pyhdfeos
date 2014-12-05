@@ -145,9 +145,11 @@ class _Grid(object):
     ----------
     projcode : scalar
     """
-    def __init__(self, gdfid, gridname, he_module):
+    def __init__(self, filename, gridname, he_module):
+        self.filename = filename
         self._he = he_module
-        self.gridid = self._he.gdattach(gdfid, gridname)
+        self.gdfid = self._he.gdopen(filename)
+        self.gridid = self._he.gdattach(self.gdfid, gridname)
         self.gridname = gridname
 
         dimnames, dimlens = self._he.gdinqdims(self.gridid)
@@ -189,6 +191,7 @@ class _Grid(object):
 
     def __del__(self):
         self._he.gddetach(self.gridid)
+        self._he.gdclose(self.gdfid)
 
     def __str__(self):
         lst = ["Grid:  {0}".format(self.gridname)]
@@ -569,7 +572,7 @@ class GridFile(object):
         gridlist = self._he.gdinqgrid(filename)
         self.grids = collections.OrderedDict()
         for gridname in gridlist:
-            self.grids[gridname] = _Grid(self.gdfid, gridname, self._he)
+            self.grids[gridname] = _Grid(self.filename, gridname, self._he)
             if not hasattr(self._he, 'gdinqlocattrs'):
                 # Inquire about hdf4 attributes using SD interface
                 for fieldname in self.grids[gridname].fields.keys():
@@ -577,6 +580,9 @@ class GridFile(object):
                     self.grids[gridname].fields[fieldname].attrs = attrs
 
     def _hdf4_attrs(self, filename, gridname, fieldname):
+        """
+        Retrieve field attributes using HDF4 interface.
+        """
 
         attrs = None
 
@@ -643,13 +649,6 @@ class GridFile(object):
         pass
 
     def __del__(self):
-        """
-        Clean up any open grids, close the file
-        """
-        for gridname in self.grids:
-            grid = self.grids[gridname]
-            self.grids[gridname] = None
-            del grid
         self._he.gdclose(self.gdfid)
 
 
