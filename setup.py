@@ -3,7 +3,25 @@ import os
 import re
 import sys
 
-from Cython.Build import cythonize
+# Make sure we have the necessary 3rd party packages
+try:
+    from Cython.Build import cythonize
+except ImportError:
+    msg = "Requires cython >= 0.21"
+    raise RuntimeError(msg)
+
+try:
+    import cffi
+except ImportError:
+    msg = "Requires cffi >= 0.8.2"
+    raise RuntimeError(msg)
+
+try:
+    import numpy
+except ImportError:
+    msg = "Requires numpy, numpy-devel >= 1.8.0"
+    raise RuntimeError(msg)
+
 import numpy
 
 # We need to locate libGctp (libgctp if on a debian variant) in order to 
@@ -55,7 +73,7 @@ e = Extension("pyhdfeos/_som", ["pyhdfeos/_som.c"],
         library_dirs = library_dirs)
 ext_modules.append(e)
 
-install_requires = ['numpy>=1.8.0', 'cffi>=0.8.2']
+install_requires = ['numpy>=1.8.0', 'cffi>=0.8.2', 'cython>=0.21']
 if sys.hexversion < 0x03000000:
     install_requires.append('mock>=1.0.1')
 

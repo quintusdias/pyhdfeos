@@ -13,7 +13,13 @@ Installation
 
 Prerequisites
 =============
-Python versions 2.7 and 3.4 are supported on Linux and Mac.
+Python versions 2.7 and 3.4 are supported on Linux and Mac.  Required python
+packages include
+
+    * cffi
+    * cython
+    * numpy
+    * numpy-devel
 
 Both HDF-EOS and HDF-EOS5 are required.  On some systems, such as Linux Mint,
 this is pretty easy, just make sure you have the devel packages installed as

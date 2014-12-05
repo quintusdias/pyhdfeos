@@ -12,11 +12,6 @@ else:
 
 import numpy as np
 
-from pyhdf.HDF import *
-from pyhdf.V   import *
-from pyhdf.VS  import *
-from pyhdf.SD  import *
-
 from .lib import he4, he5, hdf
 from . import _som
 
