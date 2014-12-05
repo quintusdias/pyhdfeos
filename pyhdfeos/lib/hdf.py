@@ -1,5 +1,11 @@
+"""
+Interface for HDF4 library.  Need this in order to access HDF-EOS2 field 
+attributes.
+"""
 import numpy as np
 from cffi import FFI
+
+from . import config
 
 DFACC_READ = 1
 
@@ -48,17 +54,14 @@ ffi.cdef("""
         """
 )
 
+libraries = config.hdf4_libs
 _lib = ffi.verify("""
         #include "hdf.h"
         #include "mfhdf.h"
         """,
-        libraries=['mfhdf', 'df', 'jpeg', 'z'],
-        include_dirs=['/usr/include/hdf',
-                      '/usr/include/x86_64-linux-gnu/hdf',
-                      '/opt/local/include',
-                      '/usr/local/include'],
-        library_dirs=['/usr/lib/hdf', '/usr/lib64/hdf',
-                      '/opt/local/lib', '/usr/local/lib'])
+        libraries=libraries,
+        include_dirs=config.include_dirs,
+        library_dirs=config.library_config(libraries))
 
 
 def _handle_error(status):

@@ -36,28 +36,9 @@ try:
 except KeyError:
     library_dirs = ['/usr/lib', '/usr/local/lib', '/opt/local/lib']
 
-def locate_gctp(library_dirs):
-    """
-    Debian systems (including Mint) have libGctp.  Most other linux systems
-    plus macports have libgctp.  Need to find out which one to use.
-    """
-    libs = ['gctp', 'Gctp']
-    suffix_list = ['a', 'so', 'dylib', 'dll']
-    for library_dir in library_dirs:
-        for libname in libs:
-            for suffix in suffix_list:
-                path = os.path.join(library_dir, 'lib' + libname + '.' + suffix)
-                if os.path.exists(path):
-                    return libname
-    return None
-
-true_gctp_lib = locate_gctp(library_dirs)
-if true_gctp_lib is None:
-    msg = "Could not locate gctp library.  Please specify a location with "
-    msg += "the LIBRARY_DIRS environment variable as specified in README.md."
-    raise RuntimeError(msg)
-
 import pyhdfeos
+
+true_gctp_lib = pyhdfeos.lib.config.locate_gctp(library_dirs)
 
 # Three CFFI extension modules, one for HDF-EOS, one for HDF-EOS5, and one
 # for augmenting HDF-EOS with HDF4.

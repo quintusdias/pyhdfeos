@@ -5,7 +5,7 @@ import sys
 import numpy as np
 from cffi import FFI
 
-from .config import library_config
+from . import config 
 
 ffi = FFI()
 ffi.cdef("""
@@ -48,12 +48,9 @@ ffi.cdef("""
         """
 )
 
-library_dir_candidates = ['/usr/lib', '/usr/lib/hdf', '/usr/lib64/hdf',
-                          '/usr/lib/i386-linux-gnu', '/usr/lib/x86_64-linux-gnu',
-                          '/usr/local/lib', '/opt/local/lib']
-library_name_candidates = ['hdfeos', 'Gctp', 'gctp', 'mfhdf', 'df', 'jpeg', 'z']
-library_dirs, libraries = library_config(library_dir_candidates,
-                                         library_name_candidates)
+libraries = config.hdfeos_libs
+libraries.extend(config.hdf4_libs)
+library_dirs = config.library_config(libraries)
 
 _lib = ffi.verify("""
         #include "mfhdf.h"
@@ -62,11 +59,7 @@ _lib = ffi.verify("""
         """,
         ext_package='pyhdfeos',
         libraries=libraries,
-        include_dirs=['/usr/include/hdf',
-                      '/usr/include/i386-linux-gnu/hdf',
-                      '/usr/include/x86_64-linux-gnu/hdf',
-                      '/opt/local/include',
-                      '/usr/local/include'],
+        include_dirs=config.include_dirs,
         library_dirs=library_dirs)
 
 def _handle_error(status):
