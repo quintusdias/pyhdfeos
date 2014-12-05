@@ -41,8 +41,11 @@ if true_gctp_lib is None:
 
 import pyhdfeos
 
+# Three CFFI extension modules, one for HDF-EOS, one for HDF-EOS5, and one
+# for augmenting HDF-EOS with HDF4.
 ext_modules = [pyhdfeos.lib.he4.ffi.verifier.get_extension(),
-               pyhdfeos.lib.he5.ffi.verifier.get_extension()]
+               pyhdfeos.lib.he5.ffi.verifier.get_extension(),
+               pyhdfeos.lib.hdf.ffi.verifier.get_extension()]
 
 from distutils.extension import Extension
 cythonize("pyhdfeos/_som.pyx")
@@ -80,6 +83,7 @@ setup(name             = 'pyhdfeos',
       packages         = ['pyhdfeos', 'pyhdfeos.lib'],
       version          = '0.1.0rc3',
       zip_safe         =  False,
+      ext_package      = 'pyhdfeos',
       ext_modules      = ext_modules,
       include_dirs     = [numpy.get_include(), '/usr/include/hdf-eos5'],
       entry_points     = entry_points,

@@ -358,43 +358,6 @@ class TestClass(unittest.TestCase):
         gdf = GridFile(self.test_driver_zonal_average_file)
         self.assertTrue(True)
 
-    def test_inqgrid(self):
-        gdf = GridFile(self.test_driver_gridfile4)
-        self.assertEqual(list(gdf.grids.keys()), ['UTMGrid', 'PolarGrid',
-                                                  'GEOGrid'])
-
-    def test_gridinfo(self):
-        gdf = GridFile(self.test_driver_gridfile4)
-        self.assertEqual(gdf.grids['UTMGrid'].xdimsize, 120)
-        self.assertEqual(gdf.grids['UTMGrid'].ydimsize, 200)
-
-        upleft = gdf.grids['UTMGrid'].upleft
-        np.testing.assert_array_equal(upleft,
-                                      np.array([210584.50041, 3322395.95445]))
-
-        lowright = gdf.grids['UTMGrid'].lowright
-        np.testing.assert_array_equal(lowright,
-                                      np.array([813931.10959, 2214162.53278]))
-
-    def test_origininfo(self):
-        gdf = GridFile(self.test_driver_gridfile4)
-        origincode = gdf.grids['UTMGrid'].origincode
-        self.assertEqual(origincode, he4.HDFE_GD_UL)
-
-    def test_pixreginfo(self):
-        gdf = GridFile(self.test_driver_gridfile4)
-        pixregcode = gdf.grids['UTMGrid'].pixregcode
-        self.assertEqual(pixregcode, he4.HDFE_CENTER)
-
-    def test_projinfo(self):
-        gdf = GridFile(self.test_driver_gridfile4)
-        self.assertEqual(gdf.grids['UTMGrid'].projcode, 1)
-        self.assertEqual(gdf.grids['UTMGrid'].zonecode, 40)
-        self.assertEqual(gdf.grids['UTMGrid'].spherecode, 0)
-        projparms = gdf.grids['UTMGrid'].projparms,
-        np.testing.assert_array_equal(projparms,
-                np.zeros((1, 13), dtype=np.float64));
-
     def test_corners(self):
         """
         should be able to supply two slice arguments
@@ -465,4 +428,92 @@ class TestClass(unittest.TestCase):
             gdf.grids['UTMGrid'][8:700,8:25]
         with self.assertRaises(RuntimeError):
             gdf.grids['UTMGrid'][8:100,8:2500]
+
+class TestMetadata(unittest.TestCase):
+    """
+    """
+    @classmethod
+    def setUpClass(cls):
+        file = pkg.resource_filename(__name__, os.path.join('data', 'Grid.h5'))
+        cls.test_driver_gridfile5 = file
+        file = pkg.resource_filename(__name__, os.path.join('data', 'ZA.he5'))
+        cls.test_driver_zonal_average_file = file
+        file = pkg.resource_filename(__name__, os.path.join('data', 'Grid219.hdf'))
+        cls.test_driver_gridfile4 = file
+        file = pkg.resource_filename(__name__, os.path.join('data', 'Swath219.hdf'))
+        cls.test_driver_swathfile4 = file
+        file = pkg.resource_filename(__name__, os.path.join('data', 'Point219.hdf'))
+        cls.test_driver_pointfile4 = file
+
+    def test_inqgrids4(self):
+        gdf = GridFile(self.test_driver_gridfile4)
+        self.assertEqual(list(gdf.grids.keys()), ['UTMGrid', 'PolarGrid',
+                                                  'GEOGrid'])
+
+    def test_inqgrids5(self):
+        gdf = GridFile(self.test_driver_gridfile5)
+        self.assertEqual(list(gdf.grids.keys()), ['GEOGrid', 'PolarGrid',
+                                                  'UTMGrid'])
+
+    def test_inqgrid_fields_4(self):
+        gdf = GridFile(self.test_driver_gridfile4)
+        self.assertEqual(list(gdf.grids['UTMGrid'].fields.keys()),
+                         ['Pollution', 'Vegetation', 'Extern'])
+
+    def test_inqgrid_fields_5(self):
+        gdf = GridFile(self.test_driver_gridfile5)
+        self.assertEqual(list(gdf.grids['UTMGrid'].fields.keys()),
+                         ['Vegetation'])
+
+    def test_fielddims_4(self):
+        gdf = GridFile(self.test_driver_gridfile4)
+        self.assertEqual(list(gdf.grids['UTMGrid'].fields['Vegetation'].dimlist),
+                         ['YDim', 'XDim'])
+
+    def test_fielddims_5(self):
+        gdf = GridFile(self.test_driver_gridfile5)
+        self.assertEqual(list(gdf.grids['UTMGrid'].fields['Vegetation'].dimlist),
+                         ['YDim', 'XDim'])
+
+    def test_gridattrs_4(self):
+        gdf = GridFile(self.test_driver_gridfile4)
+        self.assertEqual(list(gdf.grids['UTMGrid'].attrs.keys()),
+                         ['float32'])
+
+    def test_fieldattrs_4(self):
+        gdf = GridFile(self.test_driver_gridfile4)
+        self.assertEqual(list(gdf.grids['GEOGrid'].fields['GeoSpectra'].attrs.keys()),
+                         ['_FillValue'])
+
+    def test_gridinfo(self):
+        gdf = GridFile(self.test_driver_gridfile4)
+        self.assertEqual(gdf.grids['UTMGrid'].xdimsize, 120)
+        self.assertEqual(gdf.grids['UTMGrid'].ydimsize, 200)
+
+        upleft = gdf.grids['UTMGrid'].upleft
+        np.testing.assert_array_equal(upleft,
+                                      np.array([210584.50041, 3322395.95445]))
+
+        lowright = gdf.grids['UTMGrid'].lowright
+        np.testing.assert_array_equal(lowright,
+                                      np.array([813931.10959, 2214162.53278]))
+
+    def test_origininfo(self):
+        gdf = GridFile(self.test_driver_gridfile4)
+        origincode = gdf.grids['UTMGrid'].origincode
+        self.assertEqual(origincode, he4.HDFE_GD_UL)
+
+    def test_pixreginfo(self):
+        gdf = GridFile(self.test_driver_gridfile4)
+        pixregcode = gdf.grids['UTMGrid'].pixregcode
+        self.assertEqual(pixregcode, he4.HDFE_CENTER)
+
+    def test_projinfo(self):
+        gdf = GridFile(self.test_driver_gridfile4)
+        self.assertEqual(gdf.grids['UTMGrid'].projcode, 1)
+        self.assertEqual(gdf.grids['UTMGrid'].zonecode, 40)
+        self.assertEqual(gdf.grids['UTMGrid'].spherecode, 0)
+        projparms = gdf.grids['UTMGrid'].projparms,
+        np.testing.assert_array_equal(projparms,
+                np.zeros((1, 13), dtype=np.float64));
 

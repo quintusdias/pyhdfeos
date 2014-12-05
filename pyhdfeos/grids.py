@@ -17,7 +17,7 @@ from pyhdf.V   import *
 from pyhdf.VS  import *
 from pyhdf.SD  import *
 
-from .lib import he4, he5, sd
+from .lib import he4, he5, hdf
 from . import _som
 
 class _GridVariable(object):
@@ -585,36 +585,44 @@ class GridFile(object):
 
         attrs = None
 
-        hdf = HDF(filename)
-        sd = SD(filename)
-        v = hdf.vgstart()
+        fid = hdf.hopen(filename)
+        sd_id = hdf.sdstart(filename)
+        hdf.vstart(fid)
 
-        grid_ref = v.find(gridname)
-        grid_vg = v.attach(grid_ref)
-        members = grid_vg.tagrefs()
+        grid_ref = hdf.vfind(fid, gridname)
+        grid_vg = hdf.vattach(fid, grid_ref)
+
+        members = hdf.vgettagrefs(grid_vg)
         for tag_i, ref_i in members:
-            if tag_i == HC.DFTAG_VG:
-                vg0 = v.attach(ref_i)
-                if vg0._name == 'Data Fields':
-                    df_members = vg0.tagrefs()
+            if tag_i == hdf.DFTAG_VG:
+                # Descend into a vgroup if we find it.
+                vg0 = hdf.vattach(fid, ref_i)
+                name = hdf.vgetname(vg0)
+                if name == 'Data Fields':
+                    # We want this Vgroup
+                    df_members = hdf.vgettagrefs(vg0)
                     for tag_j, ref_j in df_members:
-                        if tag_j == HC.DFTAG_NDG:
-                            sds = sd.select(sd.reftoindex(ref_j))
-                            name, rank, dims, ntype, nattrs = sds.info()
+                        if tag_j == hdf.DFTAG_NDG:
+                            # SDS dataset.
+                            idx = hdf.sdreftoindex(sd_id, ref_j)
+                            sds_id = hdf.sdselect(sd_id, idx)
+                            name, dims, dtype, nattrs  = hdf.sdgetinfo(sds_id)
                             if name == fieldname:
-                                attrs = collections.OrderedDict(sds.attributes())
-                                # sort it for consistency.
-                                attrs = collections.OrderedDict(
-                                        sorted(
-                                            attrs.items(), key=lambda x: x[0]))
-                            sds.endaccess()
-                vg0.detach()
-        grid_vg.detach()
+                                alst = []
+                                for k in range(nattrs):
+                                    info = hdf.sdattrinfo(sds_id, k)
+                                    name = info[0]
+                                    value = hdf.sdreadattr(sds_id, k)
+                                    alst.append((name, value))
+                                attrs = collections.OrderedDict(alst)
+                            hdf.sdendaccess(sds_id)
+                hdf.vdetach(vg0)
 
-        v.end()
-        sd.end()
+        hdf.vdetach(grid_vg)
 
-        hdf.close()
+        hdf.vend(fid)
+        hdf.sdend(sd_id)
+        hdf.hclose(fid)
 
         if attrs is None:
             # No attributes.
