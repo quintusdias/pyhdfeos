@@ -358,6 +358,22 @@ class TestClass(unittest.TestCase):
         gdf = GridFile(self.test_driver_zonal_average_file)
         self.assertTrue(True)
 
+    def test_explicit_del_he4(self):
+        """
+        should not generate a ReferenceError when del is explicitly used
+        """
+        gdf = GridFile(self.test_driver_gridfile4)
+        utm = gdf.grids['UTMGrid']
+        del gdf
+
+    def test_explicit_del_he5(self):
+        """
+        should not generate a ReferenceError when del is explicitly used
+        """
+        gdf = GridFile(self.test_driver_grid_file)
+        utm = gdf.grids['UTMGrid']
+        del gdf
+
     def test_corners(self):
         """
         should be able to supply two slice arguments
