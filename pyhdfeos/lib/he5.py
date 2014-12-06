@@ -7,66 +7,74 @@ import numpy as np
 
 from . import config
 
-ffi = FFI()
-ffi.cdef("""
-        typedef unsigned uintn;
-        typedef unsigned long long hsize_t;
-        typedef int hid_t;
-        typedef int herr_t;
+CDEF = """
+    typedef unsigned uintn;
+    typedef unsigned long long hsize_t;
+    typedef int hid_t;
+    typedef int herr_t;
 
-        hid_t  HE5_GDattach(hid_t fid, char *gridname);
-        long   HE5_GDattrinfo(hid_t gridID, const char *attrname,
-                                 hid_t *ntype, hsize_t *count);
-        herr_t HE5_GDclose(hid_t fid);
-        herr_t HE5_GDdetach(hid_t gridid);
-        herr_t HE5_GDfieldinfo(hid_t gridID, const char *fieldname, int *rank,
-                               hsize_t dims[], hid_t *ntype, char *dimlist,
-                               char *maxdimlist);
-        herr_t HE5_GDgridinfo(hid_t gridID, long *xdimsize, long *ydimsize,
-                              double upleftpt[], double lowrightpt[]);
-        herr_t HE5_GDij2ll(int projcode, int zonecode,
-                           double projparm[], int spherecode, long xdimsize,
-                           long ydimsize, double upleft[], double lowright[],
-                           long npts, long row[], long col[],
-                           double longititude[], double latitude[],
-                           int pixcen, int pixcnr);
-        long   HE5_GDinqattrs(hid_t gridID, char *attrnames, long *strbufsize);
-        int    HE5_GDinqdims(hid_t gridid, char *dims, hsize_t *dims);
-        int    HE5_GDinqfields(hid_t gridID, char *fieldlist, int rank[],
-                               hid_t ntype[]);
-        long   HE5_GDinqgrid(const char *filename, char *gridlist,
+    hid_t  HE5_GDattach(hid_t fid, char *gridname);
+    long   HE5_GDattrinfo(hid_t gridID, const char *attrname,
+                             hid_t *ntype, hsize_t *count);
+    herr_t HE5_GDclose(hid_t fid);
+    herr_t HE5_GDdetach(hid_t gridid);
+    herr_t HE5_GDfieldinfo(hid_t gridID, const char *fieldname, int *rank,
+                           hsize_t dims[], hid_t *ntype, char *dimlist,
+                           char *maxdimlist);
+    herr_t HE5_GDgridinfo(hid_t gridID, long *xdimsize, long *ydimsize,
+                          double upleftpt[], double lowrightpt[]);
+    herr_t HE5_GDij2ll(int projcode, int zonecode,
+                       double projparm[], int spherecode, long xdimsize,
+                       long ydimsize, double upleft[], double lowright[],
+                       long npts, long row[], long col[],
+                       double longititude[], double latitude[],
+                       int pixcen, int pixcnr);
+    long   HE5_GDinqattrs(hid_t gridID, char *attrnames, long *strbufsize);
+    int    HE5_GDinqdims(hid_t gridid, char *dims, hsize_t *dims);
+    int    HE5_GDinqfields(hid_t gridID, char *fieldlist, int rank[],
+                           hid_t ntype[]);
+    long   HE5_GDinqgrid(const char *filename, char *gridlist,
+                         long *strbufsize);
+    long   HE5_GDinqlocattrs(hid_t gridID, char *fieldname, char *attrnames,
                              long *strbufsize);
-        long   HE5_GDinqlocattrs(hid_t gridID, char *fieldname, char *attrnames,
-                                 long *strbufsize);
-        long   HE5_GDlocattrinfo(hid_t gridID, char *fieldname, char *attrname,
-                                 hid_t *ntype, hsize_t *count);
-        long   HE5_GDnentries(hid_t gridID, int entrycode, long *strbufsize);
-        hid_t  HE5_GDopen(const char *filename, uintn access);
-        herr_t HE5_GDorigininfo(hid_t gridID, int *origincode);
-        herr_t HE5_GDpixreginfo(hid_t gridID, int *pixregcode);
-        herr_t HE5_GDprojinfo(hid_t gridID, int *projcode, int *zonecode,
-                              int *spherecode, double projparm[]);
-        herr_t HE5_GDreadattr(hid_t gridID, const char* attrname, void *buffer);
-        herr_t HE5_GDreadfield(hid_t gridid, const char* fieldname,
-                               const hsize_t start[],
-                               const hsize_t stride[],
-                               const hsize_t edge[],
-                               void *buffer);
-        herr_t HE5_GDreadlocattr(hid_t gridID, const char *fieldname,
-                                 const char *attrname, void *databuf);
-        /*int HE5_EHHEisHE5(char *filename);*/
-        """)
+    long   HE5_GDlocattrinfo(hid_t gridID, char *fieldname, char *attrname,
+                             hid_t *ntype, hsize_t *count);
+    long   HE5_GDnentries(hid_t gridID, int entrycode, long *strbufsize);
+    hid_t  HE5_GDopen(const char *filename, uintn access);
+    herr_t HE5_GDorigininfo(hid_t gridID, int *origincode);
+    herr_t HE5_GDpixreginfo(hid_t gridID, int *pixregcode);
+    herr_t HE5_GDprojinfo(hid_t gridID, int *projcode, int *zonecode,
+                          int *spherecode, double projparm[]);
+    herr_t HE5_GDreadattr(hid_t gridID, const char* attrname, void *buffer);
+    herr_t HE5_GDreadfield(hid_t gridid, const char* fieldname,
+                           const hsize_t start[],
+                           const hsize_t stride[],
+                           const hsize_t edge[],
+                           void *buffer);
+    herr_t HE5_GDreadlocattr(hid_t gridID, const char *fieldname,
+                             const char *attrname, void *databuf);
+    /*int HE5_EHHEisHE5(char *filename);*/
+"""
+
+SOURCE = """
+    #include "HE5_HdfEosDef.h"
+"""
+
+ffi = FFI()
+ffi.cdef(CDEF)
 
 libraries = config.hdfeos5_libs
 library_dirs = config.library_config(libraries)
 
-_lib = ffi.verify("""
-        #include "HE5_HdfEosDef.h"
-        """,
-        ext_package='pyhdfeos',
-        libraries=libraries,
-        include_dirs=config.include_dirs,
-        library_dirs=library_dirs)
+_lib = ffi.verify(SOURCE,
+                  ext_package='pyhdfeos',
+                  libraries=libraries,
+                  include_dirs=config.include_dirs,
+                  library_dirs=library_dirs,
+                  modulename=config._create_modulename("_hdfeos5",
+                                                       CDEF,
+                                                       SOURCE,
+                                                       sys.version))
 
 H5F_ACC_RDONLY = 0x0000
 
