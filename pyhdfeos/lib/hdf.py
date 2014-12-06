@@ -2,6 +2,8 @@
 Interface for HDF4 library.  Need this in order to access HDF-EOS2 field 
 attributes.
 """
+import sys
+
 import numpy as np
 from cffi import FFI
 
@@ -22,46 +24,53 @@ DFNT_UINT32 = 25
 DFTAG_NDG = 720
 DFTAG_VG = 1965
 
+CDEF = """
+    typedef short int int16;
+    typedef unsigned short int uint16;
+    typedef int int32;
+    typedef int intn;
+    int32 Hopen(const char *path, intn acc_mode, int16 ndds);
+    intn Hclose(int32 file_id);
+    intn SDattrinfo(int obj_id, int32 idx, char *name, int32 *dtype,
+                    int32 *count);
+    intn SDendaccess(int32 sds_id);
+    intn SDgetinfo(int32 sdsid, char *name, int32 *rank,
+                   int32 dimsizes[], int32 *datatype, int32 *nattrs);
+    int32 SDnametoindex(int32 sdid, char *sds_name);
+    int32 SDreftoindex(int32 sd_id, int32 sds_ref);
+    int32 SDselect(int32 sdid, int32 idx);
+    intn SDreadattr(int32 obj_id, int32 idx, void *buffer);
+    intn SDend(int32 fid);
+    int32 SDstart(char *filename, int32 access_mode);
+    int32 Vattach(int32 fid, int32 vgroup_ref, char *access);
+    int32 Vdetach(int32 vgroup_id);
+    intn Vend(int32 fid);
+    int32 Vfind(int32 fid, char *vgroup_name);
+    int32 Vgetname(int32 vgroup_id, char *vgroup_name);
+    int32 Vgetnamelen(int32 vgroup_id, uint16 *namelen);
+    int32 Vgettagrefs(int32 vgroup_id, int32 tags[], int32 refs[],
+                      int32 npairs);
+    int32 Vntagrefs(int32 vgroup_id);
+    intn Vstart(int32 fid);
+"""
+
+SOURCE = """
+    #include "hdf.h"
+    #include "mfhdf.h"
+"""
+
 ffi = FFI()
-ffi.cdef("""
-        typedef short int int16;
-        typedef unsigned short int uint16;
-        typedef int int32;
-        typedef int intn;
-        int32 Hopen(const char *path, intn acc_mode, int16 ndds);
-        intn Hclose(int32 file_id);
-        intn SDattrinfo(int obj_id, int32 idx, char *name, int32 *dtype,
-                        int32 *count);
-        intn SDendaccess(int32 sds_id);
-        intn SDgetinfo(int32 sdsid, char *name, int32 *rank,
-                       int32 dimsizes[], int32 *datatype, int32 *nattrs);
-        int32 SDnametoindex(int32 sdid, char *sds_name);
-        int32 SDreftoindex(int32 sd_id, int32 sds_ref);
-        int32 SDselect(int32 sdid, int32 idx);
-        intn SDreadattr(int32 obj_id, int32 idx, void *buffer);
-        intn SDend(int32 fid);
-        int32 SDstart(char *filename, int32 access_mode);
-        int32 Vattach(int32 fid, int32 vgroup_ref, char *access);
-        int32 Vdetach(int32 vgroup_id);
-        intn Vend(int32 fid);
-        int32 Vfind(int32 fid, char *vgroup_name);
-        int32 Vgetname(int32 vgroup_id, char *vgroup_name);
-        int32 Vgetnamelen(int32 vgroup_id, uint16 *namelen);
-        int32 Vgettagrefs(int32 vgroup_id, int32 tags[], int32 refs[],
-                          int32 npairs);
-        int32 Vntagrefs(int32 vgroup_id);
-        intn Vstart(int32 fid);
-        """
-)
+ffi.cdef(CDEF)
 
 libraries = config.hdf4_libs
-_lib = ffi.verify("""
-        #include "hdf.h"
-        #include "mfhdf.h"
-        """,
-        libraries=libraries,
-        include_dirs=config.include_dirs,
-        library_dirs=config.library_config(libraries))
+_lib = ffi.verify(SOURCE,
+                  libraries=libraries,
+                  include_dirs=config.include_dirs,
+                  library_dirs=config.library_config(libraries),
+                  modulename=config._create_modulename("_hdf4",
+                                                       CDEF,
+                                                       SOURCE,
+                                                       sys.version))
 
 
 def _handle_error(status):

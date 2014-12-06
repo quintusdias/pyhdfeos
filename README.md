@@ -21,16 +21,28 @@ packages include
     * numpy
     * numpy-devel
 
-Both HDF-EOS and HDF-EOS5 are required.  On some systems, such as Linux Mint,
-this is pretty easy, just make sure you have the devel packages installed as
-well.
+Both the HDF-EOS and HDF-EOS5 libraries are required.  On some
+systems, such as Linux Mint, these are readily available through
+the system package manager, just make sure you have the devel
+packages installed as well.  On such a system, the install command is just::
+
+   python setup.py install --user 
 
 Other systems such as OpenSUSE do not provide packages for HDF-EOS or HDF-EOS5,
-so they must be compiled from source.  You should install the libraries (and
-the header files) into ```/usr/local```.  Be advised, however, that there is
-a bug with HDF-EOS version 1.15 that prevents it from being used as-is with
-```pyhdfeos```.  You can patch it by editing ```src/EHapi.c``` and delete line
-11545.
+so they must be compiled from source.
+
+Be advised, however, that there is a bug with HDF-EOS version 1.15
+that prevents it from being used as-is with ```pyhdfeos```.  You
+can patch it by editing ```src/EHapi.c``` and delete line 11545.
+
+Ideally, you would install the libraries and header files into
+```/usr/local```, but if that is not possible, you would need to
+augment the search path when installing pyhdfeos with ```INCLUDE_DIRS```
+and ```LIBRARY_DIRS``` environment variables, something like
+
+    export INCLUDE_DIRS=/path/to/hdfeos/include
+    export LIBRARY_DIRS=/path/to/hdfeos/lib
+    python setup.py install --user 
 
 Macports provides packages for both HDF-EOS and HDF-EOS5, but the HDF-EOS5 port
 has the bug described above, so you should compile HDF-EOS5 from source.

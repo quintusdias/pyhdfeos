@@ -7,60 +7,66 @@ from cffi import FFI
 
 from . import config 
 
-ffi = FFI()
-ffi.cdef("""
-        typedef float float32;
-        typedef int int32;
-        typedef int intn;
-        typedef double float64;
+CDEF = """
+    typedef float float32;
+    typedef int int32;
+    typedef int intn;
+    typedef double float64;
 
-        intn  EHidinfo(int32 fid, int32 *hdfid, int32 *sdid);
-        int32 GDattach(int32 gdfid, char *grid);
-        intn  GDattrinfo(int32 gdfid, char *attrname, int32 *nbyte, int32
-                         *count);
-        intn  GDblkSOMoffset(int32 fid, float32 [], int32 count, char *code);
-        intn  GDdetach(int32 gid);
-        intn  GDclose(int32 fid);
-        intn  GDfieldinfo(int32 gridid, char *fieldname, int32 *rank,
-                          int32 dims[], int32 *numbertype, char *dimlist);
-        int32 GDij2ll(int32 projcode, int32 zonecode,
-                      float64 projparm[], int32 spherecode, int32 xdimsize,
-                      int32 ydimsize, float64 upleft[], float64 lowright[],
-                      int32 npts, int32 row[], int32 col[], float64
-                      longititude[], float64 latitude[], int32 pixcen,
-                      int32 pixcnr);
-        int32 GDinqattrs(int32 gridid, char *attrlist, int32 *strbufsize);
-        int32 GDinqdims(int32 gridid, char *dimname, int32 *dims);
-        int32 GDinqfields(int32 gridid, char *fieldlist, int32 rank[],
-                          int32 numbertype[]);
-        int32 GDinqgrid(char *filename, char *gridlist, int32 *strbufsize);
-        int32 GDnentries(int32 gridid, int32 entrycode, int32 *strbufsize);
-        intn  GDgridinfo(int32 gridid, int32 *xdimsize, int32 *ydimsize,
-                         float64 upleft[2], float64 lowright[2]);
-        int32 GDopen(char *name, intn access);
-        intn  GDorigininfo(int32 gridid, int32 *origincode);
-        intn  GDpixreginfo(int32 gridid, int32 *pixregcode);
-        intn  GDprojinfo(int32 gridid, int32 *projcode, int32 *zonecode,
-                         int32 *spherecode, float64 projparm[]);
-        intn  GDreadattr(int32 gridid, char* attrname, void *buffer);
-        intn  GDreadfield(int32 gridid, char* fieldname, int32 start[],
-                          int32 stride[], int32 edge[], void *buffer);
-        """
-)
+    intn  EHidinfo(int32 fid, int32 *hdfid, int32 *sdid);
+    int32 GDattach(int32 gdfid, char *grid);
+    intn  GDattrinfo(int32 gdfid, char *attrname, int32 *nbyte, int32
+                     *count);
+    intn  GDblkSOMoffset(int32 fid, float32 [], int32 count, char *code);
+    intn  GDdetach(int32 gid);
+    intn  GDclose(int32 fid);
+    intn  GDfieldinfo(int32 gridid, char *fieldname, int32 *rank,
+                      int32 dims[], int32 *numbertype, char *dimlist);
+    int32 GDij2ll(int32 projcode, int32 zonecode,
+                  float64 projparm[], int32 spherecode, int32 xdimsize,
+                  int32 ydimsize, float64 upleft[], float64 lowright[],
+                  int32 npts, int32 row[], int32 col[], float64
+                  longititude[], float64 latitude[], int32 pixcen,
+                  int32 pixcnr);
+    int32 GDinqattrs(int32 gridid, char *attrlist, int32 *strbufsize);
+    int32 GDinqdims(int32 gridid, char *dimname, int32 *dims);
+    int32 GDinqfields(int32 gridid, char *fieldlist, int32 rank[],
+                      int32 numbertype[]);
+    int32 GDinqgrid(char *filename, char *gridlist, int32 *strbufsize);
+    int32 GDnentries(int32 gridid, int32 entrycode, int32 *strbufsize);
+    intn  GDgridinfo(int32 gridid, int32 *xdimsize, int32 *ydimsize,
+                     float64 upleft[2], float64 lowright[2]);
+    int32 GDopen(char *name, intn access);
+    intn  GDorigininfo(int32 gridid, int32 *origincode);
+    intn  GDpixreginfo(int32 gridid, int32 *pixregcode);
+    intn  GDprojinfo(int32 gridid, int32 *projcode, int32 *zonecode,
+                     int32 *spherecode, float64 projparm[]);
+    intn  GDreadattr(int32 gridid, char* attrname, void *buffer);
+    intn  GDreadfield(int32 gridid, char* fieldname, int32 start[],
+                      int32 stride[], int32 edge[], void *buffer);
+"""
+
+SOURCE = """
+    #include "mfhdf.h"
+    #include "HdfEosDef.h"
+"""
+
+ffi = FFI()
+ffi.cdef(CDEF)
 
 libraries = config.hdfeos_libs
 libraries.extend(config.hdf4_libs)
 library_dirs = config.library_config(libraries)
 
-_lib = ffi.verify("""
-        #include "mfhdf.h"
-        #include "HE2_config.h"
-        #include "HdfEosDef.h"
-        """,
-        ext_package='pyhdfeos',
-        libraries=libraries,
-        include_dirs=config.include_dirs,
-        library_dirs=library_dirs)
+_lib = ffi.verify(SOURCE,
+                  ext_package='pyhdfeos',
+                  libraries=libraries,
+                  include_dirs=config.include_dirs,
+                  library_dirs=library_dirs,
+                  modulename=config._create_modulename("_hdfeos",
+                                                       CDEF,
+                                                       SOURCE,
+                                                       sys.version))
 
 def _handle_error(status):
     if status < 0:
