@@ -19,11 +19,7 @@ def locate_gctp(library_dirs):
                     true_gctp_lib = libname
                     return true_gctp_lib
 
-    if true_gctp_lib is None:
-        msg = "Could not locate gctp library.  Please specify a location with "
-        msg += "the HDFEOS_ROOT environment variable as specified in README.md."
-        raise RuntimeError(msg)
-        return None
+    return true_gctp_lib
 
 def library_config(libraries):
     """
