@@ -74,8 +74,7 @@ polar_stereographic_grid = """Grid:  PolarGrid
         Pressure[YDim, XDim]:
     Grid Attributes:"""
 
-geo_polar_utm_4 = """Grid219.hdf
-Grid:  UTMGrid
+he2_utm = """Grid:  UTMGrid
     Dimensions:
         Time:  10
         XDim:  120
@@ -91,8 +90,9 @@ Grid:  UTMGrid
         Vegetation[YDim, XDim]:
         Extern[YDim, XDim]:
     Grid Attributes:
-        float32:  [ 1.  0.  0.  0.]
-Grid:  PolarGrid
+        float32:  [ 1.  0.  0.  0.]"""
+
+he2_polar = """Grid:  PolarGrid
     Dimensions:
         Bands:  3
         XDim:  100
@@ -112,8 +112,9 @@ Grid:  PolarGrid
         Pressure[YDim, XDim]:
         Soil Dryness[YDim, XDim]:
         Spectra[Bands, YDim, XDim]:
-    Grid Attributes:
-Grid:  GEOGrid
+    Grid Attributes:"""
+
+he2_geo = r"""Grid:  GEOGrid
     Dimensions:
         XDim:  60
         YDim:  40
@@ -123,5 +124,5 @@ Grid:  GEOGrid
     Projection:  Geographic
     Fields:
         GeoSpectra[YDim, XDim]:
-            _FillValue:  1.7800604005220194e-307
+            _FillValue:  1.78006040052e-307
     Grid Attributes:"""
