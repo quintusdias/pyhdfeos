@@ -21,7 +21,6 @@ from .fixtures import test_file_exists, test_file_path
 
 somfile = 'MISR_AM1_GRP_ELLIPSOID_GM_P117_O058421_BA_F03_0024.hdf'
 
-@unittest.skipIf(sys.hexversion < 0x03000000, "do not bother with 2.7")
 class TestPrinting(unittest.TestCase):
 
     @classmethod
@@ -57,13 +56,39 @@ class TestPrinting(unittest.TestCase):
             glist2 = [grid for grid in gdf2.grids.keys()]
             self.assertEqual(glist1, glist2)
 
-    def test_he4_testdriver_file(self):
+    def test_testdriver_he2_utm(self):
         with GridFile(self.test_driver_gridfile4) as gdf:
             with patch('sys.stdout', new=StringIO()) as fake_out:
-                print(gdf)
+                print(gdf.grids['UTMGrid'])
                 actual = fake_out.getvalue().strip()
 
-        expected = fixtures.geo_polar_utm_4
+        expected = fixtures.he2_utm
+        self.assertEqual(actual, expected)
+
+    def test_testdriver_he2_polar(self):
+        with GridFile(self.test_driver_gridfile4) as gdf:
+            with patch('sys.stdout', new=StringIO()) as fake_out:
+                print(gdf.grids['PolarGrid'])
+                actual = fake_out.getvalue().strip()
+
+        expected = fixtures.he2_polar
+        self.assertEqual(actual, expected)
+
+    def test_testdriver_he2_geo(self):
+        with GridFile(self.test_driver_gridfile4) as gdf:
+            with patch('sys.stdout', new=StringIO()) as fake_out:
+                print(gdf.grids['GEOGrid'])
+                actual = fake_out.getvalue().strip()
+
+        # Trim off last two lines, gets rid of a floating point value that is
+        # hard to match.
+        actual = actual.split('\n')
+        actual = '\n'.join(actual[:-2])
+
+        expected = fixtures.he2_geo
+        expected = expected.split('\n')
+        expected = '\n'.join(expected[:-2])
+
         self.assertEqual(actual, expected)
 
     def test_utm_grid_he5(self):
