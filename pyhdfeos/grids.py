@@ -1,7 +1,5 @@
 import collections
 import os
-import platform
-import struct
 import sys
 import textwrap
 
@@ -14,6 +12,7 @@ import numpy as np
 
 from .lib import he4, he5, hdf
 from . import _som
+
 
 class _GridVariable(object):
     """
@@ -45,8 +44,6 @@ class _GridVariable(object):
         return '\n'.join(lst)
 
     def __getitem__(self, index):
-        nrows = self.shape[0]
-        ncols = self.shape[1]
         ndims = len(self.shape)
 
         # Set up defaults.
@@ -73,13 +70,15 @@ class _GridVariable(object):
         if index is Ellipsis:
             # Case of [...]
             # Handle it below.
-            return self.__getitem__(slice(None,None,None))
+            return self.__getitem__(slice(None, None, None))
 
         if isinstance(index, slice):
-            if index.start is None and index.stop is None and index.step is None:
+            if (((index.start is None) and
+                 (index.stop is None) and
+                 (index.step is None))):
                 # Case of [:].  Read all of the data.
                 return self._he.gdreadfield(self.gridid, self.fieldname,
-                                             start, stride, edge)
+                                            start, stride, edge)
 
             msg = "Single slice argument integer is only legal if ':'"
             raise RuntimeError(msg)
@@ -117,7 +116,7 @@ class _GridVariable(object):
             data = np.squeeze(data, axis=idx)
             return data
 
-        # Assuming pargs is a tuple of slices from now on.  
+        # Assuming pargs is a tuple of slices from now on.
         # This is the workhorse section for the general case.
         for j in range(len(index)):
 
@@ -133,8 +132,7 @@ class _GridVariable(object):
                 edge[j] = np.floor((index[j].stop - start[j]) / stride[j])
 
         return self._he.gdreadfield(self.gridid, self.fieldname,
-                                     start, stride, edge)
-
+                                    start, stride, edge)
 
 
 class _Grid(object):
@@ -156,13 +154,15 @@ class _Grid(object):
         dims = [(k, v) for (k, v) in zip(dimnames, dimlens)]
         self.dims = collections.OrderedDict(dims)
 
-        self.xdimsize, self.ydimsize, self.upleft, self.lowright = self._he.gdgridinfo(self.gridid)
+        _tuple = self._he.gdgridinfo(self.gridid)
+        self.xdimsize, self.ydimsize, self.upleft, self.lowright = _tuple
         if 'XDim' not in self.dims:
             self.dims['XDim'] = self.xdimsize
         if 'YDim' not in self.dims:
             self.dims['YDim'] = self.ydimsize
 
-        projcode, zonecode, spherecode, projparms = self._he.gdprojinfo(self.gridid)
+        _tuple = self._he.gdprojinfo(self.gridid)
+        projcode, zonecode, spherecode, projparms = _tuple
         self.projcode = projcode
         self.zonecode = zonecode
         self.spherecode = spherecode
@@ -181,8 +181,8 @@ class _Grid(object):
         self.fields = collections.OrderedDict()
         for fieldname in self._fields:
             self.fields[fieldname] = _GridVariable(self.gridid,
-                                                      fieldname,
-                                                      self._he)
+                                                   fieldname,
+                                                   self._he)
 
         attr_list = self._he.gdinqattrs(self.gridid)
         self.attrs = collections.OrderedDict()
@@ -258,8 +258,6 @@ class _Grid(object):
         lst.append("    Grid Attributes:")
         for attr in self.attrs.keys():
             lst.append("        {0}:  {1}".format(attr, self.attrs[attr]))
-
-        
         return '\n'.join(lst)
 
     def _projection_lonz_latz(self):
@@ -280,7 +278,8 @@ class _Grid(object):
         __str__ helper method for PFlag SOM parameter
         """
         item = self.projparms[10]
-        return "        End of path flag (0 = start, 1 = end):  {0}".format(item)
+        msg = "        End of path flag (0 = start, 1 = end):  {0}"
+        return msg.format(item)
 
     def _projection_srat(self):
         """
@@ -294,21 +293,24 @@ class _Grid(object):
         __str__ helper method for AscLong SOM parameter
         """
         item = self.projparms[4] / 1e6
-        return "        Longitude of ascending orbit at equator:  {:.6f}".format(item)
+        msg = "        Longitude of ascending orbit at equator:  {:.6f}"
+        return msg.format(item)
 
     def _projection_psrev(self):
         """
         __str__ helper method for PSRev SOM parameter
         """
         item = self.projparms[8]
-        return "        Period of satellite revolution:  {0} (min)".format(item)
+        msg = "        Period of satellite revolution:  {0} (min)"
+        return msg.format(item)
 
     def _projection_incang(self):
         """
         __str__ helper method for IncAng SOM parameter
         """
         item = self.projparms[3] / 1e6
-        return "        Inclination of orbit at ascending node:  {:.6f}".format(item)
+        msg = "        Inclination of orbit at ascending node:  {:.6f}"
+        return msg.format(item)
 
     def _projection_longitude_pole(self):
         """
@@ -326,7 +328,7 @@ class _Grid(object):
 
     def _projection_sphere(self):
         """
-        __str__ helper method for projections with known reference sphere radius
+        __str__ helper method for projections with known ref sphere radius
         """
         sphere = self.projparms[0] / 1000
         if sphere == 0:
@@ -425,16 +427,19 @@ class _Grid(object):
                 return self.__getitem__((rows, cols))
 
         if isinstance(index, slice):
-            if index.start is None and index.stop is None and index.step is None:
+            if (((index.start is None) and
+                 (index.stop is None) and
+                 (index.step is None))):
                 # Case of grid[:]
                 if self.projcode == 22:
                     # SOM projection, inherently 3D.
-                    return self.__getitem__((index,index,index))
+                    return self.__getitem__((index, index, index))
                 else:
                     # Other projections are 2D.
-                    return self.__getitem__((index,index))
+                    return self.__getitem__((index, index))
 
-            msg = "Single slice argument integer is only legal if providing ':'"
+            msg = "Single slice argument integer is only legal "
+            msg += "if providing ':'"
             raise RuntimeError(msg)
 
         if isinstance(index, tuple) and len(index) > 2:
@@ -486,13 +491,13 @@ class _Grid(object):
             lon = np.squeeze(lon, axis=idx)
             return lat, lon
 
-        # Assuming pargs is a tuple of slices from now on.  
+        # Assuming pargs is a tuple of slices from now on.
         # This is the workhorse section for the general case.
         if self.projcode == 22:
             # SOM grids are inherently 3D.  Must handle differently.
             return _som._get_som_grid(index, shape, self.offsets,
                                       self.upleft, self.lowright,
-                                      self.projcode, self.projparms, 
+                                      self.projcode, self.projparms,
                                       self.spherecode)
 
         rows = index[0]
@@ -515,39 +520,18 @@ class _Grid(object):
 
         col = np.arange(cols_start, cols_stop, cols_step)
         row = np.arange(rows_start, rows_stop, rows_step)
-        cols, rows = np.meshgrid(col,row)
+        cols, rows = np.meshgrid(col, row)
         cols = cols.astype(np.int32)
         rows = rows.astype(np.int32)
-        lon, lat = self._he.gdij2ll(self.projcode, self.zonecode, self.projparms,
-                             self.spherecode,
-                             self.xdimsize, self.ydimsize,
-                             self.upleft, self.lowright,
-                             rows, cols,
-                             self.pixregcode, self.origincode)
+        lon, lat = self._he.gdij2ll(self.projcode,
+                                    self.zonecode, self.projparms,
+                                    self.spherecode,
+                                    self.xdimsize, self.ydimsize,
+                                    self.upleft, self.lowright,
+                                    rows, cols,
+                                    self.pixregcode, self.origincode)
         return lat, lon
 
-    def _som_grid(self, index):
-        """
-        Compute grid lat/lon coordinates for SOM grid.
-
-        Parameters
-        ----------
-        index : tuple
-            slice arguments
-        """
-        rows = index[0]
-        cols = index[1]
-        blocks = index[2]
-
-        rows_start = 0 if rows.start is None else rows.start
-        rows_step = 1 if rows.step is None else rows.step
-        rows_stop = numrows if rows.stop is None else rows.stop
-        cols_start = 0 if cols.start is None else cols.start
-        cols_step = 1 if cols.step is None else cols.step
-        cols_stop = numcols if cols.stop is None else cols.stop
-        blocks_start = 0 if blocks.start is None else blocks.start
-        blocks_step = 1 if blocks.step is None else blocks.step
-        blocks_stop = self.num_blocks if blocks.stop is None else blocks.stop
 
 class GridFile(object):
     """
@@ -558,14 +542,15 @@ class GridFile(object):
     filename : str
         HDF-EOS2 or HDF-EOS5 grid file
     grids : dictionary
-        collection of grids 
+        collection of grids
     """
     def __init__(self, filename):
         self.filename = filename
         try:
             self.gdfid = he4.gdopen(filename)
             self._he = he4
-        except IOError as err:
+        except IOError:
+            # try hdf5
             self.gdfid = he5.gdopen(filename)
             self._he = he5
 
@@ -576,7 +561,7 @@ class GridFile(object):
             if not hasattr(self._he, 'gdinqlocattrs'):
                 # Inquire about hdf4 attributes using SD interface
                 for fieldname in self.grids[gridname].fields.keys():
-                    attrs = self._hdf4_attrs(filename, gridname, fieldname) 
+                    attrs = self._hdf4_attrs(filename, gridname, fieldname)
                     self.grids[gridname].fields[fieldname].attrs = attrs
 
     def _hdf4_attrs(self, filename, gridname, fieldname):
@@ -607,7 +592,7 @@ class GridFile(object):
                             # SDS dataset.
                             idx = hdf.sdreftoindex(sd_id, ref_j)
                             sds_id = hdf.sdselect(sd_id, idx)
-                            name, dims, dtype, nattrs  = hdf.sdgetinfo(sds_id)
+                            name, dims, dtype, nattrs = hdf.sdgetinfo(sds_id)
                             if name == fieldname:
                                 alst = []
                                 for k in range(nattrs):
@@ -652,28 +637,26 @@ class GridFile(object):
         self._he.gdclose(self.gdfid)
 
 
-_SPHERE = {
-        -1: 'Unspecified',
-        0: 'Clarke 1866',
-        1: 'Clarke 1880',
-        2: 'Bessel',
-        3: 'International 1967',
-        4: 'International 1909',
-        5: 'WGS 72',
-        6: 'Everest',
-        7: 'WGS 66',
-        8: 'GRS 1980',
-        9: 'Airy',
-        10: 'Modified Airy',
-        11: 'Modified Everest',
-        12: 'WGS 84',
-        13: 'Southeast Asia',
-        14: 'Australian National',
-        15: 'Krassovsky',
-        16: 'Hough',
-        17: 'Mercury 1960',
-        18: 'Modified Mercury 1968',
-        19: 'Sphere of Radius 6370997m',
-        20: 'Sphere of Radius 6371228m',
-        21: 'Sphere of Radius 6371007.181'
-}
+_SPHERE = {-1: 'Unspecified',
+           0: 'Clarke 1866',
+           1: 'Clarke 1880',
+           2: 'Bessel',
+           3: 'International 1967',
+           4: 'International 1909',
+           5: 'WGS 72',
+           6: 'Everest',
+           7: 'WGS 66',
+           8: 'GRS 1980',
+           9: 'Airy',
+           10: 'Modified Airy',
+           11: 'Modified Everest',
+           12: 'WGS 84',
+           13: 'Southeast Asia',
+           14: 'Australian National',
+           15: 'Krassovsky',
+           16: 'Hough',
+           17: 'Mercury 1960',
+           18: 'Modified Mercury 1968',
+           19: 'Sphere of Radius 6370997m',
+           20: 'Sphere of Radius 6371228m',
+           21: 'Sphere of Radius 6371007.181'}
