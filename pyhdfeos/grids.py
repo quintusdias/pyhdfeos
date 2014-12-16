@@ -1,3 +1,7 @@
+"""
+Support for HDF-EOS and HDF-EOS5 grid files
+"""
+
 import collections
 import os
 import sys
@@ -245,6 +249,12 @@ class _Grid(object):
                 lst.append(self._projection_satnum())
                 lst.append(self._projection_path())
                 lst.append(self._projection_false_easting_northing())
+        elif self.projcode == 97:
+            lst.append("    Projection:  CEA")
+            lst.append(self._projection_semi_major_semi_minor())
+            lst.append(self._projection_longitude_of_central_meridian())
+            lst.append(self._projection_true_scale())
+            lst.append(self._projection_false_easting_northing())
 
         lst.append("    Fields:")
         for field in self.fields.keys():

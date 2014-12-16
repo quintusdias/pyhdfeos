@@ -20,6 +20,7 @@ from . import fixtures
 from .fixtures import test_file_exists, test_file_path
 
 somfile = 'MISR_AM1_GRP_ELLIPSOID_GM_P117_O058421_BA_F03_0024.hdf'
+ceafile = 'AMSR_E_L3_DailyLand_V06_20050118.hdf'
 
 class TestPrinting(unittest.TestCase):
 
@@ -36,6 +37,17 @@ class TestPrinting(unittest.TestCase):
 
     def tearDown(self):
         pass
+
+    @unittest.skipIf(not test_file_exists(ceafile), 'test file not available')
+    def test_cea_grid(self):
+        file = test_file_path(ceafile)
+        gdf = GridFile(file)
+        with patch('sys.stdout', new=StringIO()) as fake_out:
+            print(gdf.grids['Ascending_Land_Grid'])
+            actual = fake_out.getvalue().strip()
+
+        expected = fixtures.cea_grid
+        self.assertEqual(actual, expected)
 
     @unittest.skipIf(not test_file_exists(somfile), 'test file not available')
     def test_som_grid(self):

@@ -11,6 +11,57 @@ def test_file_exists(file):
 def test_file_path(file):
     return os.path.join(os.environ['HDFEOS_ZOO_DIR'], file)
 
+cea_grid = """Grid:  Ascending_Land_Grid
+    Dimensions:
+        XDim:  1383
+        YDim:  586
+    Upper Left (x,y):  [-17334194.      7344784.825]
+    Lower Right (x,y):  [ 17334193.5375  -7344785.    ]
+    Sphere:  Unspecified
+    Projection:  CEA
+        Semi-major axis(km):  6371.228
+        Semi-minor axis(km):  6371.228
+        Longitude of Central Meridian:  0.0
+        Latitude of true scale:  30.0
+        False Easting:  0.0
+        False Northing:  0.0
+    Fields:
+        A_Time[YDim, XDim]:
+            _FillValue:  9999.0
+        A_TB06.9V (Res 1)[YDim, XDim]:
+            _FillValue:  9999
+        A_TB06.9H (Res 1)[YDim, XDim]:
+            _FillValue:  9999
+        A_TB10.7V (Res 1)[YDim, XDim]:
+            _FillValue:  9999
+        A_TB10.7H (Res 1)[YDim, XDim]:
+            _FillValue:  9999
+        A_TB18.7V (Res 1)[YDim, XDim]:
+            _FillValue:  9999
+        A_TB18.7H (Res 1)[YDim, XDim]:
+            _FillValue:  9999
+        A_TB36.5V (Res 1)[YDim, XDim]:
+            _FillValue:  9999
+        A_TB36.5H (Res 1)[YDim, XDim]:
+            _FillValue:  9999
+        A_TB36.5V (Res 4)[YDim, XDim]:
+            _FillValue:  9999
+        A_TB36.5H (Res 4)[YDim, XDim]:
+            _FillValue:  9999
+        A_TB89.0V (Res 4)[YDim, XDim]:
+            _FillValue:  9999
+        A_TB89.0H (Res 4)[YDim, XDim]:
+            _FillValue:  9999
+        A_Soil_Moisture[YDim, XDim]:
+            _FillValue:  9999
+        A_Veg_Water_Content[YDim, XDim]:
+            _FillValue:  9999
+        A_Land_Surface_Temp[YDim, XDim]:
+            _FillValue:  9999
+        A_Inversion_QC_Flag[YDim, XDim]:
+            _FillValue:  9999
+    Grid Attributes:"""
+
 utm_grid = """Grid:  UTMGrid
     Dimensions:
         Time:  10
