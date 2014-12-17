@@ -201,69 +201,68 @@ class _Grid(object):
         """
         Return str representation of projection information.
         """
-        lst = []
         if self.projcode == 0:
             title = "Projection:  Geographic"
+            lst = []
         elif self.projcode == 1:
             title = "Projection:  UTM"
-            lst.append(self._projection_lonz_latz())
+            lst = [self._projection_lonz_latz()]
         elif self.projcode == 3:
             title = "Projection:  Albers Conical Equal Area"
-            lst.append(self._projection_semi_major())
-            lst.append(self._projection_semi_minor())
-            lst.append(self._projection_latitudes_of_standard_parallels())
-            lst.append(self._projection_longitude_of_central_meridian())
-            lst.append(self._projection_latitude_of_projection_origin())
-            lst.append(self._projection_false_easting())
-            lst.append(self._projection_false_northing())
+            lst = [self._projection_semi_major(),
+                   self._projection_semi_minor(),
+                   self._projection_latitudes_of_standard_parallels(),
+                   self._projection_longitude_of_central_meridian(),
+                   self._projection_latitude_of_projection_origin(),
+                   self._projection_false_easting(),
+                   self._projection_false_northing()]
         elif self.projcode == 6:
             title = "Projection:  Polar Stereographic"
-            lst.append(self._projection_semi_major())
-            lst.append(self._projection_semi_minor())
-            lst.append(self._projection_longitude_pole())
-            lst.append(self._projection_true_scale())
-            lst.append(self._projection_false_easting())
-            lst.append(self._projection_false_northing())
+            lst = [self._projection_semi_major(),
+                   self._projection_semi_minor(),
+                   self._projection_longitude_pole(),
+                   self._projection_true_scale(),
+                   self._projection_false_easting(),
+                   self._projection_false_northing()]
         elif self.projcode == 11:
             title = "Projection:  Lambert Azimuthal"
-            lst.append(self._projection_sphere())
-            lst.append(self._projection_center_lon())
-            lst.append(self._projection_center_lat())
-            lst.append(self._projection_false_easting())
-            lst.append(self._projection_false_northing())
+            lst = [self._projection_sphere(),
+                   self._projection_center_lon(),
+                   self._projection_center_lat(),
+                   self._projection_false_easting(),
+                   self._projection_false_northing()]
         elif self.projcode == 16:
             title = "Projection:  Sinusoidal"
-            lst.append(self._projection_sphere())
-            lst.append(self._projection_longitude_of_central_meridian())
-            lst.append(self._projection_false_easting())
-            lst.append(self._projection_false_northing())
+            lst = [self._projection_sphere(),
+                   self._projection_longitude_of_central_meridian(),
+                   self._projection_false_easting(),
+                   self._projection_false_northing()]
         elif self.projcode == 22:
             if self.projparms[12] == 0:
                 title = "Projection:  Space Oblique Mercator A"
-                lst.append(self._projection_incang())
-                lst.append(self._projection_asclong())
-                lst.append(self._projection_false_easting())
-                lst.append(self._projection_false_northing())
-                lst.append(self._projection_psrev())
-                lst.append(self._projection_srat())
-                lst.append(self._projection_pflag())
+                lst = [self._projection_incang(),
+                       self._projection_asclong(),
+                       self._projection_false_easting(),
+                       self._projection_false_northing(),
+                       self._projection_psrev(),
+                       self._projection_srat(),
+                       self._projection_pflag()]
             else:
                 title = "Projection:  Space Oblique Mercator B"
-                lst.append(self._projection_semi_major())
-                lst.append(self._projection_semi_minor())
-                lst.append(self._projection_satnum())
-                lst.append(self._projection_path())
-                lst.append(self._projection_false_easting())
-                lst.append(self._projection_false_northing())
+                lst = [self._projection_semi_major(),
+                       self._projection_semi_minor(),
+                       self._projection_satnum(),
+                       self._projection_path(),
+                       self._projection_false_easting(),
+                       self._projection_false_northing()]
         elif self.projcode == 97:
             title = "Projection:  CEA"
-            lst.append(self._projection_semi_major())
-            lst.append(self._projection_semi_minor())
-            lst.append(self._projection_longitude_of_central_meridian())
-            lst.append(self._projection_true_scale())
-            lst.append(self._projection_false_easting())
-            lst.append(self._projection_false_northing())
-
+            lst = [self._projection_semi_major(),
+                   self._projection_semi_minor(),
+                   self._projection_longitude_of_central_meridian(),
+                   self._projection_true_scale(),
+                   self._projection_false_easting(),
+                   self._projection_false_northing()]
         
         # Indent the projection title 4 spaces, indent the projection
         # parameters 8 spaces.
