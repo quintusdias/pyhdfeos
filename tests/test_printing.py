@@ -1,4 +1,5 @@
 import os
+import pkg_resources as pkg
 import sys
 import tempfile
 import unittest
@@ -10,59 +11,112 @@ else:
     from io import StringIO
     from unittest.mock import patch
 
-from pyhdfeos import gd as GD
-from pyhdfeos.gd import GridFile, Grid
-from pyhdfeos import core
+import numpy as np
+
+import pyhdfeos
+from pyhdfeos import GridFile
 
 from . import fixtures
+from .fixtures import test_file_exists, test_file_path
 
-def fullpath(fname):
-    """
-    Short cut for creating the full path.
-    """
-    return os.path.join(os.environ['HDFEOS_ZOO_DIR'], fname)
+somfile = 'MISR_AM1_GRP_ELLIPSOID_GM_P117_O058421_BA_F03_0024.hdf'
+ceafile = 'AMSR_E_L3_DailyLand_V06_20050118.hdf'
 
 class TestPrinting(unittest.TestCase):
 
+    @classmethod
+    def setUpClass(cls):
+        file = pkg.resource_filename(__name__, os.path.join('data', 'Grid.h5'))
+        cls.test_driver_file = file
+
+        file = pkg.resource_filename(__name__, os.path.join('data', 'Grid219.hdf'))
+        cls.test_driver_gridfile4 = file
+
     def setUp(self):
-        self.file = fullpath("TOMS-EP_L3-TOMSEPL3_2000m0101_v8.HDF")
+        pass
 
-    def test_geo_grid(self):
-        with GridFile(self.file) as gdf:
+    def tearDown(self):
+        pass
+
+    @unittest.skipIf(not test_file_exists(ceafile), 'test file not available')
+    def test_cea_grid(self):
+        file = test_file_path(ceafile)
+        gdf = GridFile(file)
+        with patch('sys.stdout', new=StringIO()) as fake_out:
+            print(gdf.grids['Ascending_Land_Grid'])
+            actual = fake_out.getvalue().strip()
+
+        expected = fixtures.cea_grid
+        self.assertEqual(actual, expected)
+
+    @unittest.skipIf(not test_file_exists(somfile), 'test file not available')
+    def test_som_grid(self):
+        file = test_file_path(somfile)
+        gdf = GridFile(file)
+        with patch('sys.stdout', new=StringIO()) as fake_out:
+            print(gdf.grids['GeometricParameters'])
+            actual = fake_out.getvalue().strip()
+
+        expected = fixtures.som_grid
+        self.assertEqual(actual, expected)
+
+    def test_repr_gridfile(self):
+        with GridFile(self.test_driver_file) as gdf1:
+            gdf2 = eval(repr(gdf1))
+            self.assertEqual(gdf1.filename, gdf2.filename)
+            glist1 = [grid for grid in gdf1.grids.keys()]
+            glist2 = [grid for grid in gdf2.grids.keys()]
+            self.assertEqual(glist1, glist2)
+
+    def test_testdriver_he2_utm(self):
+        with GridFile(self.test_driver_gridfile4) as gdf:
             with patch('sys.stdout', new=StringIO()) as fake_out:
-                print(gdf)
+                print(gdf.grids['UTMGrid'])
                 actual = fake_out.getvalue().strip()
 
-        self.assertEqual(actual, fixtures.geographic_grid)
+        expected = fixtures.he2_utm
+        self.assertEqual(actual, expected)
 
-    def test_lamaz_grid(self):
-        file = fullpath("MYD29P1D.A2010133.h09v07.005.2010135182659.hdf")
-        grid = 'MOD_Grid_Seaice_1km'
-        with GridFile(file) as gdf:
+    def test_testdriver_he2_polar(self):
+        with GridFile(self.test_driver_gridfile4) as gdf:
             with patch('sys.stdout', new=StringIO()) as fake_out:
-                print(gdf.grids[grid])
+                print(gdf.grids['PolarGrid'])
                 actual = fake_out.getvalue().strip()
 
-        self.assertEqual(actual, fixtures.lambert_azimuthal_grid)
+        expected = fixtures.he2_polar
+        self.assertEqual(actual, expected)
 
-    def test_sinusoidal_grid(self):
-        file = fullpath("MOD10A1.A2000065.h00v08.005.2008237034422.hdf")
-        grid = 'MOD_Grid_Snow_500m'
-        with GridFile(file) as gdf:
+    def test_testdriver_he2_geo(self):
+        with GridFile(self.test_driver_gridfile4) as gdf:
             with patch('sys.stdout', new=StringIO()) as fake_out:
-                print(gdf.grids[grid])
+                print(gdf.grids['GEOGrid'])
                 actual = fake_out.getvalue().strip()
 
-        self.assertEqual(actual, fixtures.sinusoidal_grid)
+        # Trim off last two lines, gets rid of a floating point value that is
+        # hard to match.
+        actual = actual.split('\n')
+        actual = '\n'.join(actual[:-2])
 
-    def test_albers_grid(self):
-        file = fullpath("CONUS.annual.2012.h01v06.doy007to356.v1.5.hdf")
-        grid = 'WELD_GRID'
-        with GridFile(file) as gdf:
+        expected = fixtures.he2_geo
+        expected = expected.split('\n')
+        expected = '\n'.join(expected[:-2])
+
+        self.assertEqual(actual, expected)
+
+    def test_utm_grid_he5(self):
+        with GridFile(self.test_driver_file) as gdf:
             with patch('sys.stdout', new=StringIO()) as fake_out:
-                print(gdf.grids[grid])
+                print(gdf.grids['UTMGrid'])
                 actual = fake_out.getvalue().strip()
 
-        self.assertEqual(actual, fixtures.albers_grid)
+        expected = fixtures.utm_grid
+        self.assertEqual(actual, expected)
 
+    def test_ps_grid_he5(self):
+        with GridFile(self.test_driver_file) as gdf:
+            with patch('sys.stdout', new=StringIO()) as fake_out:
+                print(gdf.grids['PolarGrid'])
+                actual = fake_out.getvalue().strip()
+        expected = fixtures.polar_stereographic_grid
+        self.assertEqual(actual, expected)
 

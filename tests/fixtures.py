@@ -1,76 +1,179 @@
-geographic_grid = """TOMS-EP_L3-TOMSEPL3_2000m0101_v8.HDF
-Grid:  TOMS Level 3
-    Shape:  (180, 288)
-    Upper Left (x,y):  [ -1.80000000e+08   9.00000000e+07]
-    Lower Right (x,y):  [  1.80000000e+08  -9.00000000e+07]
-    Projection:  Geographic
-    Fields:
-        Ozone:
-        Reflectivity:
-        Aerosol:
-        Erythemal:
-    Attributes:
-        VerticalCoordinate:  Total Column"""
+import os
 
-lambert_azimuthal_grid = """Grid:  MOD_Grid_Seaice_1km
-    Shape:  (951, 951)
-    Upper Left (x,y):  [ -476784.3255  2383921.6275]
-    Lower Right (x,y):  [  476784.3255  1430352.9765]
-    Projection:  Lambert Azimuthal
-        Radius of reference sphere(km):  6371.228
-        Center Longitude:  0.0
-        Center Latitude:  90.0
-        False Easting:  0.0
-        False Northing:  0.0
-    Fields:
-        Sea_Ice_by_Reflectance:
-        Sea_Ice_by_Reflectance_Spatial_QA:
-        Ice_Surface_Temperature:
-        Ice_Surface_Temperature_Spatial_QA:
-    Attributes:"""
+def test_file_exists(file):
+    if 'HDFEOS_ZOO_DIR' in os.environ:
+        fullpath = os.path.join(os.environ['HDFEOS_ZOO_DIR'], file)
+        if os.path.exists(fullpath):
+            return True
+        else:
+            return False
 
-sinusoidal_grid = """Grid:  MOD_Grid_Snow_500m
-    Shape:  (2400, 2400)
-    Upper Left (x,y):  [-20015109.354      1111950.519667]
-    Lower Right (x,y):  [-18903158.834333        -0.      ]
-    Projection:  Sinusoidal
-        Radius of reference sphere(km):  6371.007181
+def test_file_path(file):
+    return os.path.join(os.environ['HDFEOS_ZOO_DIR'], file)
+
+cea_grid = """Grid:  Ascending_Land_Grid
+    Dimensions:
+        XDim:  1383
+        YDim:  586
+    Upper Left (x,y):  [-17334194.      7344784.825]
+    Lower Right (x,y):  [ 17334193.5375  -7344785.    ]
+    Sphere:  Unspecified
+    Projection:  CEA
+        Semi-major axis(km):  6371.228
+        Semi-minor axis(km):  6371.228
         Longitude of Central Meridian:  0.0
+        Latitude of true scale:  30.0
         False Easting:  0.0
         False Northing:  0.0
     Fields:
-        Snow_Cover_Daily_Tile:
-        Snow_Spatial_QA:
-        Snow_Albedo_Daily_Tile:
-        Fractional_Snow_Cover:
-    Attributes:"""
+        A_Time[YDim, XDim]:
+            _FillValue:  9999.0
+        A_TB06.9V (Res 1)[YDim, XDim]:
+            _FillValue:  9999
+        A_TB06.9H (Res 1)[YDim, XDim]:
+            _FillValue:  9999
+        A_TB10.7V (Res 1)[YDim, XDim]:
+            _FillValue:  9999
+        A_TB10.7H (Res 1)[YDim, XDim]:
+            _FillValue:  9999
+        A_TB18.7V (Res 1)[YDim, XDim]:
+            _FillValue:  9999
+        A_TB18.7H (Res 1)[YDim, XDim]:
+            _FillValue:  9999
+        A_TB36.5V (Res 1)[YDim, XDim]:
+            _FillValue:  9999
+        A_TB36.5H (Res 1)[YDim, XDim]:
+            _FillValue:  9999
+        A_TB36.5V (Res 4)[YDim, XDim]:
+            _FillValue:  9999
+        A_TB36.5H (Res 4)[YDim, XDim]:
+            _FillValue:  9999
+        A_TB89.0V (Res 4)[YDim, XDim]:
+            _FillValue:  9999
+        A_TB89.0H (Res 4)[YDim, XDim]:
+            _FillValue:  9999
+        A_Soil_Moisture[YDim, XDim]:
+            _FillValue:  9999
+        A_Veg_Water_Content[YDim, XDim]:
+            _FillValue:  9999
+        A_Land_Surface_Temp[YDim, XDim]:
+            _FillValue:  9999
+        A_Inversion_QC_Flag[YDim, XDim]:
+            _FillValue:  9999
+    Grid Attributes:"""
 
-albers_grid = """Grid:  WELD_GRID
-    Shape:  (5000, 5000)
-    Upper Left (x,y):  [-2415600.  2414800.]
-    Lower Right (x,y):  [-2265600.  2264800.]
-    Projection:  Albers Conical Equal Area
+utm_grid = """Grid:  UTMGrid
+    Dimensions:
+        Time:  10
+        ExtDim:  60
+        Unlim:  18446744073709551615
+        XDim:  120
+        YDim:  200
+    Upper Left (x,y):  [  210584.50041  3322395.95445]
+    Lower Right (x,y):  [  813931.10959  2214162.53278]
+    Sphere:  Clarke 1866
+    Projection:  UTM
+        UTM zone:  40
+    Fields:
+        Vegetation[YDim, XDim]:
+    Grid Attributes:"""
+
+som_grid = """Grid:  GeometricParameters
+    Dimensions:
+        SOMBlockDim:  180
+        XDim:  8
+        YDim:  32
+    Upper Left (x,y):  [ 7460750.  1090650.]
+    Lower Right (x,y):  [ 7601550.   527450.]
+    Sphere:  WGS 84
+    Projection:  Space Oblique Mercator A
+        Inclination of orbit at ascending node:  98.018014
+        Longitude of ascending orbit at equator:  -51.028001
+        False Easting:  0.0
+        False Northing:  0.0
+        Period of satellite revolution:  98.88 (min)
+        Satellite ratio start/end:  0.0
+        End of path flag (0 = start, 1 = end):  0.0
+    Fields:
+        SolarAzimuth[SOMBlockDim, XDim, YDim]:
+            _FillValue:  -555.0
+        SolarZenith[SOMBlockDim, XDim, YDim]:
+            _FillValue:  -555.0
+    Grid Attributes:
+        Block_size.resolution_x:  [17600     0     0     0]
+        Block_size.resolution_y:  [17600     0     0     0]
+        Block_size.size_x:  [8 0 0 0]
+        Block_size.size_y:  [32  0  0  0]"""
+
+polar_stereographic_grid = """Grid:  PolarGrid
+    Dimensions:
+        Bands:  3
+        XDim:  100
+        YDim:  100
+    Upper Left (x,y):  [ 0.  0.]
+    Lower Right (x,y):  [ 0.  0.]
+    Sphere:  International 1967
+    Projection:  Polar Stereographic
         Semi-major axis(km):  6378.2064
         Semi-minor axis(km):  6378.2064
-        Latitude of 1st Standard Parallel:  29.03
-        Latitude of 2nd Standard Parallel:  45.03
-        Longitude of Central Meridian:  -96.0
-        Latitude of Projection Origin:  23.0
+        Longitude below pole of map:  0.0
+        Latitude of true scale:  90.0
         False Easting:  0.0
         False Northing:  0.0
     Fields:
-        Band1_TOA_REF:
-        Band2_TOA_REF:
-        Band3_TOA_REF:
-        Band4_TOA_REF:
-        Band5_TOA_REF:
-        Band61_TOA_BT:
-        Band62_TOA_BT:
-        Band7_TOA_REF:
-        NDVI_TOA:
-        Day_Of_Year:
-        Saturation_Flag:
-        DT_Cloud_State:
-        ACCA_State:
-        Num_Of_Obs:
-    Attributes:"""
+        Temperature[YDim, XDim]:
+        Pressure[YDim, XDim]:
+    Grid Attributes:"""
+
+he2_utm = """Grid:  UTMGrid
+    Dimensions:
+        Time:  10
+        XDim:  120
+        YDim:  200
+    Upper Left (x,y):  [  210584.50041  3322395.95445]
+    Lower Right (x,y):  [  813931.10959  2214162.53278]
+    Sphere:  Clarke 1866
+    Projection:  UTM
+        UTM zone:  40
+    Fields:
+        Pollution[Time, YDim, XDim]:
+            _FillValue:  -7.0
+        Vegetation[YDim, XDim]:
+        Extern[YDim, XDim]:
+    Grid Attributes:
+        float32:  [ 1.  0.  0.  0.]"""
+
+he2_polar = """Grid:  PolarGrid
+    Dimensions:
+        Bands:  3
+        XDim:  100
+        YDim:  100
+    Upper Left (x,y):  [ 0.  0.]
+    Lower Right (x,y):  [ 0.  0.]
+    Sphere:  International 1967
+    Projection:  Polar Stereographic
+        Semi-major axis(km):  6378.2064
+        Semi-minor axis(km):  6378.2064
+        Longitude below pole of map:  0.0
+        Latitude of true scale:  90.0
+        False Easting:  0.0
+        False Northing:  0.0
+    Fields:
+        Temperature[YDim, XDim]:
+        Pressure[YDim, XDim]:
+        Soil Dryness[YDim, XDim]:
+        Spectra[Bands, YDim, XDim]:
+    Grid Attributes:"""
+
+he2_geo = r"""Grid:  GEOGrid
+    Dimensions:
+        XDim:  60
+        YDim:  40
+    Upper Left (x,y):  [        0.  30000000.]
+    Lower Right (x,y):  [ 15000000.  20000000.]
+    Sphere:  Clarke 1866
+    Projection:  Geographic
+    Fields:
+        GeoSpectra[YDim, XDim]:
+            _FillValue:  1.78006040052e-307
+    Grid Attributes:"""
