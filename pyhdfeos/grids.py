@@ -268,15 +268,12 @@ class _Grid(object):
         # parameters 8 spaces.
         if sys.hexversion < 0x03000000:
             msg = ' ' * 4 + title
-            if len(lst) > 0:
-                lst2 = [(' ' * 8 + line) for line in lst]
-                msg += '\n' + '\n'.join(lst2)
+            lst = [(' ' * 8 + line) for line in lst]
         else:
-            # Easy in python3
             msg = textwrap.indent(title, ' ' * 4)
-            if len(lst) > 0:
-                msg += ('\n' +
-                        '\n'.join([textwrap.indent(x, ' ' * 8) for x in lst]))
+            lst = [textwrap.indent(line, ' ' * 8) for line in lst]
+        if len(lst) > 0:
+            msg += '\n' + '\n'.join(lst)
 
         return msg
 
