@@ -54,6 +54,10 @@ CDEF = """
     herr_t HE5_GDreadlocattr(hid_t gridID, const char *fieldname,
                              const char *attrname, void *databuf);
     /*int HE5_EHHEisHE5(char *filename);*/
+    long   HE5_SWinqswath(const char *filename, char *swathlist,
+                          long *strbufsize);
+    hid_t  HE5_SWopen(const char *filename, uintn access);
+    herr_t HE5_SWclose(hid_t fid);
 """
 
 SOURCE = """
@@ -739,4 +743,66 @@ def gdreadfield(gridid, fieldname, start, stride, edge):
                                   edgep, pbuffer)
     _handle_error(status)
     return buffer
+
+def swclose(fid):
+    """Closes the HDF-EOS swath file.
+
+    This function wraps the HDF-EOS5 HE5_SWclose library function.
+
+    Parameters
+    ----------
+    fid : int
+        swath file ID
+    """
+    status = _lib.HE5_SWclose(fid)
+    _handle_error(status)
+
+def swinqswath(filename):
+    """Retrieve names of swaths defined in HDF-EOS5 file.
+
+    This function wraps the HDF-EOS5 HE5_SWinqswath library function.
+
+    Parameters
+    ----------
+    filename : str
+        name of file
+
+    Returns
+    -------
+    swathlist : list
+        List of swaths defined in HDF-EOS file.
+    """
+    strbufsizep = ffi.new("long *")
+    nswaths = _lib.HE5_GDinqswath(filename.encode(), ffi.NULL, strbufsizep)
+    if nswaths == 0:
+        return []
+    swathbuffer = ffi.new("char[]", b'\0' * (strbufsizep[0] + 1))
+    nswaths = _lib.HE5_SWinqswath(filename.encode(), swathbuffer, ffi.NULL)
+    _handle_error(nswaths)
+    if sys.hexversion < 0x03000000:
+        swathlist = ffi.string(swathbuffer).split(',')
+    else:
+        swathlist = ffi.string(swathbuffer).decode('ascii').split(',')
+    return swathlist
+
+def swopen(filename, access=H5F_ACC_RDONLY):
+    """Opens or creates HDF file in order to create, read, or write a swath.
+    
+    This function wraps the HDF-EOS5 HE5_SWopen library function.
+
+    Parameters
+    ----------
+    filename : str
+        name of file
+    access : int
+        one of H5F_ACC_RDONLY, H5F_ACC_RDWR, or H5F_ACC_TRUNC
+
+    Returns
+    -------
+    fid : int
+        swath file ID handle
+    """
+    fid = _lib.HE5_SWopen(filename.encode(), access)
+    _handle_error(fid)
+    return fid
 
