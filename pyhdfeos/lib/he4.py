@@ -46,7 +46,10 @@ CDEF = """
                       int32 stride[], int32 edge[], void *buffer);
     int32 SWattach(int32 swfid, char *swath);
     intn  SWclose(int32 fid);
+    intn  SWdetach(int32 swfid);
+    int32 SWinqdims(int32 swathid, char *dimname, int32 *dims);
     int32 SWinqswath(char *filename, char *swathlist, int32 *strbufsize);
+    int32 SWnentries(int32 swathid, int32 entrycode, int32 *strbufsize);
     int32 SWopen(char *name, intn access);
 """
 
@@ -803,6 +806,53 @@ def swclose(swfid):
     status = _lib.SWclose(swfid)
     _handle_error(status)
 
+def swdetach(swathid):
+    """Detach from swath structure.
+
+    Parameters
+    ----------
+    swathid : int
+        swath identifier
+
+    Raises
+    ------
+    IOError
+        If associated library routine fails.
+    """
+    status = _lib.SWdetach(swathid)
+    _handle_error(status)
+
+def swinqdims(swathid):
+    """Retrieve information about dimensions defined in a swath.
+
+    This function wraps the HDF-EOS SWinqdims library function.
+
+    Parameters
+    ----------
+    swathid : int
+        swath identifier
+
+    Returns
+    -------
+    dimlist : list
+        list of dimensions defined for the swath
+    dimlens : ndarray
+        corresponding length of each dimension
+
+    Raises
+    ------
+    IOError
+        If associated library routine fails.
+    """
+    ndims, strbufsize = swnentries(swathid, HDFE_NENTDIM)
+    dim_buffer = ffi.new("char[]", b'\0' * (strbufsize + 1))
+    dimlens = np.zeros(ndims, dtype=np.int32)
+    dimlensp = ffi.cast("int32 *", dimlens.ctypes.data)
+    status = _lib.SWinqdims(swathid, dim_buffer, dimlensp)
+    _handle_error(status)
+    dimlist = ffi.string(dim_buffer).decode('ascii').split(',')
+    return dimlist, dimlens
+
 def swinqswath(filename):
     """Retrieve swath structures defined in HDF-EOS file.
 
@@ -835,6 +885,39 @@ def swinqswath(filename):
     else:
         swathlist = ffi.string(swathbuffer).decode('ascii').split(',')
     return swathlist
+
+def swnentries(gridid, entry_code):
+    """Return number of specified objects in a swath.
+
+    This function wraps the HDF-EOS SWnentries library function.
+
+    Parameters
+    ----------
+    swathid : int
+        swath identifier
+    entry_code : int
+        Entry code, either HDFE_NENTDIM or HDFE_NENTDFLD
+
+    Returns
+    -------
+    nentries, strbufsize : tuple of ints
+       Number of specified entries, number of bytes in descriptive strings. 
+
+    Raises
+    ------
+    IOError
+        If associated library routine fails.
+    """
+    strbufsizep = ffi.new("int32 *")
+    nentries = _lib.SWnentries(gridid, entry_code, strbufsizep)
+
+    # sometimes running this with HDFE_NENTDIM results in 0 for STRBUFSIZE.
+    # This should never be correct, make it a minimum of 9 (for "YDim,XDim").
+    if entry_code == HDFE_NENTDIM:
+        strbufsize = max(9, strbufsizep[0])
+    else:
+        strbufsize = strbufsizep[0]
+    return nentries, strbufsize
 
 def swopen(filename, access=DFACC_READ):
     """Opens or creates HDF file in order to create, read, or write a swath.

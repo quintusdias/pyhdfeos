@@ -55,8 +55,11 @@ CDEF = """
                              const char *attrname, void *databuf);
     /*int HE5_EHHEisHE5(char *filename);*/
     hid_t  HE5_SWattach(hid_t fid, char *swathname);
+    herr_t HE5_SWdetach(hid_t swathid);
+    int    HE5_SWinqdims(hid_t swathid, char *dims, hsize_t *dims);
     long   HE5_SWinqswath(const char *filename, char *swathlist,
                           long *strbufsize);
+    long   HE5_SWnentries(hid_t swathID, int entrycode, long *strbufsize);
     hid_t  HE5_SWopen(const char *filename, uintn access);
     herr_t HE5_SWclose(hid_t fid);
 """
@@ -777,6 +780,45 @@ def swclose(fid):
     status = _lib.HE5_SWclose(fid)
     _handle_error(status)
 
+def swdetach(swathid):
+    """Detach from swath structure.
+
+    This function wraps the HDF-EOS5 HE5_SWdetach library function.
+
+    Parameters
+    ----------
+    swathid : int
+        swath identifier
+    """
+    status = _lib.HE5_SWdetach(swathid)
+    _handle_error(status)
+
+def swinqdims(swathid):
+    """Retrieve information about dimensions defined in a swath.
+
+    This function wraps the HDF-EOS5 HE5_SWinqdims library function.
+
+    Parameters
+    ----------
+    swathid : int
+        swath identifier
+
+    Returns
+    -------
+    dimlist : list
+        list of dimensions defined for the grid
+    dimlens : ndarray
+        corresponding length of each dimension
+    """
+    ndims, strbufsize = gdnentries(gridid, HE5_HDFE_NENTDIM)
+    dim_buffer = ffi.new("char[]", b'\0' * (strbufsize + 1))
+    dimlens = np.zeros(ndims, dtype=np.uint64)
+    dimlensp = ffi.cast("unsigned long long *", dimlens.ctypes.data)
+    status = _lib.HE5_SWinqdims(gridid, dim_buffer, dimlensp)
+    _handle_error(status)
+    dimlist = ffi.string(dim_buffer).decode('ascii').split(',')
+    return dimlist, dimlens
+
 def swinqswath(filename):
     """Retrieve names of swaths defined in HDF-EOS5 file.
 
@@ -804,6 +846,29 @@ def swinqswath(filename):
     else:
         swathlist = ffi.string(swathbuffer).decode('ascii').split(',')
     return swathlist
+
+def swnentries(swathid, entry_code):
+    """Return number of specified objects in a swath.
+
+    This function wraps the HDF-EOS5 HE5_SWnentries library function.
+
+    Parameters
+    ----------
+    swathid : int
+        swath identifier
+    entry_code : int
+        Entry code, either HE5_HDFE_NENTDIM or HE5_HDFE_NENTDFLD
+
+    Returns
+    -------
+    nentries, strbufsize : int
+       Number of specified entries, number of bytes in descriptive strings. 
+    """
+    strbufsizep = ffi.new("long *")
+    nentries = _lib.HE5_SWnentries(swathid, entry_code, strbufsizep)
+
+    strbufsize = strbufsizep[0]
+    return nentries, strbufsize
 
 def swopen(filename, access=H5F_ACC_RDONLY):
     """Opens or creates HDF file in order to create, read, or write a swath.
