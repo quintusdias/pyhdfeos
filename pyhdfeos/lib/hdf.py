@@ -1,5 +1,5 @@
 """
-Interface for HDF4 library.  Need this in order to access HDF-EOS2 field 
+Interface for HDF4 library.  Need this in order to access HDF-EOS2 field
 attributes.
 """
 import sys
@@ -77,6 +77,7 @@ def _handle_error(status):
     if status < 0:
         raise IOError("Library routine failed.")
 
+
 def sdattrinfo(obj_id, idx):
     """Retrieve information about an attribute.
 
@@ -100,8 +101,10 @@ def sdattrinfo(obj_id, idx):
     datatypep = ffi.new("int32 *")
     countp = ffi.new("int32 *")
     status = _lib.SDattrinfo(obj_id, idx, namebuffer, datatypep, countp)
+    _handle_error(status)
     name = ffi.string(namebuffer).decode('ascii')
     return name, datatypep[0], countp[0]
+
 
 def sdendaccess(sds_id):
     """Terminate access to a data set.
@@ -114,6 +117,7 @@ def sdendaccess(sds_id):
     """
     status = _lib.SDendaccess(sds_id)
     _handle_error(status)
+
 
 def nametoindex(sdid, name):
     """Determine the index of a data set given its name.
@@ -134,6 +138,7 @@ def nametoindex(sdid, name):
     _handle_error(idx)
     return idx
 
+
 def sdreftoindex(sd_id, sds_ref):
     """
     return the index of a data set given the reference number
@@ -153,6 +158,7 @@ def sdreftoindex(sd_id, sds_ref):
     idx = _lib.SDreftoindex(sd_id, sds_ref)
     _handle_error(idx)
     return(idx)
+
 
 def sdgetinfo(sdsid):
     """Return the name, dimension sizes, datatype, number of attributes
@@ -193,6 +199,7 @@ def sdgetinfo(sdsid):
     dimsizes = dimsizes[0:rank]
     return name, dimsizes, datatypep[0], numattrsp[0]
 
+
 def hclose(fid):
     """Closes HDF data file.
 
@@ -203,6 +210,7 @@ def hclose(fid):
     """
     status = _lib.Hclose(fid)
     _handle_error(status)
+
 
 def hopen(filename):
     """Open or create HDF data file.
@@ -218,6 +226,7 @@ def hopen(filename):
         file identifier
     """
     return _lib.Hopen(filename.encode(), DFACC_READ, 0)
+
 
 def sdreadattr(obj_id, idx):
     """read attribute
@@ -249,21 +258,21 @@ def sdreadattr(obj_id, idx):
         return ffi.string(buffer).decode('ascii')
 
     if dtype == DFNT_INT8:
-        buffer = np.zeros(count, dtype = np.int8)
+        buffer = np.zeros(count, dtype=np.int8)
     elif dtype == DFNT_UINT8:
-        buffer = np.zeros(count, dtype = np.uint8)
+        buffer = np.zeros(count, dtype=np.uint8)
     elif dtype == DFNT_INT16:
-        buffer = np.zeros(count, dtype = np.int16)
+        buffer = np.zeros(count, dtype=np.int16)
     elif dtype == DFNT_UINT16:
-        buffer = np.zeros(count, dtype = np.uint16)
+        buffer = np.zeros(count, dtype=np.uint16)
     elif dtype == DFNT_INT32:
-        buffer = np.zeros(count, dtype = np.int32)
+        buffer = np.zeros(count, dtype=np.int32)
     elif dtype == DFNT_UINT32:
-        buffer = np.zeros(count, dtype = np.uint32)
+        buffer = np.zeros(count, dtype=np.uint32)
     elif dtype == DFNT_FLOAT:
-        buffer = np.zeros(count, dtype = np.float32)
+        buffer = np.zeros(count, dtype=np.float32)
     elif dtype == DFNT_FLOAT64:
-        buffer = np.zeros(count, dtype = np.float64)
+        buffer = np.zeros(count, dtype=np.float64)
     pbuffer = ffi.cast("void *", buffer.ctypes.data)
 
     status = _lib.SDreadattr(obj_id, idx, pbuffer)
@@ -271,6 +280,7 @@ def sdreadattr(obj_id, idx):
     if count == 1:
         buffer = buffer[0]
     return buffer
+
 
 def sdselect(sdid, idx):
     """Obtain the data set identifier
@@ -291,6 +301,7 @@ def sdselect(sdid, idx):
     _handle_error(sds_id)
     return sds_id
 
+
 def sdend(sd_id):
     """
     close scientific dataset
@@ -302,6 +313,7 @@ def sdend(sd_id):
     """
     status = _lib.SDend(sd_id)
     _handle_error(status)
+
 
 def sdstart(filename):
     """
@@ -316,6 +328,7 @@ def sdstart(filename):
         dataset (file) identifier
     """
     return _lib.SDstart(filename.encode(), DFACC_READ)
+
 
 def vattach(fid, vgroup_ref):
     """
@@ -337,6 +350,7 @@ def vattach(fid, vgroup_ref):
     _handle_error(vg_id)
     return vg_id
 
+
 def vdetach(vg_id):
     """
     terminate access to a vgroup
@@ -349,6 +363,7 @@ def vdetach(vg_id):
     status = _lib.Vdetach(vg_id)
     _handle_error(status)
 
+
 def vend(fid):
     """
     close vgroup interface
@@ -360,6 +375,7 @@ def vend(fid):
     """
     status = _lib.Vend(fid)
     _handle_error(status)
+
 
 def vfind(fid, group_name):
     """
@@ -382,6 +398,7 @@ def vfind(fid, group_name):
         raise IOError("Library routine failed.")
     return ref_id
 
+
 def vgetname(vgroup_id):
     """
     retrieve the name of a vgroup
@@ -393,6 +410,7 @@ def vgetname(vgroup_id):
     name = ffi.string(namebuffer).decode('ascii')
     return name
 
+
 def vgetnamelen(vgroup_id):
     """
     retrieve the length of the name of a vgroup
@@ -401,6 +419,7 @@ def vgetnamelen(vgroup_id):
     status = _lib.Vgetnamelen(vgroup_id, countp)
     _handle_error(status)
     return countp[0]
+
 
 def vgettagrefs(vgroup_id, ntags=None):
     """
@@ -429,6 +448,7 @@ def vgettagrefs(vgroup_id, ntags=None):
         lst.append((tagp[j], refp[j]))
     return lst
 
+
 def vntagrefs(vgroup_id):
     """
     return number of objects in a vgroup
@@ -446,6 +466,7 @@ def vntagrefs(vgroup_id):
     ntagrefs = _lib.Vntagrefs(vgroup_id)
     _handle_error(ntagrefs)
     return ntagrefs
+
 
 def vstart(fid):
     """

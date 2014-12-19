@@ -4,17 +4,9 @@ import unittest
 import numpy as np
 
 from pyhdfeos import GridFile
-from pyhdfeos.lib import he4
 
 from . import fixtures
 
-def print_kij(block, i, j):
-    R2D = 57.2957795131
-    somx, somy = misr.inv(block+1, i, j)
-    lon, lat = som.inv(somx, somy)
-    lon *= R2D
-    lat *= R2D
-    print("({0} {1} {2}):  {3:.3f} {4:.3f}".format(block, i, j, lat, lon))
 
 @unittest.skipIf('HDFEOS_ZOO_DIR' not in os.environ,
                  'HDFEOS_ZOO_DIR environment variable not set.')
@@ -24,12 +16,6 @@ class TestSuite(unittest.TestCase):
     def setUpClass(cls):
         file = 'MISR_AM1_GRP_ELLIPSOID_GM_P117_O058421_BA_F03_0024.hdf'
         cls.som_file = fixtures.test_file_path(file)
-
-    def test_point(self):
-        """
-        retrieve a single point from SOM grid.
-        """
-        gdf = GridFile(self.som_file)
 
     def test_ellipsis_complete_grid(self):
         file = 'MISR_AM1_GRP_ELLIPSOID_GM_P117_O058421_BA_F03_0024.hdf'

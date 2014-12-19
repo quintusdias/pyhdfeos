@@ -14,7 +14,8 @@ else:
 
 import numpy as np
 
-from .lib import he4, he5, hdf
+from .lib import he4, he5
+from .core import EosFile
 from . import _som
 
 
@@ -263,7 +264,7 @@ class _Grid(object):
                    self._projection_true_scale(),
                    self._projection_false_easting(),
                    self._projection_false_northing()]
-        
+
         # Indent the projection title 4 spaces, indent the projection
         # parameters 8 spaces.
         if sys.hexversion < 0x03000000:
@@ -431,7 +432,7 @@ class _Grid(object):
         """
         __str__ helper method for projections center of projection lat and lon
         """
-        msg += "Center Latitude:  {0}".format(self.projparms[5]/1e6)
+        msg = "Center Latitude:  {0}".format(self.projparms[5]/1e6)
         return msg
 
     def _projection_latitude_of_projection_origin(self):
@@ -599,7 +600,7 @@ class _Grid(object):
         return lat, lon
 
 
-class GridFile(object):
+class GridFile(EosFile):
     """
     Access to HDF-EOS grid files.
 
@@ -611,6 +612,7 @@ class GridFile(object):
         collection of grids
     """
     def __init__(self, filename):
+        EosFile.__init__(self)
         self.filename = filename
         try:
             self.gdfid = he4.gdopen(filename)
@@ -629,57 +631,6 @@ class GridFile(object):
                 for fieldname in self.grids[gridname].fields.keys():
                     attrs = self._hdf4_attrs(filename, gridname, fieldname)
                     self.grids[gridname].fields[fieldname].attrs = attrs
-
-    def _hdf4_attrs(self, filename, gridname, fieldname):
-        """
-        Retrieve field attributes using HDF4 interface.
-        """
-
-        attrs = None
-
-        fid = hdf.hopen(filename)
-        sd_id = hdf.sdstart(filename)
-        hdf.vstart(fid)
-
-        grid_ref = hdf.vfind(fid, gridname)
-        grid_vg = hdf.vattach(fid, grid_ref)
-
-        members = hdf.vgettagrefs(grid_vg)
-        for tag_i, ref_i in members:
-            if tag_i == hdf.DFTAG_VG:
-                # Descend into a vgroup if we find it.
-                vg0 = hdf.vattach(fid, ref_i)
-                name = hdf.vgetname(vg0)
-                if name == 'Data Fields':
-                    # We want this Vgroup
-                    df_members = hdf.vgettagrefs(vg0)
-                    for tag_j, ref_j in df_members:
-                        if tag_j == hdf.DFTAG_NDG:
-                            # SDS dataset.
-                            idx = hdf.sdreftoindex(sd_id, ref_j)
-                            sds_id = hdf.sdselect(sd_id, idx)
-                            name, dims, dtype, nattrs = hdf.sdgetinfo(sds_id)
-                            if name == fieldname:
-                                alst = []
-                                for k in range(nattrs):
-                                    info = hdf.sdattrinfo(sds_id, k)
-                                    name = info[0]
-                                    value = hdf.sdreadattr(sds_id, k)
-                                    alst.append((name, value))
-                                attrs = collections.OrderedDict(alst)
-                            hdf.sdendaccess(sds_id)
-                hdf.vdetach(vg0)
-
-        hdf.vdetach(grid_vg)
-
-        hdf.vend(fid)
-        hdf.sdend(sd_id)
-        hdf.hclose(fid)
-
-        if attrs is None:
-            # No attributes.
-            attrs = collections.OrderedDict()
-        return attrs
 
     def __repr__(self):
         return "GridFile('{0}')".format(self.filename)
