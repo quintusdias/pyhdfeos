@@ -38,10 +38,41 @@ class SwathFile(EosFile):
                     attrs = self._hdf4_attrs(filename, swathname, fieldname)
                     self.swaths[swathname].fields[fieldname].attrs = attrs
 
+    def __del__(self):
+        self._he.swclose(self.swfid)
+
+
 class _Swath(object):
     """
     Swath object.
     """
     def __init__(self, filename, swathname, he_module):
         self.filename = filename
+        self._he = he_module
+        self.swfid = self._he.swopen(filename)
+        self.swathid = self._he.swattach(self.swfid, swathname)
+        self.swathname = swathname
+
+        dimnames, dimlens = self._he.swinqdims(self.swathid)
+        dims = [(k, v) for (k, v) in zip(dimnames, dimlens)]
+        self.dims = collections.OrderedDict(dims)
+
+        _tuple = self._he.swswathinfo(self.swathid)
+
+        # collect the fieldnames
+        self._fields, _, _ = self._he.swinqfields(self.swathid)
+        self.fields = collections.OrderedDict()
+        for fieldname in self._fields:
+            self.fields[fieldname] = _SwathVariable(self.swathid,
+                                                    fieldname,
+                                                    self._he)
+
+        attr_list = self._he.swinqattrs(self.swathid)
+        self.attrs = collections.OrderedDict()
+        for attr in attr_list:
+            self.attrs[attr] = self._he.swreadattr(self.swathid, attr)
+
+    def __del__(self):
+        self._he.swdetach(self.swathid)
+        self._he.swclose(self.swfid)
 

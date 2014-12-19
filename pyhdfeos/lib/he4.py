@@ -44,6 +44,7 @@ CDEF = """
     intn  GDreadattr(int32 gridid, char* attrname, void *buffer);
     intn  GDreadfield(int32 gridid, char* fieldname, int32 start[],
                       int32 stride[], int32 edge[], void *buffer);
+    int32 SWattach(int32 swfid, char *swath);
     intn  SWclose(int32 fid);
     int32 SWinqswath(char *filename, char *swathlist, int32 *strbufsize);
     int32 SWopen(char *name, intn access);
@@ -759,6 +760,30 @@ def gdreadfield(gridid, fieldname, start, stride, edge):
                               edgep, pbuffer)
     _handle_error(status)
     return buffer
+
+def swattach(swfid, swathname):
+    """Attach to an existing grid structure.
+
+    This function wraps the HDF-EOS SWattach library function.
+
+    Parameters
+    ----------
+    gdfid : int
+        swath file id
+    swathname : str
+        name of swath to be attached
+
+    Returns
+    -------
+    swid : int
+        swath identifier
+
+    Raises
+    ------
+    IOError
+        If associated library routine fails.
+    """
+    return _lib.SWattach(swfid, swathname.encode())
 
 def swclose(swfid):
     """Close an HDF-EOS file.

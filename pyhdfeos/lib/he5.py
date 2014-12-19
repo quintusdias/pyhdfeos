@@ -54,6 +54,7 @@ CDEF = """
     herr_t HE5_GDreadlocattr(hid_t gridID, const char *fieldname,
                              const char *attrname, void *databuf);
     /*int HE5_EHHEisHE5(char *filename);*/
+    hid_t  HE5_SWattach(hid_t fid, char *swathname);
     long   HE5_SWinqswath(const char *filename, char *swathlist,
                           long *strbufsize);
     hid_t  HE5_SWopen(const char *filename, uintn access);
@@ -743,6 +744,25 @@ def gdreadfield(gridid, fieldname, start, stride, edge):
                                   edgep, pbuffer)
     _handle_error(status)
     return buffer
+
+def swattach(swfid, swathname):
+    """Attach to an existing swath within the file.
+
+    This function wraps the HDF-EOS5 HE5_SWattach library function.
+
+    Parameters
+    ----------
+    swfid : int
+        swath file id
+    swathname : str
+        name of swath to be attached
+
+    Returns
+    -------
+    swath_id : int
+        swath identifier
+    """
+    return _lib.HE5_SWattach(swfid, swathname.encode())
 
 def swclose(fid):
     """Closes the HDF-EOS swath file.
