@@ -17,6 +17,9 @@ class TestMetadata(unittest.TestCase):
     def setUpClass(cls):
         file = pkg.resource_filename(__name__, os.path.join('data', 'Grid.h5'))
         cls.test_driver_gridfile5 = file
+        file = pkg.resource_filename(__name__, os.path.join('data',
+                                                            'SimpleSwath.h5'))
+        cls.test_driver_swathfile5 = file
         file = pkg.resource_filename(__name__, os.path.join('data', 'ZA.he5'))
         cls.test_driver_zonal_average_file = file
         file = pkg.resource_filename(__name__, os.path.join('data', 'Grid219.hdf'))
@@ -29,5 +32,9 @@ class TestMetadata(unittest.TestCase):
     def test_inqswaths4(self):
         swf = SwathFile(self.test_driver_swathfile4)
         self.assertEqual(list(swf.swaths.keys()), ['Swath1'])
+
+    def test_inqswaths5(self):
+        swf = SwathFile(self.test_driver_swathfile5)
+        self.assertEqual(list(swf.swaths.keys()), ['INDEX', 'SIMPLE'])
 
 

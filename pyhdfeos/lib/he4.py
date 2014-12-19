@@ -6,6 +6,7 @@ import numpy as np
 from cffi import FFI
 
 from . import config 
+from .core import decode_comma_delimited_ffi_string
 
 CDEF = """
     typedef float float32;
@@ -86,14 +87,6 @@ _lib = ffi.verify(SOURCE,
 def _handle_error(status):
     if status < 0:
         raise IOError("Library routine failed.")
-
-def decode_comma_delimited_ffi_string(ffi_buffer):
-    fieldlist = ffi.string(ffi_buffer).decode('ascii').split(',')
-    if sys.hexversion < 0x03000000:
-        fieldlist = ffi.string(ffi_buffer).split(',')
-    else:
-        fieldlist = ffi.string(ffi_buffer).decode('ascii').split(',')
-    return fieldlist
 
 DFACC_READ = 1
 DFACC_WRITE = 2
@@ -482,10 +475,10 @@ def gdinqattrs(gridid):
     nattrs = _lib.GDinqattrs(gridid, ffi.NULL, strbufsize)
     if nattrs == 0:
         return []
-    attr_buffer = ffi.new("char[]", b'\0' * (strbufsize[0] + 1))
-    nattrs = _lib.GDinqattrs(gridid, attr_buffer, strbufsize)
+    attrb = ffi.new("char[]", b'\0' * (strbufsize[0] + 1))
+    nattrs = _lib.GDinqattrs(gridid, attrb, strbufsize)
     _handle_error(nattrs)
-    attr_list = decode_comma_delimited_ffi_string(attr_buffer)
+    attr_list = decode_comma_delimited_ffi_string(ffi.string(attrb))
     return attr_list
 
 def gdinqdims(gridid):
@@ -887,10 +880,10 @@ def swinqattrs(swathid):
     nattrs = _lib.SWinqattrs(swathid, ffi.NULL, strbufsize)
     if nattrs == 0:
         return []
-    attr_buffer = ffi.new("char[]", b'\0' * (strbufsize[0] + 1))
-    nattrs = _lib.SWinqattrs(swathid, attr_buffer, strbufsize)
+    attrs = ffi.new("char[]", b'\0' * (strbufsize[0] + 1))
+    nattrs = _lib.SWinqattrs(swathid, attrs, strbufsize)
     _handle_error(nattrs)
-    attr_list = decode_comma_delimited_ffi_string(attr_buffer)
+    attr_list = decode_comma_delimited_ffi_string(ffi.string(attrs))
     return attr_list
 
 def swinqdims(swathid):
@@ -952,12 +945,12 @@ def swinqdatafields(swathid):
     if nfields == 0:
         return [], None, None
 
-    fieldlist_buffer = ffi.new("char[]", b'\0' * (strbufsize + 1))
+    fieldlist = ffi.new("char[]", b'\0' * (strbufsize + 1))
     rank_buffer = ffi.new("int[]", nfields)
     numbertype_buffer = ffi.new("int[]", nfields)
-    nfields = _lib.SWinqdatafields(swathid, fieldlist_buffer,
+    nfields = _lib.SWinqdatafields(swathid, fieldlist,
                                    rank_buffer, numbertype_buffer)
-    fieldlist = decode_comma_delimited_ffi_string(fieldlist_buffer)
+    fieldlist = decode_comma_delimited_ffi_string(ffi.string(fieldlist))
 
     ranks = []
     numbertypes = []
@@ -1000,7 +993,7 @@ def swinqgeofields(swathid):
     numbertype_buffer = ffi.new("int[]", nfields)
     nfields = _lib.SWinqgeofields(swathid, fieldlist_buffer,
                                   rank_buffer, numbertype_buffer)
-    fieldlist = decode_comma_delimited_ffi_string(fieldlist_buffer)
+    fieldlist = decode_comma_delimited_ffi_string(ffi.string(fieldlist_buffer))
 
     ranks = []
     numbertypes = []

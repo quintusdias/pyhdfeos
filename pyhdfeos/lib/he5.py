@@ -6,6 +6,7 @@ from cffi import FFI
 import numpy as np
 
 from . import config
+from .core import decode_comma_delimited_ffi_string
 
 CDEF = """
     typedef unsigned uintn;
@@ -55,12 +56,22 @@ CDEF = """
                              const char *attrname, void *databuf);
     /*int HE5_EHHEisHE5(char *filename);*/
     hid_t  HE5_SWattach(hid_t fid, char *swathname);
+    long   HE5_SWattrinfo(hid_t gridID, const char *attrname,
+                             hid_t *ntype, hsize_t *count);
     herr_t HE5_SWdetach(hid_t swathid);
+    long   HE5_SWinqattrs(hid_t gridID, char *attrnames, long *strbufsize);
     int    HE5_SWinqdims(hid_t swathid, char *dims, hsize_t *dims);
+    int    HE5_SWinqdatafields(hid_t gridID, char *fieldlist, int rank[],
+                               hid_t ntype[]);
+    int    HE5_SWinqgeofields(hid_t gridID, char *fieldlist, int rank[],
+                              hid_t ntype[]);
+    long   HE5_SWinqlocattrs(hid_t swathID, char *fieldname, char *attrnames,
+                             long *strbufsize);
     long   HE5_SWinqswath(const char *filename, char *swathlist,
                           long *strbufsize);
     long   HE5_SWnentries(hid_t swathID, int entrycode, long *strbufsize);
     hid_t  HE5_SWopen(const char *filename, uintn access);
+    herr_t HE5_SWreadattr(hid_t gridID, const char* attrname, void *buffer);
     herr_t HE5_SWclose(hid_t fid);
 """
 
@@ -344,10 +355,7 @@ def gdinqattrs(gridid):
     attr_buffer = ffi.new("char[]", b'\0' * (strbufsize + 1))
     nattrs = _lib.HE5_GDinqattrs(gridid, attr_buffer, strbufsizep)
     _handle_error(nattrs)
-    if sys.hexversion < 0x03000000:
-        attr_list = ffi.string(attr_buffer).split(',')
-    else:
-        attr_list = ffi.string(attr_buffer).decode('ascii').split(',')
+    attr_list = decode_comma_delimited_ffi_string(ffi.string(attr_buffer))
     return attr_list
 
 def gdinqdims(gridid):
@@ -406,10 +414,7 @@ def gdinqfields(gridid):
     numbertypep = ffi.cast("hid_t *", numbertypes.ctypes.data)
     nfields2 = _lib.HE5_GDinqfields(gridid, fieldlist_buffer,
                                     rankp, numbertypep)
-    if sys.hexversion < 0x03000000:
-        fieldlist = ffi.string(fieldlist_buffer).split(',')
-    else:
-        fieldlist = ffi.string(fieldlist_buffer).decode('ascii').split(',')
+    fieldlist = decode_comma_delimited_ffi_string(ffi.string(fieldlist_buffer))
 
     return fieldlist, ranks, numbertypes
 
@@ -467,10 +472,7 @@ def gdinqlocattrs(gridid, fieldname):
     nattrs = _lib.HE5_GDinqlocattrs(gridid, fieldname.encode(),
                                     attr_buffer, strbufsize)
     _handle_error(nattrs)
-    if sys.hexversion < 0x03000000:
-        attr_list = ffi.string(attr_buffer).split(',')
-    else:
-        attr_list = ffi.string(attr_buffer).decode('ascii').split(',')
+    attr_list = decode_comma_delimited_ffi_string(ffi.string(attr_buffer))
     return attr_list
 
 def gdlocattrinfo(grid_id, fieldname, attrname):
@@ -767,6 +769,58 @@ def swattach(swfid, swathname):
     """
     return _lib.HE5_SWattach(swfid, swathname.encode())
 
+def swattrinfo(swathid, attrname):
+    """return information about a swath attribute
+
+    Parameters
+    ----------
+    swathid : int
+        grid identifier
+    attrname : str
+        attribute name
+
+    Returns
+    -------
+    ntype : int
+        number type of attribute, see Appendix A in "HDF-EOS Interface Based
+        on HDF5, Volume 2: Function Reference Guide"
+    count : int
+        number of attribute elements
+    """
+    ntypep = ffi.new("hid_t *")
+    countp = ffi.new("hsize_t *")
+    status = _lib.HE5_SWattrinfo(swathid, attrname.encode(), ntypep, countp)
+    _handle_error(status)
+
+    return ntypep[0], countp[0]
+
+def swinqattrs(swathid):
+    """Retrieve information about attributes for a specific swath.
+
+    This function wraps the HDF-EOS5 HE5_SWinqattrs library function.
+
+    Parameters
+    ----------
+    grid_id : int
+        grid identifier
+
+    Returns
+    -------
+    attrlist : list
+        list of attributes defined for the swath
+    """
+    strbufsizep = ffi.new("long *")
+    nattrs = _lib.HE5_SWinqattrs(swathid, ffi.NULL, strbufsizep)
+    if nattrs == 0:
+        return []
+    strbufsize = strbufsizep[0]
+    strbufsize = max(strbufsize, 1000)
+    attr_buffer = ffi.new("char[]", b'\0' * (strbufsize + 1))
+    nattrs = _lib.HE5_SWinqattrs(swathid, attr_buffer, strbufsizep)
+    _handle_error(nattrs)
+    attr_list = decode_comma_delimited_ffi_string(ffi.string(attr_buffer))
+    return attr_list
+
 def swclose(fid):
     """Closes the HDF-EOS swath file.
 
@@ -810,14 +864,109 @@ def swinqdims(swathid):
     dimlens : ndarray
         corresponding length of each dimension
     """
-    ndims, strbufsize = gdnentries(gridid, HE5_HDFE_NENTDIM)
+    ndims, strbufsize = swnentries(swathid, HE5_HDFE_NENTDIM)
     dim_buffer = ffi.new("char[]", b'\0' * (strbufsize + 1))
     dimlens = np.zeros(ndims, dtype=np.uint64)
     dimlensp = ffi.cast("unsigned long long *", dimlens.ctypes.data)
-    status = _lib.HE5_SWinqdims(gridid, dim_buffer, dimlensp)
+    status = _lib.HE5_SWinqdims(swathid, dim_buffer, dimlensp)
     _handle_error(status)
     dimlist = ffi.string(dim_buffer).decode('ascii').split(',')
     return dimlist, dimlens
+
+def swinqdatafields(swathid):
+    """Retrieve information about the data fields defined in a swath.
+
+    This function wraps the HDF-EOS5 HE5_SWinqdatafields library function.
+
+    Parameters
+    ----------
+    swathid : int
+        swath identifier
+
+    Returns
+    -------
+    fields : list
+        list of data fields in the swath.
+    ranks : list
+        list of ranks corresponding to the fields
+    numbertypes : list
+        list of numbertypes corresponding to the fields
+    """
+    nfields, strbufsize = swnentries(swathid, HE5_HDFE_NENTDFLD)
+    if nfields == 0:
+        return [], None, None
+
+    fieldlist = ffi.new("char[]", b'\0' * (strbufsize + 1))
+    ranks = np.zeros(nfields, dtype=np.int32)
+    rankp = ffi.cast("int *", ranks.ctypes.data)
+    numbertypes = np.zeros(nfields, dtype=np.int32)
+    numbertypep = ffi.cast("hid_t *", numbertypes.ctypes.data)
+    nfields = _lib.HE5_SWinqdatafields(swathid, fieldlist, rankp, numbertypep)
+    fieldlist = decode_comma_delimited_ffi_string(ffi.string(fieldlist))
+
+    return fieldlist, ranks, numbertypes
+
+def swinqgeofields(swathid):
+    """Retrieve information about the geolocation fields defined in a swath.
+
+    This function wraps the HDF-EOS5 HE5_SWinqgeofields library function.
+
+    Parameters
+    ----------
+    swathid : int
+        swath identifier
+
+    Returns
+    -------
+    fields : list
+        list of geolocation fields in the swath.
+    ranks : list
+        list of ranks corresponding to the fields
+    numbertypes : list
+        list of numbertypes corresponding to the fields
+    """
+    nfields, strbufsize = swnentries(swathid, HE5_HDFE_NENTDFLD)
+    if nfields == 0:
+        return [], None, None
+
+    fieldlist = ffi.new("char[]", b'\0' * (strbufsize + 1))
+    ranks = np.zeros(nfields, dtype=np.int32)
+    rankp = ffi.cast("int *", ranks.ctypes.data)
+    numbertypes = np.zeros(nfields, dtype=np.int32)
+    numbertypep = ffi.cast("hid_t *", numbertypes.ctypes.data)
+    nfields2 = _lib.HE5_SWinqgeofields(swathid, fieldlist, rankp, numbertypep)
+    fieldlist = decode_comma_delimited_ffi_string(ffi.string(fieldlist))
+
+    return fieldlist, ranks, numbertypes
+
+def swinqlocattrs(gridid, fieldname):
+    """Retrieve information about local swath field attributes.
+
+    This function wraps the HDF-EOS5 HE5_SWinqlocattrs library function.
+
+    Parameters
+    ----------
+    swathid : int
+        grid identifier
+    fieldname : str
+        retrieve attribute names for this field
+
+    Returns
+    -------
+    attrlist : list
+        list of attributes defined for the field
+    """
+    strbufsize = ffi.new("long *")
+    nattrs = _lib.HE5_SWinqlocattrs(gridid, fieldname.encode(), 
+                                    ffi.NULL, strbufsize)
+    if nattrs == 0:
+        return []
+    attr_buffer = ffi.new("char[]", b'\0' * (strbufsize[0] + 1))
+    nattrs = _lib.HE5_SWinqlocattrs(gridid, fieldname.encode(),
+                                    attr_buffer, strbufsize)
+    _handle_error(nattrs)
+    attr_list = decode_comma_delimited_ffi_string(ffi.string(attr_buffer))
+    return attr_list
 
 def swinqswath(filename):
     """Retrieve names of swaths defined in HDF-EOS5 file.
@@ -835,7 +984,7 @@ def swinqswath(filename):
         List of swaths defined in HDF-EOS file.
     """
     strbufsizep = ffi.new("long *")
-    nswaths = _lib.HE5_GDinqswath(filename.encode(), ffi.NULL, strbufsizep)
+    nswaths = _lib.HE5_SWinqswath(filename.encode(), ffi.NULL, strbufsizep)
     if nswaths == 0:
         return []
     swathbuffer = ffi.new("char[]", b'\0' * (strbufsizep[0] + 1))
@@ -869,6 +1018,42 @@ def swnentries(swathid, entry_code):
 
     strbufsize = strbufsizep[0]
     return nentries, strbufsize
+
+def swreadattr(swathid, attrname):
+    """read swath attribute
+
+    This function wraps the HDF-EOS5 HE5_SWreadattr library function.
+
+    Parameters
+    ----------
+    swathid : int
+        grid identifier
+    attrname : str
+        attribute name
+
+    Returns
+    -------
+    value : object
+        swath field attribute value
+    """
+    [ntype, count] = swattrinfo(swathid, attrname)
+    if ntype == 57:
+        buffer = ffi.new("char[]", b'\0' * (1000 + 1))
+        status = _lib.HE5_SWreadattr(swathid, attrname.encode(), buffer)
+        _handle_error(status)
+        return ffi.string(buffer).decode('ascii')
+
+    buffer = np.zeros(count, dtype=number_type_dict[ntype])
+    bufferp = ffi.cast(cast_string_dict[ntype], buffer.ctypes.data)
+
+    status = _lib.HE5_SWreadattr(swathid, attrname.encode(), bufferp)
+    _handle_error(status)
+
+    if count == 1:
+        # present as a scalar rather than an array.
+        buffer = buffer[0]
+    return buffer
+
 
 def swopen(filename, access=H5F_ACC_RDONLY):
     """Opens or creates HDF file in order to create, read, or write a swath.
