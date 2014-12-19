@@ -45,11 +45,19 @@ CDEF = """
     intn  GDreadfield(int32 gridid, char* fieldname, int32 start[],
                       int32 stride[], int32 edge[], void *buffer);
     int32 SWattach(int32 swfid, char *swath);
+    intn  SWattrinfo(int32 swathid, char *attrname, int32 *nbyte, int32
+                     *count);
     intn  SWclose(int32 fid);
     intn  SWdetach(int32 swfid);
+    int32 SWinqattrs(int32 swathid, char *attrlist, int32 *strbufsize);
     int32 SWinqdims(int32 swathid, char *dimname, int32 *dims);
+    int32 SWinqdatafields(int32 swathid, char *fieldlist, int32 rank[],
+                          int32 numbertype[]);
+    int32 SWinqgeofields(int32 swathid, char *fieldlist, int32 rank[],
+                         int32 numbertype[]);
     int32 SWinqswath(char *filename, char *swathlist, int32 *strbufsize);
     int32 SWnentries(int32 swathid, int32 entrycode, int32 *strbufsize);
+    intn  SWreadattr(int32 swathid, char* attrname, void *buffer);
     int32 SWopen(char *name, intn access);
 """
 
@@ -78,6 +86,14 @@ _lib = ffi.verify(SOURCE,
 def _handle_error(status):
     if status < 0:
         raise IOError("Library routine failed.")
+
+def decode_comma_delimited_ffi_string(ffi_buffer):
+    fieldlist = ffi.string(ffi_buffer).decode('ascii').split(',')
+    if sys.hexversion < 0x03000000:
+        fieldlist = ffi.string(ffi_buffer).split(',')
+    else:
+        fieldlist = ffi.string(ffi_buffer).decode('ascii').split(',')
+    return fieldlist
 
 DFACC_READ = 1
 DFACC_WRITE = 2
@@ -469,10 +485,7 @@ def gdinqattrs(gridid):
     attr_buffer = ffi.new("char[]", b'\0' * (strbufsize[0] + 1))
     nattrs = _lib.GDinqattrs(gridid, attr_buffer, strbufsize)
     _handle_error(nattrs)
-    if sys.hexversion < 0x03000000:
-        attr_list = ffi.string(attr_buffer).split(',')
-    else:
-        attr_list = ffi.string(attr_buffer).decode('ascii').split(',')
+    attr_list = decode_comma_delimited_ffi_string(attr_buffer)
     return attr_list
 
 def gdinqdims(gridid):
@@ -788,6 +801,36 @@ def swattach(swfid, swathname):
     """
     return _lib.SWattach(swfid, swathname.encode())
 
+def swattrinfo(swathid, attr_name):
+    """return information about a swath attribute
+
+    Parameters
+    ----------
+    swathid : int
+        grid identifier
+    attr_name : str
+        attribute name
+
+    Returns
+    -------
+    number_type : int
+        number type of attribute
+    count : int
+        number of total bytes in attribute
+
+    Raises
+    ------
+    IOError
+        If associated library routine fails.
+    """
+    number_type_p = ffi.new("int32 *")
+    count_p = ffi.new("int32 *")
+    status = _lib.SWattrinfo(swathid, attr_name.encode(),
+                             number_type_p, count_p)
+    _handle_error(status)
+
+    return number_type_p[0], count_p[0]
+
 def swclose(swfid):
     """Close an HDF-EOS file.
 
@@ -822,6 +865,34 @@ def swdetach(swathid):
     status = _lib.SWdetach(swathid)
     _handle_error(status)
 
+def swinqattrs(swathid):
+    """Retrieve information about swath attributes.
+
+    Parameters
+    ----------
+    swathid : int
+        swath identifier
+
+    Returns
+    -------
+    attrlist : list
+        list of attributes defined for the swath
+
+    Raises
+    ------
+    IOError
+        If associated library routine fails.
+    """
+    strbufsize = ffi.new("int32 *")
+    nattrs = _lib.SWinqattrs(swathid, ffi.NULL, strbufsize)
+    if nattrs == 0:
+        return []
+    attr_buffer = ffi.new("char[]", b'\0' * (strbufsize[0] + 1))
+    nattrs = _lib.SWinqattrs(swathid, attr_buffer, strbufsize)
+    _handle_error(nattrs)
+    attr_list = decode_comma_delimited_ffi_string(attr_buffer)
+    return attr_list
+
 def swinqdims(swathid):
     """Retrieve information about dimensions defined in a swath.
 
@@ -852,6 +923,92 @@ def swinqdims(swathid):
     _handle_error(status)
     dimlist = ffi.string(dim_buffer).decode('ascii').split(',')
     return dimlist, dimlens
+
+def swinqdatafields(swathid):
+    """Retrieve information about data fields defined in a swath.
+
+    This function wraps the HDF-EOS SWinqdatafields library function.
+
+    Parameters
+    ----------
+    swathid : int
+        swath identifier
+
+    Returns
+    -------
+    fields : list
+        list of fields in the swath
+    ranks : list
+        list of ranks corresponding to the fields
+    numbertypes : list
+        list of numbertypes corresponding to the fields
+
+    Raises
+    ------
+    IOError
+        If associated library routine fails.
+    """
+    nfields, strbufsize = swnentries(swathid, HDFE_NENTFLD)
+    if nfields == 0:
+        return [], None, None
+
+    fieldlist_buffer = ffi.new("char[]", b'\0' * (strbufsize + 1))
+    rank_buffer = ffi.new("int[]", nfields)
+    numbertype_buffer = ffi.new("int[]", nfields)
+    nfields = _lib.SWinqdatafields(swathid, fieldlist_buffer,
+                                   rank_buffer, numbertype_buffer)
+    fieldlist = decode_comma_delimited_ffi_string(fieldlist_buffer)
+
+    ranks = []
+    numbertypes = []
+    for j in range(len(fieldlist)):
+        ranks.append(rank_buffer[j])
+        numbertypes.append(numbertype_buffer[j])
+
+    return fieldlist, ranks, numbertypes
+
+def swinqgeofields(swathid):
+    """Retrieve information about geolocation fields defined in a swath.
+
+    This function wraps the HDF-EOS SWinqgeofields library function.
+
+    Parameters
+    ----------
+    swathid : int
+        swath identifier
+
+    Returns
+    -------
+    fields : list
+        list of fields in the swath
+    ranks : list
+        list of ranks corresponding to the fields
+    numbertypes : list
+        list of numbertypes corresponding to the fields
+
+    Raises
+    ------
+    IOError
+        If associated library routine fails.
+    """
+    nfields, strbufsize = swnentries(swathid, HDFE_NENTFLD)
+    if nfields == 0:
+        return [], None, None
+
+    fieldlist_buffer = ffi.new("char[]", b'\0' * (strbufsize + 1))
+    rank_buffer = ffi.new("int[]", nfields)
+    numbertype_buffer = ffi.new("int[]", nfields)
+    nfields = _lib.SWinqgeofields(swathid, fieldlist_buffer,
+                                  rank_buffer, numbertype_buffer)
+    fieldlist = decode_comma_delimited_ffi_string(fieldlist_buffer)
+
+    ranks = []
+    numbertypes = []
+    for j in range(len(fieldlist)):
+        ranks.append(rank_buffer[j])
+        numbertypes.append(numbertype_buffer[j])
+
+    return fieldlist, ranks, numbertypes
 
 def swinqswath(filename):
     """Retrieve swath structures defined in HDF-EOS file.
@@ -919,6 +1076,43 @@ def swnentries(gridid, entry_code):
         strbufsize = strbufsizep[0]
     return nentries, strbufsize
 
+def swreadattr(swathid, attrname):
+    """read swath attribute
+
+    This function wraps the HDF-EOS library SWreadattr function.
+
+    Parameters
+    ----------
+    swathid : int
+        swath identifier
+    attrname : str
+        attribute name
+
+    Returns
+    -------
+    value : object
+        grid attribute value
+
+    Raises
+    ------
+    IOError
+        If associated library routine fails.
+    """
+    [ntype, count] = swattrinfo(swathid, attrname)
+    if ntype == 4:
+        # char8
+        buffer = ffi.new("char[]", b'\0' * (count + 1))
+        status = _lib.SWreadattr(gridid, attrname.encode(), buffer)
+        _handle_error(status)
+        return ffi.string(buffer).decode('ascii')
+
+    buffer = np.zeros(count, dtype=number_type_dict[ntype])
+    pbuffer = ffi.cast(cast_string_dict[ntype], buffer.ctypes.data)
+
+    status = _lib.SWreadattr(swathid, attrname.encode(), pbuffer)
+    _handle_error(status)
+    return buffer
+
 def swopen(filename, access=DFACC_READ):
     """Opens or creates HDF file in order to create, read, or write a swath.
     
@@ -939,6 +1133,4 @@ def swopen(filename, access=DFACC_READ):
     fid = _lib.SWopen(filename.encode(), access)
     _handle_error(fid)
     return fid
-
-
 

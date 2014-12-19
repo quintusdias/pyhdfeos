@@ -28,7 +28,6 @@ class TestMetadata(unittest.TestCase):
 
     def test_inqswaths4(self):
         swf = SwathFile(self.test_driver_swathfile4)
-        self.assertEqual(list(swf.swaths.keys()), ['UTMGrid', 'PolarGrid',
-                                                   'GEOGrid'])
+        self.assertEqual(list(swf.swaths.keys()), ['Swath1'])
 
 
