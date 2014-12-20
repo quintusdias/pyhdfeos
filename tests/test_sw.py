@@ -38,6 +38,13 @@ class TestMetadata(unittest.TestCase):
         self.assertEqual(list(swf.swaths['Swath1'].geofields.keys()),
                          ['Time', 'Longitude', 'Latitude'])
 
+    def test_inqgeofields5(self):
+        swf = SwathFile(self.test_driver_swathfile5)
+        self.assertEqual(list(swf.swaths['INDEX'].geofields.keys()),
+                         ['Latitude', 'Longi'])
+        self.assertEqual(list(swf.swaths['SIMPLE'].geofields.keys()),
+                         ['Time', 'Latitude', 'Longitude'])
+
     def test_inqdatafields4(self):
         swf = SwathFile(self.test_driver_swathfile4)
         self.assertEqual(list(swf.swaths['Swath1'].datafields.keys()),
