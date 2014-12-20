@@ -35,10 +35,10 @@ class SwathFile(EosFile):
             if not hasattr(self._he, 'swinqlocattrs'):
                 # Inquire about hdf4 attributes using SD interface
                 for fieldname in self.swaths[swathname].geofields.keys():
-                    attrs = self._hdf4_attrs(filename, swathname, fieldname)
+                    attrs = self._hdf4_attrs(filename, swathname, fieldname, True)
                     self.swaths[swathname].geofields[fieldname].attrs = attrs
                 for fieldname in self.swaths[swathname].datafields.keys():
-                    attrs = self._hdf4_attrs(filename, swathname, fieldname)
+                    attrs = self._hdf4_attrs(filename, swathname, fieldname, False)
                     self.swaths[swathname].datafields[fieldname].attrs = attrs
 
     def __del__(self):
