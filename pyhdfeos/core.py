@@ -5,6 +5,9 @@ import collections
 
 from .lib import hdf
 
+# swath dimension map definition
+DimensionMap = collections.namedtuple('DimensionMap', ['offset', 'increment'])
+
 
 class EosFile(object):
     """

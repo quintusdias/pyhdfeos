@@ -1,11 +1,9 @@
-import os
-import platform
 import sys
 
 import numpy as np
 from cffi import FFI
 
-from . import config 
+from . import config
 from .core import decode_comma_delimited_ffi_string
 
 CDEF = """
@@ -56,6 +54,7 @@ CDEF = """
                           int32 numbertype[]);
     int32 SWinqgeofields(int32 swathid, char *fieldlist, int32 rank[],
                          int32 numbertype[]);
+    int32 SWinqmaps(int32, char *, int32 [], int32 []);
     int32 SWinqswath(char *filename, char *swathlist, int32 *strbufsize);
     int32 SWnentries(int32 swathid, int32 entrycode, int32 *strbufsize);
     intn  SWreadattr(int32 swathid, char* attrname, void *buffer);
@@ -84,6 +83,7 @@ _lib = ffi.verify(SOURCE,
                                                        SOURCE,
                                                        sys.version))
 
+
 def _handle_error(status):
     if status < 0:
         raise IOError("Library routine failed.")
@@ -101,8 +101,7 @@ HDFE_GD_LL = 2
 HDFE_GD_LR = 3
 DFNT_FLOAT = 5
 
-number_type_dict = {
-                    3: np.uint16,
+number_type_dict = {3: np.uint16,
                     4: np.int8,
                     5: np.float32,
                     6: np.float64,
@@ -113,10 +112,8 @@ number_type_dict = {
                     24: np.int32,
                     25: np.uint32,
                     26: np.int64,
-                    27: np.uint64,
-        }
-cast_string_dict = {
-                    3: "unsigned short *",
+                    27: np.uint64}
+cast_string_dict = {3: "unsigned short *",
                     4: "signed char *",
                     5: "float *",
                     6: "double *",
@@ -127,8 +124,8 @@ cast_string_dict = {
                     24: "int *",
                     25: "unsigned int *",
                     26: "long long int",
-                    27: "unsigned long long *",
-        }
+                    27: "unsigned long long *"}
+
 
 def ehidinfo(fid):
     """Get HDF file IDs.
@@ -139,7 +136,7 @@ def ehidinfo(fid):
     ----------
     gdfid : int
         Grid file id.
-    
+
     Returns
     -------
     hdfid : int
@@ -155,7 +152,9 @@ def ehidinfo(fid):
     hdfidp = ffi.new("int32 *")
     sdidp = ffi.new("int32 *")
     status = _lib.EHidinfo(fid, hdfidp, sdidp)
+    _handle_error(status)
     return hdfidp[0], sdidp[0]
+
 
 def gdattach(gdfid, gridname):
     """Attach to an existing grid structure.
@@ -180,6 +179,7 @@ def gdattach(gdfid, gridname):
         If associated library routine fails.
     """
     return _lib.GDattach(gdfid, gridname.encode())
+
 
 def gdattrinfo(grid_id, attr_name):
     """return information about a grid attribute
@@ -211,6 +211,7 @@ def gdattrinfo(grid_id, attr_name):
 
     return number_type_p[0], count_p[0]
 
+
 def gdblksomoffset(grid_id):
     """read SOM block offsets
 
@@ -234,10 +235,11 @@ def gdblksomoffset(grid_id):
     offset = np.zeros(num_offsets - 1, dtype=np.float32)
     offsetp = ffi.cast("float32 *", offset.ctypes.data)
     status = _lib.GDblkSOMoffset(grid_id, offsetp, num_offsets - 1,
-                                  'r'.encode())
+                                 'r'.encode())
     _handle_error(status)
- 
+
     return offset
+
 
 def gdclose(gdfid):
     """Close an HDF-EOS file.
@@ -257,6 +259,7 @@ def gdclose(gdfid):
     status = _lib.GDclose(gdfid)
     _handle_error(status)
 
+
 def gddetach(grid_id):
     """Detach from grid structure.
 
@@ -272,6 +275,7 @@ def gddetach(grid_id):
     """
     status = _lib.GDdetach(grid_id)
     _handle_error(status)
+
 
 def gdgridinfo(grid_id):
     """Return information about a grid structure.
@@ -311,6 +315,7 @@ def gdgridinfo(grid_id):
 
     return xdimsize[0], ydimsize[0], upleft, lowright
 
+
 def gdfieldinfo(grid_id, fieldname):
     """Return information about a geolocation field or data field in a grid.
 
@@ -344,7 +349,7 @@ def gdfieldinfo(grid_id, fieldname):
     dims = np.zeros(8, dtype=np.int32)
     dimsp = ffi.cast("int32 *", dims.ctypes.data)
     status = _lib.GDfieldinfo(grid_id, fieldname.encode(), rankp, dimsp,
-                              ntypep, dimlist_buffer)  
+                              ntypep, dimlist_buffer)
     _handle_error(status)
 
     shape = []
@@ -358,8 +363,9 @@ def gdfieldinfo(grid_id, fieldname):
 
     return tuple(shape), ntypep[0], dimlist
 
-def gdij2ll(projcode, zonecode, projparm, spherecode, xdimsize, ydimsize, upleft,
-          lowright, row, col, pixcen, pixcnr):
+
+def gdij2ll(projcode, zonecode, projparm, spherecode, xdimsize,
+            ydimsize, upleft, lowright, row, col, pixcen, pixcnr):
     """Convert coordinates (i, j) to (longitude, latitude).
 
     This function wraps the HDF-EOS GDij2ll library function.
@@ -404,7 +410,9 @@ def gdij2ll(projcode, zonecode, projparm, spherecode, xdimsize, ydimsize, upleft
     status = _lib.GDij2ll(projcode, zonecode, projparmp, spherecode,
                           xdimsize, ydimsize, upleftp, lowrightp, col.size,
                           rowp, colp, longitudep, latitudep, pixcen, pixcnr)
+    _handle_error(status)
     return longitude, latitude
+
 
 def gdinqfields(gridid):
     """Retrieve information about data fields defined in a grid.
@@ -437,8 +445,9 @@ def gdinqfields(gridid):
     fieldlist_buffer = ffi.new("char[]", b'\0' * (strbufsize + 1))
     rank_buffer = ffi.new("int[]", nfields)
     numbertype_buffer = ffi.new("int[]", nfields)
-    nfields2 = _lib.GDinqfields(gridid, fieldlist_buffer,
-                                rank_buffer, numbertype_buffer)
+    nfields = _lib.GDinqfields(gridid, fieldlist_buffer,
+                               rank_buffer, numbertype_buffer)
+    _handle_error(nfields)
     fieldlist = ffi.string(fieldlist_buffer).decode('ascii').split(',')
     if sys.hexversion < 0x03000000:
         fieldlist = ffi.string(fieldlist_buffer).split(',')
@@ -452,6 +461,7 @@ def gdinqfields(gridid):
         numbertypes.append(numbertype_buffer[j])
 
     return fieldlist, ranks, numbertypes
+
 
 def gdinqattrs(gridid):
     """Retrieve information about grid attributes.
@@ -480,6 +490,7 @@ def gdinqattrs(gridid):
     _handle_error(nattrs)
     attr_list = decode_comma_delimited_ffi_string(ffi.string(attrb))
     return attr_list
+
 
 def gdinqdims(gridid):
     """Retrieve information about dimensions defined in a grid.
@@ -511,6 +522,7 @@ def gdinqdims(gridid):
     _handle_error(status)
     dimlist = ffi.string(dim_buffer).decode('ascii').split(',')
     return dimlist, dimlens
+
 
 def gdinqgrid(filename):
     """Retrieve grid structures defined in HDF-EOS file.
@@ -545,6 +557,7 @@ def gdinqgrid(filename):
         gridlist = ffi.string(gridbuffer).decode('ascii').split(',')
     return gridlist
 
+
 def gdnentries(gridid, entry_code):
     """Return number of specified objects in a grid.
 
@@ -560,7 +573,7 @@ def gdnentries(gridid, entry_code):
     Returns
     -------
     nentries, strbufsize : tuple of ints
-       Number of specified entries, number of bytes in descriptive strings. 
+       Number of specified entries, number of bytes in descriptive strings.
 
     Raises
     ------
@@ -578,9 +591,10 @@ def gdnentries(gridid, entry_code):
         strbufsize = strbufsizep[0]
     return nentries, strbufsize
 
+
 def gdopen(filename, access=DFACC_READ):
     """Opens or creates HDF file in order to create, read, or write a grid.
-    
+
     This function wraps the HDF-EOS GDopen library function.
 
     Parameters
@@ -598,6 +612,7 @@ def gdopen(filename, access=DFACC_READ):
     fid = _lib.GDopen(filename.encode(), access)
     _handle_error(fid)
     return fid
+
 
 def gdorigininfo(grid_id):
     """Return grid pixel origin information.
@@ -625,6 +640,7 @@ def gdorigininfo(grid_id):
 
     return origincode[0]
 
+
 def gdpixreginfo(grid_id):
     """Return pixel registration information.
 
@@ -650,6 +666,7 @@ def gdpixreginfo(grid_id):
     _handle_error(status)
 
     return pixregcode[0]
+
 
 def gdprojinfo(grid_id):
     """Return grid projection information.
@@ -685,6 +702,7 @@ def gdprojinfo(grid_id):
     _handle_error(status)
 
     return projcode[0], zonecode[0], spherecode[0], projparm
+
 
 def gdreadattr(gridid, attrname):
     """read grid attribute
@@ -722,6 +740,7 @@ def gdreadattr(gridid, attrname):
     status = _lib.GDreadattr(gridid, attrname.encode(), pbuffer)
     _handle_error(status)
     return buffer
+
 
 def gdreadfield(gridid, fieldname, start, stride, edge):
     """read data from grid field
@@ -770,6 +789,7 @@ def gdreadfield(gridid, fieldname, start, stride, edge):
     _handle_error(status)
     return buffer
 
+
 def swattach(swfid, swathname):
     """Attach to an existing grid structure.
 
@@ -793,6 +813,7 @@ def swattach(swfid, swathname):
         If associated library routine fails.
     """
     return _lib.SWattach(swfid, swathname.encode())
+
 
 def swattrinfo(swathid, attr_name):
     """return information about a swath attribute
@@ -824,6 +845,7 @@ def swattrinfo(swathid, attr_name):
 
     return number_type_p[0], count_p[0]
 
+
 def swclose(swfid):
     """Close an HDF-EOS file.
 
@@ -842,6 +864,7 @@ def swclose(swfid):
     status = _lib.SWclose(swfid)
     _handle_error(status)
 
+
 def swdetach(swathid):
     """Detach from swath structure.
 
@@ -857,6 +880,7 @@ def swdetach(swathid):
     """
     status = _lib.SWdetach(swathid)
     _handle_error(status)
+
 
 def swinqattrs(swathid):
     """Retrieve information about swath attributes.
@@ -885,6 +909,7 @@ def swinqattrs(swathid):
     _handle_error(nattrs)
     attr_list = decode_comma_delimited_ffi_string(ffi.string(attrs))
     return attr_list
+
 
 def swinqdims(swathid):
     """Retrieve information about dimensions defined in a swath.
@@ -916,6 +941,7 @@ def swinqdims(swathid):
     _handle_error(status)
     dimlist = ffi.string(dim_buffer).decode('ascii').split(',')
     return dimlist, dimlens
+
 
 def swinqdatafields(swathid):
     """Retrieve information about data fields defined in a swath.
@@ -960,6 +986,7 @@ def swinqdatafields(swathid):
 
     return fieldlist, ranks, numbertypes
 
+
 def swinqgeofields(swathid):
     """Retrieve information about geolocation fields defined in a swath.
 
@@ -1003,6 +1030,48 @@ def swinqgeofields(swathid):
 
     return fieldlist, ranks, numbertypes
 
+
+def swinqmaps(swathid):
+    """retrieve information about swath geolocation relations
+
+    This function wraps the HDF-EOS library SWinqmaps function.
+
+    Parameters
+    ----------
+    swathid : int
+        swath identifier
+
+    Returns
+    -------
+    dimmap : list
+        list of dimension mappings
+    offsets : list
+        list of offsets of each geolocation relation
+    increments : list
+        list of increments of each geolocation relation
+
+    Raises
+    ------
+    IOError
+        If associated library routine fails.
+    """
+    _, strbufsize = swnentries(swathid, HDFE_NENTDIM)
+    dimmapb = ffi.new("char[]", b'\0' * (strbufsize + 1))
+    nmaps = _lib.SWinqmaps(swathid, dimmapb, ffi.NULL, ffi.NULL)
+    _handle_error(nmaps)
+
+    offsets = np.zeros(nmaps, dtype=np.int32)
+    offsetsp = ffi.cast("int32 *", offsets.ctypes.data)
+    increments = np.zeros(nmaps, dtype=np.int32)
+    incrementsp = ffi.cast("int32 *", increments.ctypes.data)
+
+    nmaps = _lib.SWinqmaps(swathid, ffi.NULL, offsetsp, incrementsp)
+    _handle_error(nmaps)
+
+    dimmap = decode_comma_delimited_ffi_string(ffi.string(dimmapb))
+    return dimmap, offsets, increments
+
+
 def swinqswath(filename):
     """Retrieve swath structures defined in HDF-EOS file.
 
@@ -1028,13 +1097,14 @@ def swinqswath(filename):
     if nswaths == 0:
         return []
     swathbuffer = ffi.new("char[]", b'\0' * (strbufsize[0] + 1))
-    ngrids = _lib.SWinqswath(filename.encode(), swathbuffer, ffi.NULL)
+    nswaths = _lib.SWinqswath(filename.encode(), swathbuffer, ffi.NULL)
     _handle_error(nswaths)
     if sys.hexversion < 0x03000000:
         swathlist = ffi.string(swathbuffer).split(',')
     else:
         swathlist = ffi.string(swathbuffer).decode('ascii').split(',')
     return swathlist
+
 
 def swnentries(gridid, entry_code):
     """Return number of specified objects in a swath.
@@ -1051,7 +1121,7 @@ def swnentries(gridid, entry_code):
     Returns
     -------
     nentries, strbufsize : tuple of ints
-       Number of specified entries, number of bytes in descriptive strings. 
+       Number of specified entries, number of bytes in descriptive strings.
 
     Raises
     ------
@@ -1068,6 +1138,7 @@ def swnentries(gridid, entry_code):
     else:
         strbufsize = strbufsizep[0]
     return nentries, strbufsize
+
 
 def swreadattr(swathid, attrname):
     """read swath attribute
@@ -1095,7 +1166,7 @@ def swreadattr(swathid, attrname):
     if ntype == 4:
         # char8
         buffer = ffi.new("char[]", b'\0' * (count + 1))
-        status = _lib.SWreadattr(gridid, attrname.encode(), buffer)
+        status = _lib.SWreadattr(swathid, attrname.encode(), buffer)
         _handle_error(status)
         return ffi.string(buffer).decode('ascii')
 
@@ -1106,9 +1177,10 @@ def swreadattr(swathid, attrname):
     _handle_error(status)
     return buffer
 
+
 def swopen(filename, access=DFACC_READ):
     """Opens or creates HDF file in order to create, read, or write a swath.
-    
+
     This function wraps the HDF-EOS SWopen library function.
 
     Parameters
@@ -1126,4 +1198,3 @@ def swopen(filename, access=DFACC_READ):
     fid = _lib.SWopen(filename.encode(), access)
     _handle_error(fid)
     return fid
-

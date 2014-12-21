@@ -4,7 +4,7 @@ Support for HDF-EOS and HDF-EOS5 swath files.
 import collections
 
 from .lib import he4, he5
-from .core import EosFile
+from .core import EosFile, DimensionMap
 
 
 class SwathFile(EosFile):
@@ -76,6 +76,12 @@ class _Swath(object):
             self.datafields[fieldname] = _SwathVariable(fieldname,
                                                         self.swathid,
                                                         self._he)
+
+        dimmap_names, offsets, increments = self._he.swinqmaps(self.swathid)
+        self.dimmaps = collections.OrderedDict()
+        for j in range(len(offsets)):
+            dimmap = DimensionMap(offset=offsets[j], increment=increments[j])
+            self.dimmaps[dimmap_names[j]] = dimmap
 
         attr_list = self._he.swinqattrs(self.swathid)
         self.attrs = collections.OrderedDict()

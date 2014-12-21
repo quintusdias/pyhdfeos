@@ -7,6 +7,7 @@ import numpy as np
 
 from pyhdfeos.lib import he4
 from pyhdfeos import SwathFile
+from pyhdfeos.core import DimensionMap
 
 from . import fixtures
 
@@ -44,6 +45,12 @@ class TestMetadata4(unittest.TestCase):
                           'IndxTrack': 12,
                           'Unlim': 0})
 
+    def test_inqmaps(self):
+        swf = SwathFile(self.test_driver_swathfile4)
+        self.assertEqual(swf.swaths['Swath1'].dimmaps['GeoTrack/Res2tr'],
+                         DimensionMap(offset=0, increment=2))
+        self.assertEqual(swf.swaths['Swath1'].dimmaps['GeoXtrack/Res2xtr'],
+                         DimensionMap(offset=1, increment=2))
 
 class TestMetadata5(unittest.TestCase):
     """
@@ -85,3 +92,14 @@ class TestMetadata5(unittest.TestCase):
         self.assertEqual(swf.swaths['SIMPLE'].dims['GeoXtrack'], 4)
         self.assertTrue('Unlim' in swf.swaths['SIMPLE'].dims)
 
+    def test_inqmaps(self):
+        swf = SwathFile(self.swathfile)
+        self.assertEqual(swf.swaths['SIMPLE'].dimmaps['GeoTrack/DataTrack'],
+                         DimensionMap(offset=0, increment=2))
+        self.assertEqual(swf.swaths['SIMPLE'].dimmaps['GeoXtrack/DataXtrack'],
+                         DimensionMap(offset=0, increment=1))
+        self.assertEqual(swf.swaths['SIMPLE'].dimmaps['GeoTrack/GeoXtrack'],
+                         DimensionMap(offset=0, increment=1))
+        self.assertEqual(swf.swaths['SIMPLE'].dimmaps['GeoTrack/GeoTrack'],
+                         DimensionMap(offset=0, increment=1))
+        self.assertEqual(len(swf.swaths['INDEX'].dimmaps), 0)

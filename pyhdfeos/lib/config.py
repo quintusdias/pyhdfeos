@@ -1,6 +1,7 @@
 import binascii
 import os
 
+
 def locate_gctp(library_dirs):
     """
     Debian systems (including Mint) have libGctp.  Most other linux systems
@@ -12,12 +13,14 @@ def locate_gctp(library_dirs):
     for library_dir in library_dirs:
         for libname in libs:
             for suffix in suffix_list:
-                path = os.path.join(library_dir, 'lib' + libname + '.' + suffix)
+                path = os.path.join(library_dir,
+                                    'lib' + libname + '.' + suffix)
                 if os.path.exists(path):
                     true_gctp_lib = libname
                     return true_gctp_lib
 
     return true_gctp_lib
+
 
 def library_config(libraries):
     """
@@ -36,7 +39,8 @@ def library_config(libraries):
     for libname in libraries:
         for library_dir in library_dir_candidates:
             for suffix in suffix_list:
-                path = os.path.join(library_dir, 'lib' + libname + '.' + suffix)
+                path = os.path.join(library_dir,
+                                    'lib' + libname + '.' + suffix)
                 if os.path.exists(path):
                     if library_dir not in library_dirs:
                         library_dirs.append(library_dir)
@@ -44,12 +48,12 @@ def library_config(libraries):
     return library_dirs
 
 # Locations where we might look for HDF, HDF-EOS, and HDF-EOS5 libraries.
-include_dirs=['/usr/include/hdf',
-              '/usr/include/x86_64-linux-gnu/hdf',
-              '/usr/include/i386-linux-gnu/hdf',
-              '/opt/local/include',
-              '/usr/local/include',
-              '/usr/include/hdf-eos5']
+include_dirs = ['/usr/include/hdf',
+                '/usr/include/x86_64-linux-gnu/hdf',
+                '/usr/include/i386-linux-gnu/hdf',
+                '/opt/local/include',
+                '/usr/local/include',
+                '/usr/include/hdf-eos5']
 if 'INCLUDE_DIRS' in os.environ:
     lst = os.environ['INCLUDE_DIRS'].split(':')
     lst.extend(include_dirs)
@@ -75,6 +79,7 @@ hdfeos_libs = ['hdfeos', true_gctp_lib]
 hdfeos5_libs = ['he5_hdfeos', true_gctp_lib]
 hdfeos5_libs.extend(['hdf5_hl', 'hdf5', 'z'])
 
+
 def _create_modulename(tag, cdef_sources, source, sys_version):
     """
     This is the same as CFFI's create modulename except we don't include the
@@ -88,5 +93,4 @@ def _create_modulename(tag, cdef_sources, source, sys_version):
     k1 = k1.lstrip('0x').rstrip('L')
     k2 = hex(binascii.crc32(key[1::2]) & 0xffffffff)
     k2 = k2.lstrip('0').rstrip('L')
-    return '_{0}_cffi_{1}{2}'.format(tag,k1, k2)
-
+    return '_{0}_cffi_{1}{2}'.format(tag, k1, k2)
