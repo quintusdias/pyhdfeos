@@ -3,8 +3,9 @@ Support for HDF-EOS and HDF-EOS5 swath files.
 """
 import collections
 
-from .lib import he4, he5, hdf
+from .lib import he4, he5
 from .core import EosFile
+
 
 class SwathFile(EosFile):
     """
@@ -35,10 +36,12 @@ class SwathFile(EosFile):
             if not hasattr(self._he, 'swinqlocattrs'):
                 # Inquire about hdf4 attributes using SD interface
                 for fieldname in self.swaths[swathname].geofields.keys():
-                    attrs = self._hdf4_attrs(filename, swathname, fieldname, True)
+                    attrs = self._hdf4_attrs(filename, swathname, fieldname,
+                                             True)
                     self.swaths[swathname].geofields[fieldname].attrs = attrs
                 for fieldname in self.swaths[swathname].datafields.keys():
-                    attrs = self._hdf4_attrs(filename, swathname, fieldname, False)
+                    attrs = self._hdf4_attrs(filename, swathname, fieldname,
+                                             False)
                     self.swaths[swathname].datafields[fieldname].attrs = attrs
 
     def __del__(self):
@@ -64,11 +67,15 @@ class _Swath(object):
         geofields, _, _ = self._he.swinqgeofields(self.swathid)
         self.geofields = collections.OrderedDict()
         for fieldname in geofields:
-            self.geofields[fieldname] = _SwathVariable(fieldname, self.swathid, self._he)
+            self.geofields[fieldname] = _SwathVariable(fieldname,
+                                                       self.swathid,
+                                                       self._he)
         datafields, _, _ = self._he.swinqdatafields(self.swathid)
         self.datafields = collections.OrderedDict()
         for fieldname in datafields:
-            self.datafields[fieldname] = _SwathVariable(fieldname, self.swathid, self._he)
+            self.datafields[fieldname] = _SwathVariable(fieldname,
+                                                        self.swathid,
+                                                        self._he)
 
         attr_list = self._he.swinqattrs(self.swathid)
         self.attrs = collections.OrderedDict()
@@ -78,6 +85,7 @@ class _Swath(object):
     def __del__(self):
         self._he.swdetach(self.swathid)
         self._he.swclose(self.swfid)
+
 
 class _SwathVariable(object):
     """

@@ -1,8 +1,6 @@
 import binascii
 import os
 
-# HDFEOS relies on GCTP, but sometimes this library is called "Gctp" and
-# sometimes it is called "gctp" (Ubuntu derivatives).
 def locate_gctp(library_dirs):
     """
     Debian systems (including Mint) have libGctp.  Most other linux systems

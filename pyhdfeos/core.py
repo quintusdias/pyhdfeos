@@ -3,7 +3,8 @@ Required for grids, swaths.
 """
 import collections
 
-from .lib import he4, he5, hdf
+from .lib import hdf
+
 
 class EosFile(object):
     """
@@ -44,15 +45,16 @@ class EosFile(object):
                 # Descend into a vgroup if we find it.
                 vg0 = hdf.vattach(fid, ref_i)
                 name = hdf.vgetname(vg0)
-                if hasattr(self, 'swfid'):
-                    # Swath
-                    if geolocation and name == 'Geolocation Fields':
-                        attrs = self.collect_attrs_from_sds_in_vgroup(sd_id, vg0, fieldname)
-                    elif not geolocation and name == 'Data Fields':
-                        attrs = self.collect_attrs_from_sds_in_vgroup(sd_id, vg0, fieldname)
+                if (((hasattr(self, 'swfid')) and
+                     (geolocation and name == 'Geolocation Fields') and
+                     (not geolocation and name == 'Data Fields'))):
+                    attrs = self.collect_attrs_from_sds_in_vgroup(sd_id,
+                                                                  vg0,
+                                                                  fieldname)
                 elif hasattr(self, 'gdfid') and name == 'Data Fields':
-                    # Grid
-                    attrs = self.collect_attrs_from_sds_in_vgroup(sd_id, vg0, fieldname)
+                    attrs = self.collect_attrs_from_sds_in_vgroup(sd_id,
+                                                                  vg0,
+                                                                  fieldname)
                 hdf.vdetach(vg0)
 
         hdf.vdetach(grid_vg)
