@@ -17,25 +17,25 @@ class TestMetadata4(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         file = pkg.resource_filename(__name__, os.path.join('data', 'Swath219.hdf'))
-        cls.test_driver_swathfile4 = file
+        cls.swathfile = file
 
     def test_inqswaths4(self):
-        swf = SwathFile(self.test_driver_swathfile4)
+        swf = SwathFile(self.swathfile)
         self.assertEqual(list(swf.swaths.keys()), ['Swath1'])
 
     def test_inqgeofields4(self):
-        swf = SwathFile(self.test_driver_swathfile4)
+        swf = SwathFile(self.swathfile)
         self.assertEqual(list(swf.swaths['Swath1'].geofields.keys()),
                          ['Time', 'Longitude', 'Latitude'])
 
     def test_inqdatafields4(self):
-        swf = SwathFile(self.test_driver_swathfile4)
+        swf = SwathFile(self.swathfile)
         self.assertEqual(list(swf.swaths['Swath1'].datafields.keys()),
                          ['Density', 'Temperature', 'Temperature_3D',
                           'Pressure', 'Spectra', 'Count'])
 
     def test_inqdims(self):
-        swf = SwathFile(self.test_driver_swathfile4)
+        swf = SwathFile(self.swathfile)
         self.assertEqual(swf.swaths['Swath1'].dims,
                          {'GeoTrack': 20,
                           'GeoXtrack': 10,
@@ -46,11 +46,21 @@ class TestMetadata4(unittest.TestCase):
                           'Unlim': 0})
 
     def test_inqmaps(self):
-        swf = SwathFile(self.test_driver_swathfile4)
+        swf = SwathFile(self.swathfile)
         self.assertEqual(swf.swaths['Swath1'].dimmaps['GeoTrack/Res2tr'],
                          DimensionMap(offset=0, increment=2))
         self.assertEqual(swf.swaths['Swath1'].dimmaps['GeoXtrack/Res2xtr'],
                          DimensionMap(offset=1, increment=2))
+
+    def test_datafieldinfo(self):
+        swf = SwathFile(self.swathfile)
+        field = swf.swaths['Swath1'].datafields['Temperature_3D']
+        self.assertEqual(field.dimlist, ['Bands', 'GeoTrack', 'GeoXtrack'])
+        self.assertEqual(field.dtype, np.float32)
+
+        field = swf.swaths['Swath1'].geofields['Longitude']
+        self.assertEqual(field.dimlist, ['GeoTrack', 'GeoXtrack'])
+        self.assertEqual(field.dtype, np.float32)
 
 class TestMetadata5(unittest.TestCase):
     """

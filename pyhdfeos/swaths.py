@@ -99,4 +99,8 @@ class _SwathVariable(object):
     def __init__(self, fieldname, swathid, he_module):
         self.fieldname = fieldname
         self.swathid = swathid
-        self.he_module = he_module
+        self._he = he_module
+
+        x = self._he.swfieldinfo(self.swathid, fieldname)
+        self.shape, self.dtype, self.dimlist = x[0:3]
+

@@ -58,6 +58,9 @@ CDEF = """
     long   HE5_SWattrinfo(hid_t gridID, const char *attrname,
                              hid_t *ntype, hsize_t *count);
     herr_t HE5_SWdetach(hid_t swathid);
+    herr_t HE5_SWfieldinfo(hid_t gridID, const char *fieldname, int *rank,
+                           hsize_t dims[], hid_t *ntype, char *dimlist,
+                           char *maxdimlist);
     long   HE5_SWinqattrs(hid_t gridID, char *attrnames, long *strbufsize);
     int    HE5_SWinqdims(hid_t swathid, char *dims, hsize_t *dims);
     int    HE5_SWinqdatafields(hid_t gridID, char *fieldlist, int rank[],
@@ -227,27 +230,26 @@ def gdfieldinfo(grid_id, fieldname):
         list of dimensions
     """
     _, strbufsize = gdnentries(grid_id, HE5_HDFE_NENTDIM)
-    dimlist_buffer = ffi.new("char[]", b'\0' * (strbufsize + 1))
-    max_dimlist_buffer = ffi.new("char[]", b'\0' * (strbufsize + 1))
+    dimlistb = ffi.new("char[]", b'\0' * (strbufsize + 1))
+    maxdimlistb = ffi.new("char[]", b'\0' * (strbufsize + 1))
 
     rankp = ffi.new("int *")
     ntypep = ffi.new("hid_t *")
 
     # Assume that no field has more than 8 dimensions.  Seems like a safe bet.
-    # dimsp = ffi.new("unsigned long long []", 8)
     dims = np.zeros(8, dtype=np.uint64)
     dimsp = ffi.cast("hsize_t *", dims.ctypes.data)
 
     status = _lib.HE5_GDfieldinfo(grid_id, fieldname.encode(), rankp, dimsp,
-                                  ntypep, dimlist_buffer, max_dimlist_buffer)
+                                  ntypep, dimlistb, maxdimlistb)
     _handle_error(status)
 
     shape = []
     for j in range(rankp[0]):
         shape.append(dimsp[j])
 
-    dimlist = ffi.string(dimlist_buffer).decode('ascii').split(',')
-    maxdimlist = ffi.string(max_dimlist_buffer).decode('ascii').split(',')
+    dimlist = decode_comma_delimited_ffi_string(ffi.string(dimlistb))
+    maxdimlist = decode_comma_delimited_ffi_string(ffi.string(maxdimlistb))
 
     return tuple(shape), ntypep[0], dimlist, maxdimlist
 
@@ -867,6 +869,52 @@ def swdetach(swathid):
     """
     status = _lib.HE5_SWdetach(swathid)
     _handle_error(status)
+
+
+def swfieldinfo(swathid, fieldname):
+    """return information about a specific geolocation or data field
+
+    This function wraps the HDF-EOS5 HE5_SWfieldinfo library function.
+
+    Parameters
+    ----------
+    swathid : int
+        swath identifier
+    fieldname : str
+        field name
+
+    Returns
+    -------
+    shape : tuple
+        size of the field
+    ntype : type
+        datatype of the field
+    dimlist, maxdimlist : list
+        list of dimensions
+    """
+    _, strbufsize = swnentries(swathid, HE5_HDFE_NENTDIM)
+    dimlistb = ffi.new("char[]", b'\0' * (strbufsize + 1))
+    maxdimlistb = ffi.new("char[]", b'\0' * (strbufsize + 1))
+
+    rankp = ffi.new("int *")
+    ntypep = ffi.new("hid_t *")
+
+    # Assume that no field has more than 8 dimensions.  Seems like a safe bet.
+    dims = np.zeros(8, dtype=np.uint64)
+    dimsp = ffi.cast("hsize_t *", dims.ctypes.data)
+
+    status = _lib.HE5_SWfieldinfo(swathid, fieldname.encode(), rankp, dimsp,
+                                  ntypep, dimlistb, maxdimlistb)
+    _handle_error(status)
+
+    shape = []
+    for j in range(rankp[0]):
+        shape.append(dimsp[j])
+
+    dimlist = decode_comma_delimited_ffi_string(ffi.string(dimlistb))
+    maxdimlist = decode_comma_delimited_ffi_string(ffi.string(maxdimlistb))
+
+    return tuple(shape), number_type_dict[ntypep[0]], dimlist, maxdimlist
 
 
 def swinqdims(swathid):

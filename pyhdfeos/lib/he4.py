@@ -48,6 +48,9 @@ CDEF = """
                      *count);
     intn  SWclose(int32 fid);
     intn  SWdetach(int32 swfid);
+    intn  SWfieldinfo(int32 gridid, char *fieldname, int32 *rank,
+                      int32 dims[], int32 *numbertype, char *dimlist);
+    int32 SWidxmapinfo(int32, char *, char *, int32 []);
     int32 SWinqattrs(int32 swathid, char *attrlist, int32 *strbufsize);
     int32 SWinqdims(int32 swathid, char *dimname, int32 *dims);
     int32 SWinqdatafields(int32 swathid, char *fieldlist, int32 rank[],
@@ -356,10 +359,7 @@ def gdfieldinfo(grid_id, fieldname):
     for j in range(rankp[0]):
         shape.append(dims[j])
 
-    if sys.hexversion < 0x03000000:
-        dimlist = ffi.string(dimlist_buffer).split(',')
-    else:
-        dimlist = ffi.string(dimlist_buffer).decode('ascii').split(',')
+    dimlist = decode_comma_delimited_ffi_string(ffi.string(dimlist_buffer))
 
     return tuple(shape), ntypep[0], dimlist
 
@@ -880,6 +880,86 @@ def swdetach(swathid):
     """
     status = _lib.SWdetach(swathid)
     _handle_error(status)
+
+
+def swfieldinfo(swathid, fieldname):
+    """return information about a specific geolocation or data field
+
+    This function wraps the HDF-EOS SWfieldinfo library function.
+
+    Parameters
+    ----------
+    swathid : int
+        swath identifier.
+    fieldname : str
+        field name
+
+    Returns
+    -------
+    shape : tuple
+        size of the field
+    ntype : type
+        datatype of the field
+    dimlist : list
+        list of dimensions
+    """
+    _, strbufsize = swnentries(swathid, HDFE_NENTDIM)
+    strbufsize = max(1000, strbufsize)
+    dimlist_buffer = ffi.new("char[]", b'\0' * (strbufsize + 1))
+
+    rankp = ffi.new("int32 *")
+    ntypep = ffi.new("int32 *")
+
+    # Assume that no field has more than 8 dimensions.  Seems like a safe bet.
+    dims = np.zeros(8, dtype=np.int32)
+    dimsp = ffi.cast("int32 *", dims.ctypes.data)
+    status = _lib.SWfieldinfo(swathid, fieldname.encode(), rankp, dimsp,
+                              ntypep, dimlist_buffer)
+    _handle_error(status)
+
+    shape = []
+    for j in range(rankp[0]):
+        shape.append(dims[j])
+
+    dimlist = decode_comma_delimited_ffi_string(ffi.string(dimlist_buffer))
+
+    return tuple(shape), number_type_dict[ntypep[0]], dimlist
+
+
+def swidxmapinfo(swathid, geodim, datadim):
+    """retrieve indexed array of specified geolocation mapping
+
+    This function wraps the HDF-EOS library SWidxmapinfo function.
+
+    Parameters
+    ----------
+    swathid : int
+        swath identifier
+    geodim : str
+        indexed geolocation dimension name
+    datadim : str
+        indexed data dimension name
+
+    Returns
+    -------
+    index : ndarray
+        index mapping
+
+    Raises
+    ------
+    IOError
+        If associated library routine fails.
+    """
+    idxsize = _lib.SWidxmapinfo(swathid, geodim.encode(), datadim.encode(),
+                                ffi.NULL)
+    _handle_error(idxsize)
+
+    index = np.zeros(idxsize, dtype=np.int32)
+    indexp = ffi.cast("int32 *", index.ctypes.data)
+    idxsize = _lib.SWidxmapinfo(swathid, geodim.encode(), datadim.encode(),
+                                indexp)
+    _handle_error(idxsize)
+    return index
 
 
 def swinqattrs(swathid):
