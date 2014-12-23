@@ -1,7 +1,6 @@
 import os
 import pkg_resources as pkg
 import sys
-import tempfile
 import unittest
 
 if sys.hexversion < 0x03000000:
@@ -11,9 +10,6 @@ else:
     from io import StringIO
     from unittest.mock import patch
 
-import numpy as np
-
-import pyhdfeos
 from pyhdfeos import GridFile
 
 from . import fixtures
@@ -22,6 +18,7 @@ from .fixtures import test_file_exists, test_file_path
 somfile = 'MISR_AM1_GRP_ELLIPSOID_GM_P117_O058421_BA_F03_0024.hdf'
 ceafile = 'AMSR_E_L3_DailyLand_V06_20050118.hdf'
 
+
 class TestPrinting(unittest.TestCase):
 
     @classmethod
@@ -29,7 +26,8 @@ class TestPrinting(unittest.TestCase):
         file = pkg.resource_filename(__name__, os.path.join('data', 'Grid.h5'))
         cls.test_driver_file = file
 
-        file = pkg.resource_filename(__name__, os.path.join('data', 'Grid219.hdf'))
+        file = pkg.resource_filename(__name__,
+                                     os.path.join('data', 'Grid219.hdf'))
         cls.test_driver_gridfile4 = file
 
     def setUp(self):
@@ -119,4 +117,3 @@ class TestPrinting(unittest.TestCase):
                 actual = fake_out.getvalue().strip()
         expected = fixtures.polar_stereographic_grid
         self.assertEqual(actual, expected)
-

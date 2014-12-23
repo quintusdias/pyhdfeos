@@ -1,5 +1,6 @@
 import os
 
+
 def test_file_exists(file):
     if 'HDFEOS_ZOO_DIR' in os.environ:
         fullpath = os.path.join(os.environ['HDFEOS_ZOO_DIR'], file)
@@ -8,8 +9,11 @@ def test_file_exists(file):
         else:
             return False
 
+
 def test_file_path(file):
     return os.path.join(os.environ['HDFEOS_ZOO_DIR'], file)
+
+swath4_datafield = """Temperature_3D[Bands, GeoTrack, GeoXtrack]:"""
 
 cea_grid = """Grid:  Ascending_Land_Grid
     Dimensions:

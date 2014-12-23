@@ -1,22 +1,50 @@
 import os
 import pkg_resources as pkg
-import tempfile
+import sys
 import unittest
+
+if sys.hexversion < 0x03000000:
+    from StringIO import StringIO
+    from mock import patch
+else:
+    from io import StringIO
+    from unittest.mock import patch
+
 
 import numpy as np
 
-from pyhdfeos.lib import he4
 from pyhdfeos import SwathFile
 from pyhdfeos.core import DimensionMap
 
 from . import fixtures
+
+
+class TestPrinting4(unittest.TestCase):
+    """
+    """
+    @classmethod
+    def setUpClass(cls):
+        file = pkg.resource_filename(__name__,
+                                     os.path.join('data', 'Swath219.hdf'))
+        cls.swathfile = file
+
+    def test_datafields4(self):
+        swf = SwathFile(self.swathfile)
+        with patch('sys.stdout', new=StringIO()) as fake_out:
+            print(swf.swaths['Swath1'].datafields['Temperature_3D'])
+            actual = fake_out.getvalue().strip()
+
+        expected = fixtures.swath4_datafield
+        self.assertEqual(actual, expected)
+
 
 class TestMetadata4(unittest.TestCase):
     """
     """
     @classmethod
     def setUpClass(cls):
-        file = pkg.resource_filename(__name__, os.path.join('data', 'Swath219.hdf'))
+        file = pkg.resource_filename(__name__,
+                                     os.path.join('data', 'Swath219.hdf'))
         cls.swathfile = file
 
     def test_inqswaths4(self):
@@ -40,7 +68,7 @@ class TestMetadata4(unittest.TestCase):
                          {'GeoTrack': 20,
                           'GeoXtrack': 10,
                           'Res2tr': 40,
-                          'Res2xtr': 20, 
+                          'Res2xtr': 20,
                           'Bands': 15,
                           'IndxTrack': 12,
                           'Unlim': 0})
@@ -61,6 +89,7 @@ class TestMetadata4(unittest.TestCase):
         field = swf.swaths['Swath1'].geofields['Longitude']
         self.assertEqual(field.dimlist, ['GeoTrack', 'GeoXtrack'])
         self.assertEqual(field.dtype, np.float32)
+
 
 class TestMetadata5(unittest.TestCase):
     """

@@ -104,3 +104,10 @@ class _SwathVariable(object):
         x = self._he.swfieldinfo(self.swathid, fieldname)
         self.shape, self.dtype, self.dimlist = x[0:3]
 
+    def __str__(self):
+        dimstr = ", ".join(self.dimlist)
+        lst = ["{0}[{1}]:".format(self.fieldname, dimstr)]
+
+        for name, value in self.attrs.items():
+            lst.append("    {0}:  {1}".format(name, value))
+        return '\n'.join(lst)
