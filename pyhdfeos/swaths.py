@@ -2,6 +2,11 @@
 Support for HDF-EOS and HDF-EOS5 swath files.
 """
 import collections
+import os
+import sys
+import textwrap
+
+import numpy as np
 
 from .lib import he4, he5
 from .core import EosFile, DimensionMap
@@ -43,6 +48,24 @@ class SwathFile(EosFile):
                     attrs = self._hdf4_attrs(filename, swathname, fieldname,
                                              False)
                     self.swaths[swathname].datafields[fieldname].attrs = attrs
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
+
+    def __repr__(self):
+        return "SwathFile('{0}')".format(self.filename)
+
+    def __str__(self):
+        orig_printoptions = np.get_printoptions()
+        np.set_printoptions(precision=6)
+        lst = ["{0}".format(os.path.basename(self.filename))]
+        for swath in self.swaths.keys():
+            lst.append(str(self.swaths[swath]))
+        np.set_printoptions(**orig_printoptions)
+        return '\n'.join(lst)
 
     def __del__(self):
         self._he.swclose(self.swfid)
@@ -91,6 +114,43 @@ class _Swath(object):
     def __del__(self):
         self._he.swdetach(self.swathid)
         self._he.swclose(self.swfid)
+
+    def __str__(self):
+        lst = ["Swath:  {0}".format(self.swathname)]
+        lst.append("    Dimensions:")
+        for dimname, dimlen in self.dims.items():
+            lst.append("        {0}:  {1}".format(dimname, dimlen))
+
+        lst.append("    Geolocation Fields:")
+        for field in self.geofields.keys():
+            if sys.hexversion <= 0x03000000:
+                textstr = str(self.geofields[field])
+                field_lst = [(' ' * 8 + line) for line in textstr.split('\n')]
+                lst.extend(field_lst)
+            else:
+                lst.append(textwrap.indent(str(self.geofields[field]),
+                           ' ' * 8))
+
+        lst.append("    Dimension Maps:")
+        for name, map in self.dimmaps.items():
+            msg = "        {0}:  offset={1}, increment={2}"
+            msg = msg.format(name, map.offset, map.increment)
+            lst.append(msg)
+
+        lst.append("    Data Fields:")
+        for field in self.datafields.keys():
+            if sys.hexversion <= 0x03000000:
+                textstr = str(self.datafields[field])
+                field_lst = [(' ' * 8 + line) for line in textstr.split('\n')]
+                lst.extend(field_lst)
+            else:
+                lst.append(textwrap.indent(str(self.datafields[field]),
+                           ' ' * 8))
+
+        lst.append("    Swath Attributes:")
+        for attr in self.attrs.keys():
+            lst.append("        {0}:  {1}".format(attr, self.attrs[attr]))
+        return '\n'.join(lst)
 
 
 class _SwathVariable(object):

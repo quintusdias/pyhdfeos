@@ -13,7 +13,32 @@ def test_file_exists(file):
 def test_file_path(file):
     return os.path.join(os.environ['HDFEOS_ZOO_DIR'], file)
 
-swath4_datafield = """Temperature_3D[Bands, GeoTrack, GeoXtrack]:"""
+swath4 = """Swath219.hdf
+Swath:  Swath1
+    Dimensions:
+        GeoTrack:  20
+        GeoXtrack:  10
+        Res2tr:  40
+        Res2xtr:  20
+        Bands:  15
+        IndxTrack:  12
+        Unlim:  0
+    Geolocation Fields:
+        Time[GeoTrack]:
+        Longitude[GeoTrack, GeoXtrack]:
+        Latitude[GeoTrack, GeoXtrack]:
+    Dimension Maps:
+        GeoTrack/Res2tr:  offset=0, increment=2
+        GeoXtrack/Res2xtr:  offset=1, increment=2
+    Data Fields:
+        Density[GeoTrack]:
+        Temperature[GeoTrack, GeoXtrack]:
+        Temperature_3D[Bands, GeoTrack, GeoXtrack]:
+        Pressure[Res2tr, Res2xtr]:
+        Spectra[Bands, Res2tr, Res2xtr]:
+        Count[Unlim]:
+    Swath Attributes:
+        TestAttr:  [ 3  5  7 11  0  0  0  0  0  0  0  0  0  0  0  0]"""
 
 cea_grid = """Grid:  Ascending_Land_Grid
     Dimensions:

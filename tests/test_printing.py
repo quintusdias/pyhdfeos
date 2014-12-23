@@ -10,7 +10,7 @@ else:
     from io import StringIO
     from unittest.mock import patch
 
-from pyhdfeos import GridFile
+from pyhdfeos import GridFile, SwathFile
 
 from . import fixtures
 from .fixtures import test_file_exists, test_file_path
@@ -116,4 +116,32 @@ class TestPrinting(unittest.TestCase):
                 print(gdf.grids['PolarGrid'])
                 actual = fake_out.getvalue().strip()
         expected = fixtures.polar_stereographic_grid
+        self.assertEqual(actual, expected)
+
+
+class TestSwathPrinting(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        file = pkg.resource_filename(__name__, os.path.join('data',
+                                                            'Swath219.hdf'))
+        cls.swath4file = file
+
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
+
+    def test_repr_swath4file(self):
+        with SwathFile(self.swath4file) as swf1:
+            swf2 = eval(repr(swf1))
+            self.assertEqual(swf1.filename, swf2.filename)
+
+    def test_print_swath4file(self):
+        with SwathFile(self.swath4file) as swf:
+            with patch('sys.stdout', new=StringIO()) as stdout:
+                print(swf)
+                actual = stdout.getvalue().strip()
+        expected = fixtures.swath4
         self.assertEqual(actual, expected)

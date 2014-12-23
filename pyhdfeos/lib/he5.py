@@ -749,7 +749,8 @@ def gdreadfield(gridid, fieldname, start, stride, edge):
     data : ndarray
         data read from field
     """
-    _, ntype, _, _  = gdfieldinfo(gridid, fieldname)
+    info = gdfieldinfo(gridid, fieldname)
+    ntype = info[1]
     shape = tuple([int(x) for x in edge])
     buffer = np.zeros(shape, dtype=number_type_dict[ntype])
     pbuffer = ffi.cast(cast_string_dict[ntype], buffer.ctypes.data)
