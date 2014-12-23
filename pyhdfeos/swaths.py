@@ -108,7 +108,7 @@ class _Swath(object):
 
         dimmap_names, idxsizes = self._he.swinqidxmaps(self.swathid)
         self.idxmaps = collections.OrderedDict()
-        for j in range(len(dimmap_names)):
+        for j in range(len(idxsizes)):
             geodim, datadim = dimmap_names[j].split('/')
             index = self._he.swidxmapinfo(self.swathid, geodim, datadim)
             self.idxmaps[dimmap_names[j]] = index
