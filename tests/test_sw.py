@@ -10,6 +10,7 @@ from pyhdfeos.core import DimensionMap
 from .fixtures import test_file_exists, test_file_path
 
 issue50file = 'MOD021KM.A2000055.0000.005.2010041143816.hdf'
+issue53file = 'MYD03.A2002226.0000.005.2009193071127.hdf'
 
 
 class TestSuite(unittest.TestCase):
@@ -26,6 +27,19 @@ class TestSuite(unittest.TestCase):
     def test_issue_50(self):
         filename = test_file_path(issue50file)
         SwathFile(filename)
+
+    @unittest.skipIf(not test_file_exists(issue53file),
+                     'test file not available')
+    def test_sds_attributes(self):
+        """
+        retrieve SDS attributes
+        """
+        filename = test_file_path(issue53file)
+        swf = SwathFile(filename)
+        field = swf.swaths['MODIS_Swath_Type_GEO'].datafields['SolarZenith']
+        actual = field.attrs['units']
+        expected = 'degrees'
+        self.assertEqual(actual, expected)
 
 
 class TestMetadata4(unittest.TestCase):

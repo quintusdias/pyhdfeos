@@ -52,8 +52,8 @@ class EosFile(object):
                 vg0 = hdf.vattach(fid, ref_i)
                 name = hdf.vgetname(vg0)
                 if (((hasattr(self, 'swfid')) and
-                     (geolocation and name == 'Geolocation Fields') and
-                     (not geolocation and name == 'Data Fields'))):
+                     ((geolocation and name == 'Geolocation Fields') or
+                      (not geolocation and name == 'Data Fields')))):
                     attrs = self.collect_attrs_from_sds_in_vgroup(sd_id,
                                                                   vg0,
                                                                   fieldname)
