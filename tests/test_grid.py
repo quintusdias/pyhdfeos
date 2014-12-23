@@ -9,6 +9,19 @@ from pyhdfeos import GridFile
 
 from . import fixtures
 
+issue52file = 'SBUV2-NOAA17_L2-SBUV2N17L2_2011m1231_v01-01-2012m0905t152911.h5'
+
+class TestNegative5(unittest.TestCase):
+    """
+    Negative tests for HDF-EOS5 grids.
+    """
+    @unittest.skipIf(not fixtures.test_file_exists(issue52file),
+                     'test file not available')
+    def test_issue52(self):
+        """
+        """
+        with self.assertRaises(RuntimeError) as cm:
+            GridFile(fixtures.test_file_path(issue52file))
 
 class TestReadGridCoords(unittest.TestCase):
 

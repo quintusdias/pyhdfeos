@@ -619,7 +619,12 @@ class GridFile(EosFile):
             self._he = he4
         except IOError:
             # try hdf5
-            self.gdfid = he5.gdopen(filename)
+            try:
+                self.gdfid = he5.gdopen(filename)
+            except IOError:
+                msg = "Unable to open {0} as either an HDF-EOS or HDF-EOS5 "
+                msg += "grid file."
+                raise RuntimeError(msg.format(filename))
             self._he = he5
 
         gridlist = self._he.gdinqgrid(filename)
@@ -651,7 +656,8 @@ class GridFile(EosFile):
         pass
 
     def __del__(self):
-        self._he.gdclose(self.gdfid)
+        if self._he is not None:
+            self._he.gdclose(self.gdfid)
 
 
 _SPHERE = {-1: 'Unspecified',

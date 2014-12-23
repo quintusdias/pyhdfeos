@@ -13,6 +13,9 @@ class EosFile(object):
     """
     """
     def __init__(self):
+        # "_he" is an internal mechanism for storing the correct interface
+        # to the correct HDF-EOS library.  Establish a placeholder here.
+        self._he = None
         pass
 
     def _hdf4_attrs(self, filename, eos_vg_name, fieldname, geolocation=False):
