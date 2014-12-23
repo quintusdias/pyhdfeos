@@ -13,6 +13,8 @@ def test_file_exists(file):
 def test_file_path(file):
     return os.path.join(os.environ['HDFEOS_ZOO_DIR'], file)
 
+not_hdfeos = """No HDF-EOS structures detected."""
+
 swath4 = """Swath219.hdf
 Swath:  Swath1
     Dimensions:
