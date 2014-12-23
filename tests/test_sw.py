@@ -7,6 +7,26 @@ import numpy as np
 from pyhdfeos import SwathFile
 from pyhdfeos.core import DimensionMap
 
+from .fixtures import test_file_exists, test_file_path
+
+issue50file = 'MOD021KM.A2000055.0000.005.2010041143816.hdf'
+
+
+class TestSuite(unittest.TestCase):
+    """
+    """
+    @classmethod
+    def setUpClass(cls):
+        file = pkg.resource_filename(__name__,
+                                     os.path.join('data', 'Swath219.hdf'))
+        cls.swathfile = file
+
+    @unittest.skipIf(not test_file_exists(issue50file),
+                     'test file not available')
+    def test_issue_50(self):
+        filename = test_file_path(issue50file)
+        SwathFile(filename)
+
 
 class TestMetadata4(unittest.TestCase):
     """
@@ -61,6 +81,7 @@ class TestMetadata4(unittest.TestCase):
         self.assertEqual(field.dtype, np.float32)
 
 
+@unittest.skip("HDFEOS5 interface problematic")
 class TestMetadata5(unittest.TestCase):
     """
     """
