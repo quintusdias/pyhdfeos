@@ -1,6 +1,7 @@
 import argparse
 
 from .grids import GridFile
+from .swaths import SwathFile
 
 
 def dump_metadata():
@@ -10,5 +11,11 @@ def dump_metadata():
     parser.add_argument('filename')
 
     args = parser.parse_args()
+
     gdf = GridFile(args.filename)
-    print(gdf)
+    if len(gdf.grids) > 0:
+        print(gdf)
+
+    swf = SwathFile(args.filename)
+    if len(swf.swaths) > 0:
+        print(swf)

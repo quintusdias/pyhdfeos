@@ -1,6 +1,5 @@
 import os
 import pkg_resources as pkg
-import tempfile
 import unittest
 
 import numpy as np
@@ -10,6 +9,7 @@ from pyhdfeos import GridFile
 
 from . import fixtures
 
+
 class TestReadGridCoords(unittest.TestCase):
 
     @classmethod
@@ -18,11 +18,14 @@ class TestReadGridCoords(unittest.TestCase):
         cls.test_driver_gridfile5 = file
         file = pkg.resource_filename(__name__, os.path.join('data', 'ZA.he5'))
         cls.test_driver_zonal_average_file = file
-        file = pkg.resource_filename(__name__, os.path.join('data', 'Grid219.hdf'))
+        file = pkg.resource_filename(__name__,
+                                     os.path.join('data', 'Grid219.hdf'))
         cls.test_driver_gridfile4 = file
-        file = pkg.resource_filename(__name__, os.path.join('data', 'Swath219.hdf'))
+        file = pkg.resource_filename(__name__,
+                                     os.path.join('data', 'Swath219.hdf'))
         cls.test_driver_swathfile4 = file
-        file = pkg.resource_filename(__name__, os.path.join('data', 'Point219.hdf'))
+        file = pkg.resource_filename(__name__,
+                                     os.path.join('data', 'Point219.hdf'))
         cls.test_driver_pointfile4 = file
 
     def test_he5(self):
@@ -37,6 +40,7 @@ class TestReadGridCoords(unittest.TestCase):
         np.testing.assert_array_equal(lon4, lon5)
         np.testing.assert_array_equal(lat4, lat5)
 
+
 class TestRead(unittest.TestCase):
 
     @classmethod
@@ -45,11 +49,14 @@ class TestRead(unittest.TestCase):
         cls.test_driver_gridfile5 = file
         file = pkg.resource_filename(__name__, os.path.join('data', 'ZA.he5'))
         cls.test_driver_zonal_average_file = file
-        file = pkg.resource_filename(__name__, os.path.join('data', 'Grid219.hdf'))
+        file = pkg.resource_filename(__name__,
+                                     os.path.join('data', 'Grid219.hdf'))
         cls.test_driver_gridfile4 = file
-        file = pkg.resource_filename(__name__, os.path.join('data', 'Swath219.hdf'))
+        file = pkg.resource_filename(__name__,
+                                     os.path.join('data', 'Swath219.hdf'))
         cls.test_driver_swathfile4 = file
-        file = pkg.resource_filename(__name__, os.path.join('data', 'Point219.hdf'))
+        file = pkg.resource_filename(__name__,
+                                     os.path.join('data', 'Point219.hdf'))
         cls.test_driver_pointfile4 = file
 
     @unittest.skipIf('HDFEOS_ZOO_DIR' not in os.environ,
@@ -66,7 +73,7 @@ class TestRead(unittest.TestCase):
         he4.gddetach(gridid)
         he4.gdclose(gdfid)
         self.assertEqual(len(actual), 179)
-        
+
         expected_offset = [0, 16, 0, 16, 0, 0, 0, 16, 0, 0, 0, 0, 16, 0, 0,
                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -16, 0, 0, 0,
                            -16, 0, 0, -16, 0, 0, -16, 0, -16, 0, -16, 0, -16,
@@ -106,7 +113,7 @@ class TestRead(unittest.TestCase):
         with GridFile(self.test_driver_gridfile4) as gdf:
             actual = gdf.grids['UTMGrid'].fields['Vegetation'][:]
 
-        expected = np.zeros((200,120), dtype=np.float32)
+        expected = np.zeros((200, 120), dtype=np.float32)
         for j in range(200):
             expected[j] = j + 10
         np.testing.assert_array_equal(actual, expected)
@@ -117,7 +124,7 @@ class TestRead(unittest.TestCase):
         """
         with GridFile(self.test_driver_gridfile5) as gdf:
             actual = gdf.grids['UTMGrid'].fields['Vegetation'][:]
-        
+
         expected = np.array([[10, 0], [0, 76]], dtype=np.float32)
         np.testing.assert_array_equal(actual[0:280:279, 0:180:179], expected)
 
@@ -128,7 +135,7 @@ class TestRead(unittest.TestCase):
         with GridFile(self.test_driver_gridfile4) as gdf:
             actual = gdf.grids['UTMGrid'].fields['Vegetation'][:]
 
-        expected = np.zeros((200,120), dtype=np.float32)
+        expected = np.zeros((200, 120), dtype=np.float32)
         for j in range(200):
             expected[j] = j + 10
         np.testing.assert_array_equal(actual, expected)
@@ -139,7 +146,7 @@ class TestRead(unittest.TestCase):
         """
         with GridFile(self.test_driver_gridfile5) as gdf:
             actual = gdf.grids['UTMGrid'].fields['Vegetation'][:]
-        
+
         expected = np.array([[10, 0], [0, 76]], dtype=np.float32)
         np.testing.assert_array_equal(actual[0:280:279, 0:180:179], expected)
 
@@ -148,9 +155,9 @@ class TestRead(unittest.TestCase):
         array-style indexing case of [:,:]
         """
         with GridFile(self.test_driver_gridfile4) as gdf:
-            actual = gdf.grids['UTMGrid'].fields['Vegetation'][:,:]
+            actual = gdf.grids['UTMGrid'].fields['Vegetation'][:, :]
 
-        expected = np.zeros((200,120), dtype=np.float32)
+        expected = np.zeros((200, 120), dtype=np.float32)
         for j in range(200):
             expected[j] = j + 10
         np.testing.assert_array_equal(actual, expected)
@@ -183,7 +190,7 @@ class TestRead(unittest.TestCase):
         with GridFile(self.test_driver_gridfile4) as gdf:
             actual = gdf.grids['UTMGrid'].fields['Vegetation'][3:5, 4:7]
 
-        expected = np.zeros((2,3), dtype=np.float32)
+        expected = np.zeros((2, 3), dtype=np.float32)
         for j in range(2):
             expected[j] = j + 13
         np.testing.assert_array_equal(actual, expected)
@@ -195,7 +202,7 @@ class TestRead(unittest.TestCase):
         with GridFile(self.test_driver_gridfile5) as gdf:
             actual = gdf.grids['UTMGrid'].fields['Vegetation'][3:5, 4:7]
 
-        expected = np.zeros((2,3), dtype=np.float32)
+        expected = np.zeros((2, 3), dtype=np.float32)
         for j in range(2):
             expected[j] = j + 13
         np.testing.assert_array_equal(actual, expected)
@@ -230,6 +237,7 @@ class TestRead(unittest.TestCase):
         expected = 13
         np.testing.assert_array_equal(actual, expected)
 
+
 class TestClass(unittest.TestCase):
 
     @classmethod
@@ -238,16 +246,18 @@ class TestClass(unittest.TestCase):
         cls.test_driver_grid_file = file
         file = pkg.resource_filename(__name__, os.path.join('data', 'ZA.he5'))
         cls.test_driver_zonal_average_file = file
-        file = pkg.resource_filename(__name__, os.path.join('data', 'Grid219.hdf'))
+        file = pkg.resource_filename(__name__,
+                                     os.path.join('data', 'Grid219.hdf'))
         cls.test_driver_gridfile4 = file
-        file = pkg.resource_filename(__name__, os.path.join('data', 'Swath219.hdf'))
+        file = pkg.resource_filename(__name__,
+                                     os.path.join('data', 'Swath219.hdf'))
         cls.test_driver_swathfile4 = file
-        file = pkg.resource_filename(__name__, os.path.join('data', 'Point219.hdf'))
+        file = pkg.resource_filename(__name__,
+                                     os.path.join('data', 'Point219.hdf'))
         cls.test_driver_pointfile4 = file
 
-
     def test_context_manager(self):
-        with GridFile(self.test_driver_gridfile4) as gdf:
+        with GridFile(self.test_driver_gridfile4):
             pass
         self.assertTrue(True)
 
@@ -269,7 +279,7 @@ class TestClass(unittest.TestCase):
         with GridFile(self.test_driver_gridfile4) as gdf:
             actual = gdf.grids['UTMGrid'].fields['Vegetation'][:]
 
-        expected = np.zeros((200,120), dtype=np.float32)
+        expected = np.zeros((200, 120), dtype=np.float32)
         for j in range(200):
             expected[j] = j + 10
         np.testing.assert_array_equal(actual, expected)
@@ -281,7 +291,7 @@ class TestClass(unittest.TestCase):
         with GridFile(self.test_driver_gridfile4) as gdf:
             actual = gdf.grids['UTMGrid'].fields['Vegetation'][:]
 
-        expected = np.zeros((200,120), dtype=np.float32)
+        expected = np.zeros((200, 120), dtype=np.float32)
         for j in range(200):
             expected[j] = j + 10
         np.testing.assert_array_equal(actual, expected)
@@ -291,9 +301,9 @@ class TestClass(unittest.TestCase):
         array-style indexing case of [:,:]
         """
         with GridFile(self.test_driver_gridfile4) as gdf:
-            actual = gdf.grids['UTMGrid'].fields['Vegetation'][:,:]
+            actual = gdf.grids['UTMGrid'].fields['Vegetation'][:, :]
 
-        expected = np.zeros((200,120), dtype=np.float32)
+        expected = np.zeros((200, 120), dtype=np.float32)
         for j in range(200):
             expected[j] = j + 10
         np.testing.assert_array_equal(actual, expected)
@@ -315,7 +325,7 @@ class TestClass(unittest.TestCase):
         with GridFile(self.test_driver_gridfile4) as gdf:
             actual = gdf.grids['UTMGrid'].fields['Vegetation'][3:5, 4:7]
 
-        expected = np.zeros((2,3), dtype=np.float32)
+        expected = np.zeros((2, 3), dtype=np.float32)
         for j in range(2):
             expected[j] = j + 13
         np.testing.assert_array_equal(actual, expected)
@@ -355,7 +365,7 @@ class TestClass(unittest.TestCase):
 
         Issue #15
         """
-        gdf = GridFile(self.test_driver_zonal_average_file)
+        GridFile(self.test_driver_zonal_average_file)
         self.assertTrue(True)
 
     def test_explicit_del_he4(self):
@@ -364,6 +374,7 @@ class TestClass(unittest.TestCase):
         """
         gdf = GridFile(self.test_driver_gridfile4)
         utm = gdf.grids['UTMGrid']
+        del utm
         del gdf
 
     def test_explicit_del_he5(self):
@@ -372,6 +383,7 @@ class TestClass(unittest.TestCase):
         """
         gdf = GridFile(self.test_driver_grid_file)
         utm = gdf.grids['UTMGrid']
+        del utm
         del gdf
 
     def test_corners(self):
@@ -379,11 +391,11 @@ class TestClass(unittest.TestCase):
         should be able to supply two slice arguments
         """
         gdf = GridFile(self.test_driver_grid_file)
-        rows = slice(0,200,199)
-        cols = slice(0,120,119)
+        rows = slice(0, 200, 199)
+        cols = slice(0, 120, 119)
         lat, lon = gdf.grids['UTMGrid'][rows, cols]
-        self.assertEqual(lat.shape, (2,2))
-        self.assertEqual(lon.shape, (2,2))
+        self.assertEqual(lat.shape, (2, 2))
+        self.assertEqual(lon.shape, (2, 2))
 
     def test_ellipsis(self):
         """
@@ -405,13 +417,12 @@ class TestClass(unittest.TestCase):
 
     def test_ellipsis_slice(self):
         """
-        combine Ellipsis with slice 
+        combine Ellipsis with slice
         """
         gdf = GridFile(self.test_driver_gridfile4)
-        lat, lon = gdf.grids['UTMGrid'][:,...]
+        lat, lon = gdf.grids['UTMGrid'][:, ...]
         self.assertEqual(lat.shape, (200, 120))
         self.assertEqual(lon.shape, (200, 120))
-
 
     def test_getitem_int(self):
         """
@@ -429,21 +440,22 @@ class TestClass(unittest.TestCase):
         """
         gdf = GridFile(self.test_driver_grid_file)
         with self.assertRaises(RuntimeError):
-            gdf.grids['UTMGrid'][:,:,:]
+            gdf.grids['UTMGrid'][:, :, :]
 
     def test_slice_out_of_bounds(self):
         """
-        slice arguments should not exceed grid boundaries 
+        slice arguments should not exceed grid boundaries
         """
         gdf = GridFile(self.test_driver_grid_file)
         with self.assertRaises(RuntimeError):
-            gdf.grids['UTMGrid'][-1:25,8:25]
+            gdf.grids['UTMGrid'][-1:25, 8:25]
         with self.assertRaises(RuntimeError):
-            gdf.grids['UTMGrid'][8:25,-1:25]
+            gdf.grids['UTMGrid'][8:25, -1:25]
         with self.assertRaises(RuntimeError):
-            gdf.grids['UTMGrid'][8:700,8:25]
+            gdf.grids['UTMGrid'][8:700, 8:25]
         with self.assertRaises(RuntimeError):
-            gdf.grids['UTMGrid'][8:100,8:2500]
+            gdf.grids['UTMGrid'][8:100, 8:2500]
+
 
 class TestMetadata(unittest.TestCase):
     """
@@ -454,11 +466,14 @@ class TestMetadata(unittest.TestCase):
         cls.test_driver_gridfile5 = file
         file = pkg.resource_filename(__name__, os.path.join('data', 'ZA.he5'))
         cls.test_driver_zonal_average_file = file
-        file = pkg.resource_filename(__name__, os.path.join('data', 'Grid219.hdf'))
+        file = pkg.resource_filename(__name__,
+                                     os.path.join('data', 'Grid219.hdf'))
         cls.test_driver_gridfile4 = file
-        file = pkg.resource_filename(__name__, os.path.join('data', 'Swath219.hdf'))
+        file = pkg.resource_filename(__name__,
+                                     os.path.join('data', 'Swath219.hdf'))
         cls.test_driver_swathfile4 = file
-        file = pkg.resource_filename(__name__, os.path.join('data', 'Point219.hdf'))
+        file = pkg.resource_filename(__name__,
+                                     os.path.join('data', 'Point219.hdf'))
         cls.test_driver_pointfile4 = file
 
     def test_inqgrids4(self):
@@ -483,13 +498,13 @@ class TestMetadata(unittest.TestCase):
 
     def test_fielddims_4(self):
         gdf = GridFile(self.test_driver_gridfile4)
-        self.assertEqual(list(gdf.grids['UTMGrid'].fields['Vegetation'].dimlist),
-                         ['YDim', 'XDim'])
+        field = gdf.grids['UTMGrid'].fields['Vegetation']
+        self.assertEqual(list(field.dimlist), ['YDim', 'XDim'])
 
     def test_fielddims_5(self):
         gdf = GridFile(self.test_driver_gridfile5)
-        self.assertEqual(list(gdf.grids['UTMGrid'].fields['Vegetation'].dimlist),
-                         ['YDim', 'XDim'])
+        field = gdf.grids['UTMGrid'].fields['Vegetation']
+        self.assertEqual(list(field.dimlist), ['YDim', 'XDim'])
 
     def test_gridattrs_4(self):
         gdf = GridFile(self.test_driver_gridfile4)
@@ -498,8 +513,8 @@ class TestMetadata(unittest.TestCase):
 
     def test_fieldattrs_4(self):
         gdf = GridFile(self.test_driver_gridfile4)
-        self.assertEqual(list(gdf.grids['GEOGrid'].fields['GeoSpectra'].attrs.keys()),
-                         ['_FillValue'])
+        field = gdf.grids['GEOGrid'].fields['GeoSpectra']
+        self.assertEqual(list(field.attrs.keys()), ['_FillValue'])
 
     def test_gridinfo(self):
         gdf = GridFile(self.test_driver_gridfile4)
@@ -531,5 +546,4 @@ class TestMetadata(unittest.TestCase):
         self.assertEqual(gdf.grids['UTMGrid'].spherecode, 0)
         projparms = gdf.grids['UTMGrid'].projparms,
         np.testing.assert_array_equal(projparms,
-                np.zeros((1, 13), dtype=np.float64));
-
+                                      np.zeros((1, 13), dtype=np.float64))
