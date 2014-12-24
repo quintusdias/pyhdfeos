@@ -108,7 +108,7 @@ HDFE_GD_LR = 3
 DFNT_FLOAT = 5
 
 number_type_dict = {3: np.uint16,
-                    4: np.int8,
+                    4: np.str,
                     5: np.float32,
                     6: np.float64,
                     20: np.int8,
@@ -119,20 +119,17 @@ number_type_dict = {3: np.uint16,
                     25: np.uint32,
                     26: np.int64,
                     27: np.uint64}
-cast_string_dict = {3: "unsigned short *",
-                    4: "signed char *",
-                    5: "float *",
+cast_string_dict = {np.uint16: "unsigned short *",
+                    np.int8: "signed char *",
                     np.float32: "float *",
-                    6: "double *",
                     np.float64: "double *",
-                    20: "signed char *",
-                    21: "unsigned char *",
-                    22: "short int *",
-                    23: "unsigned short int *",
-                    24: "int *",
-                    25: "unsigned int *",
-                    26: "long long int",
-                    27: "unsigned long long *"}
+                    np.uint8: "unsigned char *",
+                    np.int16: "short int *",
+                    np.uint16: "unsigned short int *",
+                    np.int32: "int *",
+                    np.uint32: "unsigned int *",
+                    np.int64: "long long int",
+                    np.uint64: "unsigned long long *"}
 
 
 def ehidinfo(fid):
@@ -217,7 +214,7 @@ def gdattrinfo(grid_id, attr_name):
                              number_type_p, count_p)
     _handle_error(status)
 
-    return number_type_p[0], count_p[0]
+    return number_type_dict[number_type_p[0]], count_p[0]
 
 
 def gdblksomoffset(grid_id):
@@ -366,7 +363,7 @@ def gdfieldinfo(grid_id, fieldname):
 
     dimlist = decode_comma_delimited_ffi_string(ffi.string(dimlist_buffer))
 
-    return tuple(shape), ntypep[0], dimlist
+    return tuple(shape), number_type_dict[ntypep[0]], dimlist
 
 
 def gdij2ll(projcode, zonecode, projparm, spherecode, xdimsize,
@@ -731,16 +728,16 @@ def gdreadattr(gridid, attrname):
     IOError
         If associated library routine fails.
     """
-    [ntype, count] = gdattrinfo(gridid, attrname)
-    if ntype == 4:
+    [dtype, count] = gdattrinfo(gridid, attrname)
+    if dtype == np.str:
         # char8
         buffer = ffi.new("char[]", b'\0' * (count + 1))
         status = _lib.GDreadattr(gridid, attrname.encode(), buffer)
         _handle_error(status)
         return ffi.string(buffer).decode('ascii')
 
-    buffer = np.zeros(count, dtype=number_type_dict[ntype])
-    pbuffer = ffi.cast(cast_string_dict[ntype], buffer.ctypes.data)
+    buffer = np.zeros(count, dtype=dtype)
+    pbuffer = ffi.cast(cast_string_dict[dtype], buffer.ctypes.data)
 
     status = _lib.GDreadattr(gridid, attrname.encode(), pbuffer)
     _handle_error(status)
@@ -776,10 +773,10 @@ def gdreadfield(gridid, fieldname, start, stride, edge):
         If associated library routine fails.
     """
     info = gdfieldinfo(gridid, fieldname)
-    ntype = info[1]
+    dtype = info[1]
     shape = tuple([int(x) for x in edge])
-    buffer = np.zeros(shape, dtype=number_type_dict[ntype])
-    pbuffer = ffi.cast(cast_string_dict[ntype], buffer.ctypes.data)
+    buffer = np.zeros(shape, dtype=dtype)
+    pbuffer = ffi.cast(cast_string_dict[dtype], buffer.ctypes.data)
 
     startp = ffi.new("int32 []", len(shape))
     stridep = ffi.new("int32 []", len(shape))
@@ -849,7 +846,7 @@ def swattrinfo(swathid, attr_name):
                              number_type_p, count_p)
     _handle_error(status)
 
-    return number_type_p[0], count_p[0]
+    return number_type_dict[number_type_p[0]], count_p[0]
 
 
 def swclose(swfid):
@@ -1284,16 +1281,16 @@ def swreadattr(swathid, attrname):
     IOError
         If associated library routine fails.
     """
-    [ntype, count] = swattrinfo(swathid, attrname)
-    if ntype == 4:
+    [dtype, count] = swattrinfo(swathid, attrname)
+    if dtype == np.str:
         # char8
         buffer = ffi.new("char[]", b'\0' * (count + 1))
         status = _lib.SWreadattr(swathid, attrname.encode(), buffer)
         _handle_error(status)
         return ffi.string(buffer).decode('ascii')
 
-    buffer = np.zeros(count, dtype=number_type_dict[ntype])
-    pbuffer = ffi.cast(cast_string_dict[ntype], buffer.ctypes.data)
+    buffer = np.zeros(count, dtype=dtype)
+    pbuffer = ffi.cast(cast_string_dict[dtype], buffer.ctypes.data)
 
     status = _lib.SWreadattr(swathid, attrname.encode(), pbuffer)
     _handle_error(status)

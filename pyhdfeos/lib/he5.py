@@ -117,16 +117,16 @@ number_type_dict = {0: np.int32,
                     57: np.str}
 
 
-cast_string_dict = {0: "int *",
-                    1: "unsigned int *",
-                    2: "short int *",
-                    3: "unsigned short int *",
-                    4: "signed char *",
-                    5: "unsigned char *",
-                    8: "long long int *",
-                    9: "unsigned long long int *",
-                    10: "float *",
-                    11: "double *",
+cast_string_dict = {np.int32: "int *",
+                    np.uint32: "unsigned int *",
+                    np.int16: "short int *",
+                    np.uint16: "unsigned short int *",
+                    np.int8: "signed char *",
+                    np.uint8: "unsigned char *",
+                    np.int64: "long long int *",
+                    np.uint64: "unsigned long long int *",
+                    np.float32: "float *",
+                    np.float64: "double *",
                     57: "char *"}
 
 
@@ -252,7 +252,7 @@ def gdfieldinfo(grid_id, fieldname):
     dimlist = decode_comma_delimited_ffi_string(ffi.string(dimlistb))
     maxdimlist = decode_comma_delimited_ffi_string(ffi.string(maxdimlistb))
 
-    return tuple(shape), ntypep[0], dimlist, maxdimlist
+    return tuple(shape), number_type_dict[ntypep[0]], dimlist
 
 
 def gdgridinfo(grid_id):
@@ -751,10 +751,10 @@ def gdreadfield(gridid, fieldname, start, stride, edge):
         data read from field
     """
     info = gdfieldinfo(gridid, fieldname)
-    ntype = info[1]
+    dtype = info[1]
     shape = tuple([int(x) for x in edge])
-    buffer = np.zeros(shape, dtype=number_type_dict[ntype])
-    pbuffer = ffi.cast(cast_string_dict[ntype], buffer.ctypes.data)
+    buffer = np.zeros(shape, dtype=dtype)
+    pbuffer = ffi.cast(cast_string_dict[dtype], buffer.ctypes.data)
 
     startp = ffi.new("const hsize_t []", len(shape))
     stridep = ffi.new("const hsize_t []", len(shape))
