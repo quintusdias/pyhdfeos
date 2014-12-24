@@ -26,21 +26,21 @@ Swath:  Swath1
         IndxTrack:  12
         Unlim:  0
     Geolocation Fields:
-        Time[GeoTrack]:
-        Longitude[GeoTrack, GeoXtrack]:
-        Latitude[GeoTrack, GeoXtrack]:
+        float64 Time[GeoTrack]:
+        float32 Longitude[GeoTrack, GeoXtrack]:
+        float32 Latitude[GeoTrack, GeoXtrack]:
     Dimension Maps:
         GeoTrack/Res2tr:  offset=0, increment=2
         GeoXtrack/Res2xtr:  offset=1, increment=2
     Index Maps:
         IndxTrack/Res2tr:  index=[ 0  1  3  6  7  8 11 12 14 24 32 39]
     Data Fields:
-        Density[GeoTrack]:
-        Temperature[GeoTrack, GeoXtrack]:
-        Temperature_3D[Bands, GeoTrack, GeoXtrack]:
-        Pressure[Res2tr, Res2xtr]:
-        Spectra[Bands, Res2tr, Res2xtr]:
-        Count[Unlim]:
+        float32 Density[GeoTrack]:
+        float32 Temperature[GeoTrack, GeoXtrack]:
+        float32 Temperature_3D[Bands, GeoTrack, GeoXtrack]:
+        float64 Pressure[Res2tr, Res2xtr]:
+        float64 Spectra[Bands, Res2tr, Res2xtr]:
+        int16 Count[Unlim]:
     Swath Attributes:
         TestAttr:  [ 3  5  7 11  0  0  0  0  0  0  0  0  0  0  0  0]"""
 
@@ -59,39 +59,39 @@ cea_grid = """Grid:  Ascending_Land_Grid
         False Easting:  0.0
         False Northing:  0.0
     Fields:
-        A_Time[YDim, XDim]:
+        float64 A_Time[YDim, XDim]:
             _FillValue:  9999.0
-        A_TB06.9V (Res 1)[YDim, XDim]:
+        int16 A_TB06.9V (Res 1)[YDim, XDim]:
             _FillValue:  9999
-        A_TB06.9H (Res 1)[YDim, XDim]:
+        int16 A_TB06.9H (Res 1)[YDim, XDim]:
             _FillValue:  9999
-        A_TB10.7V (Res 1)[YDim, XDim]:
+        int16 A_TB10.7V (Res 1)[YDim, XDim]:
             _FillValue:  9999
-        A_TB10.7H (Res 1)[YDim, XDim]:
+        int16 A_TB10.7H (Res 1)[YDim, XDim]:
             _FillValue:  9999
-        A_TB18.7V (Res 1)[YDim, XDim]:
+        int16 A_TB18.7V (Res 1)[YDim, XDim]:
             _FillValue:  9999
-        A_TB18.7H (Res 1)[YDim, XDim]:
+        int16 A_TB18.7H (Res 1)[YDim, XDim]:
             _FillValue:  9999
-        A_TB36.5V (Res 1)[YDim, XDim]:
+        int16 A_TB36.5V (Res 1)[YDim, XDim]:
             _FillValue:  9999
-        A_TB36.5H (Res 1)[YDim, XDim]:
+        int16 A_TB36.5H (Res 1)[YDim, XDim]:
             _FillValue:  9999
-        A_TB36.5V (Res 4)[YDim, XDim]:
+        int16 A_TB36.5V (Res 4)[YDim, XDim]:
             _FillValue:  9999
-        A_TB36.5H (Res 4)[YDim, XDim]:
+        int16 A_TB36.5H (Res 4)[YDim, XDim]:
             _FillValue:  9999
-        A_TB89.0V (Res 4)[YDim, XDim]:
+        int16 A_TB89.0V (Res 4)[YDim, XDim]:
             _FillValue:  9999
-        A_TB89.0H (Res 4)[YDim, XDim]:
+        int16 A_TB89.0H (Res 4)[YDim, XDim]:
             _FillValue:  9999
-        A_Soil_Moisture[YDim, XDim]:
+        int16 A_Soil_Moisture[YDim, XDim]:
             _FillValue:  9999
-        A_Veg_Water_Content[YDim, XDim]:
+        int16 A_Veg_Water_Content[YDim, XDim]:
             _FillValue:  9999
-        A_Land_Surface_Temp[YDim, XDim]:
+        int16 A_Land_Surface_Temp[YDim, XDim]:
             _FillValue:  9999
-        A_Inversion_QC_Flag[YDim, XDim]:
+        int16 A_Inversion_QC_Flag[YDim, XDim]:
             _FillValue:  9999
     Grid Attributes:"""
 
@@ -108,7 +108,7 @@ utm_grid = """Grid:  UTMGrid
     Projection:  UTM
         UTM zone:  40
     Fields:
-        Vegetation[YDim, XDim]:
+        float32 Vegetation[YDim, XDim]:
     Grid Attributes:"""
 
 som_grid = """Grid:  GeometricParameters
@@ -128,9 +128,9 @@ som_grid = """Grid:  GeometricParameters
         Satellite ratio start/end:  0.0
         End of path flag (0 = start, 1 = end):  0.0
     Fields:
-        SolarAzimuth[SOMBlockDim, XDim, YDim]:
+        float64 SolarAzimuth[SOMBlockDim, XDim, YDim]:
             _FillValue:  -555.0
-        SolarZenith[SOMBlockDim, XDim, YDim]:
+        float64 SolarZenith[SOMBlockDim, XDim, YDim]:
             _FillValue:  -555.0
     Grid Attributes:
         Block_size.resolution_x:  [17600     0     0     0]
@@ -154,8 +154,8 @@ polar_stereographic_grid = """Grid:  PolarGrid
         False Easting:  0.0
         False Northing:  0.0
     Fields:
-        Temperature[YDim, XDim]:
-        Pressure[YDim, XDim]:
+        float32 Temperature[YDim, XDim]:
+        float32 Pressure[YDim, XDim]:
     Grid Attributes:"""
 
 he2_utm = """Grid:  UTMGrid
@@ -169,10 +169,10 @@ he2_utm = """Grid:  UTMGrid
     Projection:  UTM
         UTM zone:  40
     Fields:
-        Pollution[Time, YDim, XDim]:
+        float32 Pollution[Time, YDim, XDim]:
             _FillValue:  -7.0
-        Vegetation[YDim, XDim]:
-        Extern[YDim, XDim]:
+        float32 Vegetation[YDim, XDim]:
+        float32 Extern[YDim, XDim]:
     Grid Attributes:
         float32:  [ 1.  0.  0.  0.]"""
 
@@ -192,10 +192,10 @@ he2_polar = """Grid:  PolarGrid
         False Easting:  0.0
         False Northing:  0.0
     Fields:
-        Temperature[YDim, XDim]:
-        Pressure[YDim, XDim]:
-        Soil Dryness[YDim, XDim]:
-        Spectra[Bands, YDim, XDim]:
+        float32 Temperature[YDim, XDim]:
+        float32 Pressure[YDim, XDim]:
+        float32 Soil Dryness[YDim, XDim]:
+        float64 Spectra[Bands, YDim, XDim]:
     Grid Attributes:"""
 
 he2_geo = r"""Grid:  GEOGrid
@@ -207,6 +207,6 @@ he2_geo = r"""Grid:  GEOGrid
     Sphere:  Clarke 1866
     Projection:  Geographic
     Fields:
-        GeoSpectra[YDim, XDim]:
+        float64 GeoSpectra[YDim, XDim]:
             _FillValue:  1.78006040052e-307
     Grid Attributes:"""

@@ -252,7 +252,7 @@ def gdfieldinfo(grid_id, fieldname):
     dimlist = decode_comma_delimited_ffi_string(ffi.string(dimlistb))
     maxdimlist = decode_comma_delimited_ffi_string(ffi.string(maxdimlistb))
 
-    return tuple(shape), number_type_dict[ntypep[0]], dimlist
+    return tuple(shape), number_type_dict[ntypep[0]], dimlist, maxdimlist
 
 
 def gdgridinfo(grid_id):
