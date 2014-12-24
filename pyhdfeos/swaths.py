@@ -179,7 +179,8 @@ class _SwathVariable(_EosField):
 
     def __str__(self):
         dimstr = ", ".join(self.dimlist)
-        lst = ["{0}[{1}]:".format(self.fieldname, dimstr)]
+        dtype_str = str(self.dtype).split('.')[1].split("'")[0]
+        lst = ["{0} {1}[{2}]:".format(dtype_str, self.fieldname, dimstr)]
 
         for name, value in self.attrs.items():
             lst.append("    {0}:  {1}".format(name, value))
