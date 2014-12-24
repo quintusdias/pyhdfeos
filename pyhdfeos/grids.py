@@ -15,28 +15,29 @@ else:
 import numpy as np
 
 from .lib import he4, he5
-from .core import EosFile
+from .core import EosFile, _EosField
 from . import _som
 
 
-class _GridVariable(object):
+class _GridVariable(_EosField):
     """
     Grid field object (data, dimensions, attributes)
     """
     def __init__(self, gridid, fieldname, he_module):
-        self.gridid = gridid
+        _EosField.__init__(self)
+        self.struct_id = gridid
         self.fieldname = fieldname
         self._he = he_module
 
-        x = self._he.gdfieldinfo(self.gridid, fieldname)
+        x = self._he.gdfieldinfo(self.struct_id, fieldname)
         self.shape, self.ntype, self.dimlist = x[0:3]
 
         # HDFEOS5 only.
         self.attrs = collections.OrderedDict()
         if hasattr(self._he, 'gdinqlocattrs'):
-            attr_names = self._he.gdinqlocattrs(self.gridid, self.fieldname)
+            attr_names = self._he.gdinqlocattrs(self.struct_id, self.fieldname)
             for attrname in attr_names:
-                self.attrs[attrname] = self._he.gdreadlocattr(self.gridid,
+                self.attrs[attrname] = self._he.gdreadlocattr(self.struct_id,
                                                               self.fieldname,
                                                               attrname)
 
@@ -48,95 +49,8 @@ class _GridVariable(object):
             lst.append("    {0}:  {1}".format(name, value))
         return '\n'.join(lst)
 
-    def __getitem__(self, index):
-        ndims = len(self.shape)
-
-        # Set up defaults.
-        start = np.zeros(ndims)
-        stride = np.ones(ndims)
-        edge = list(self.shape)
-
-        if isinstance(index, int):
-            # Retrieve a row.
-            start[0] = index
-            stride[0] = 1
-            edge[0] = 1
-            for j in range(1, ndims):
-                start[j] = 0
-                stride[j] = 1
-                edge[j] = self.shape[j]
-            data = self._he.gdreadfield(self.gridid, self.fieldname,
-                                        start, stride, edge)
-
-            # Reduce dimensionality in the row dimension.
-            data = np.squeeze(data, axis=0)
-            return data
-
-        if index is Ellipsis:
-            # Case of [...]
-            # Handle it below.
-            return self.__getitem__(slice(None, None, None))
-
-        if isinstance(index, slice):
-            if (((index.start is None) and
-                 (index.stop is None) and
-                 (index.step is None))):
-                # Case of [:].  Read all of the data.
-                return self._he.gdreadfield(self.gridid, self.fieldname,
-                                            start, stride, edge)
-
-            msg = "Single slice argument integer is only legal if ':'"
-            raise RuntimeError(msg)
-
-        if isinstance(index, tuple) and any(x is Ellipsis for x in index):
-            # Remove the first ellipsis we find.
-            newindex = []
-            first_ellipsis = True
-            for j, idx in enumerate(index):
-                if idx is Ellipsis and first_ellipsis:
-                    newindex.append(slice(0, self.shape[j]))
-                    first_ellipsis = False
-                else:
-                    newindex.append(idx)
-
-            # Run once again because it is possible that there's another
-            # Ellipsis object.
-            newindex = tuple(newindex)
-            return self.__getitem__(newindex)
-
-        if isinstance(index, tuple) and any(isinstance(x, int) for x in index):
-            # Find the first such integer argument, replace it with a slice.
-            lst = list(index)
-            predicate = lambda x: not isinstance(x[1], int)
-            g = filterfalse(predicate, enumerate(index))
-            idx = next(g)[0]
-            lst[idx] = slice(index[idx], index[idx] + 1)
-            newindex = tuple(lst)
-
-            # Invoke array-based slicing again, as there may be additional
-            # integer argument remaining.
-            data = self.__getitem__(newindex)
-
-            # Reduce dimensionality in the scalar dimension.
-            data = np.squeeze(data, axis=idx)
-            return data
-
-        # Assuming pargs is a tuple of slices from now on.
-        # This is the workhorse section for the general case.
-        for j in range(len(index)):
-
-            if index[j].start is not None:
-                start[j] = index[j].start
-
-            if index[j].step is not None:
-                stride[j] = index[j].step
-
-            if index[j].stop is None:
-                edge[j] = np.floor((self.shape[j] - start[j]) / stride[j])
-            else:
-                edge[j] = np.floor((index[j].stop - start[j]) / stride[j])
-
-        return self._he.gdreadfield(self.gridid, self.fieldname,
+    def _readfield(self, start, stride, edge):
+        return self._he.gdreadfield(self.struct_id, self.fieldname,
                                     start, stride, edge)
 
 

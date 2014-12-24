@@ -41,6 +41,28 @@ class TestSuite(unittest.TestCase):
         expected = 'degrees'
         self.assertEqual(actual, expected)
 
+    def test_read_geolocation_field_1d(self):
+        """
+        Not an actual SDS, but a vdata
+        """
+        swf = SwathFile(self.swathfile)
+        actual = swf.swaths['Swath1'].geofields['Time'][:]
+        expected = np.array([34574087.3, 34658980.5, 34743873.7,
+                             34828766.9, 34913660.09999999, 34998553.3,
+                             35083446.5, 35168339.7,  35253232.9,
+                             35338126.09999999, 35423019.3, 35507912.5,
+                             35592805.7, 35677698.9, 35762592.09999999,
+                             35847485.3, 35932378.5, 36017271.7,
+                             36102164.9, 36187058.09999999])
+        np.testing.assert_array_almost_equal(actual, expected, decimal=1)
+
+    def test_read_2d_32bit_floatdata(self):
+        """
+        """
+        swf = SwathFile(self.swathfile)
+        actual = swf.swaths['Swath1'].datafields['Temperature'][:]
+        self.assertEqual(actual.dtype, np.float32)
+
 
 class TestMetadata4(unittest.TestCase):
     """

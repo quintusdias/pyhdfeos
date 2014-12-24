@@ -62,6 +62,8 @@ CDEF = """
     int32 SWinqswath(char *filename, char *swathlist, int32 *strbufsize);
     int32 SWnentries(int32 swathid, int32 entrycode, int32 *strbufsize);
     intn  SWreadattr(int32 swathid, char* attrname, void *buffer);
+    intn  SWreadfield(int32 gridid, char* fieldname, int32 start[],
+                      int32 stride[], int32 edge[], void *buffer);
     int32 SWopen(char *name, intn access);
 """
 
@@ -120,7 +122,9 @@ number_type_dict = {3: np.uint16,
 cast_string_dict = {3: "unsigned short *",
                     4: "signed char *",
                     5: "float *",
+                    np.float32: "float *",
                     6: "double *",
+                    np.float64: "double *",
                     20: "signed char *",
                     21: "unsigned char *",
                     22: "short int *",
@@ -1316,3 +1320,52 @@ def swopen(filename, access=DFACC_READ):
     fid = _lib.SWopen(filename.encode(), access)
     _handle_error(fid)
     return fid
+
+
+def swreadfield(swathid, fieldname, start, stride, edge):
+    """read data from swath field
+
+    This function wraps the HDF-EOS library SWreadfield function.
+
+    Parameters
+    ----------
+    swathid : int
+        swath identifier
+    fieldname : str
+        attribute name
+    start : array-like
+        specifies starting location within each dimension
+    stride : array-like
+        specifies number of values to skip along each dimension
+    edge : array-like
+        specifies number of values to read along each dimension
+
+    Returns
+    -------
+    data : ndarray
+        data read from field
+
+    Raises
+    ------
+    IOError
+        If associated library routine fails.
+    """
+    info = swfieldinfo(swathid, fieldname)
+    dtype = info[1]
+    shape = tuple([int(x) for x in edge])
+    buffer = np.zeros(shape, dtype=dtype)
+    pbuffer = ffi.cast(cast_string_dict[dtype], buffer.ctypes.data)
+
+    startp = ffi.new("int32 []", len(shape))
+    stridep = ffi.new("int32 []", len(shape))
+    edgep = ffi.new("int32 []", len(shape))
+
+    for j in range(len(shape)):
+        startp[j] = int(start[j])
+        stridep[j] = int(stride[j])
+        edgep[j] = int(edge[j])
+
+    status = _lib.SWreadfield(swathid, fieldname.encode(), startp, stridep,
+                              edgep, pbuffer)
+    _handle_error(status)
+    return buffer
