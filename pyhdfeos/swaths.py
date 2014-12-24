@@ -9,7 +9,7 @@ import textwrap
 import numpy as np
 
 from .lib import he4, he5
-from .core import EosFile, DimensionMap
+from .core import EosFile, _EosField, DimensionMap
 
 
 class SwathFile(EosFile):
@@ -165,15 +165,16 @@ class _Swath(object):
         return '\n'.join(lst)
 
 
-class _SwathVariable(object):
+class _SwathVariable(_EosField):
     """
     """
     def __init__(self, fieldname, swathid, he_module):
+        _EosField.__init__(self)
         self.fieldname = fieldname
-        self.swathid = swathid
+        self.struct_id = swathid
         self._he = he_module
 
-        x = self._he.swfieldinfo(self.swathid, fieldname)
+        x = self._he.swfieldinfo(self.struct_id, fieldname)
         self.shape, self.dtype, self.dimlist = x[0:3]
 
     def __str__(self):
@@ -183,3 +184,7 @@ class _SwathVariable(object):
         for name, value in self.attrs.items():
             lst.append("    {0}:  {1}".format(name, value))
         return '\n'.join(lst)
+
+    def _readfield(self, start, stride, edge):
+        return self._he.swreadfield(self.struct_id, self.fieldname,
+                                    start, stride, edge)
