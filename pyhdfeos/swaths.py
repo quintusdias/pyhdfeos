@@ -128,16 +128,6 @@ class _Swath(object):
         for dimname, dimlen in self.dims.items():
             lst.append("        {0}:  {1}".format(dimname, dimlen))
 
-        lst.append("    Geolocation Fields:")
-        for field in self.geofields.keys():
-            if sys.hexversion <= 0x03000000:
-                textstr = str(self.geofields[field])
-                field_lst = [(' ' * 8 + line) for line in textstr.split('\n')]
-                lst.extend(field_lst)
-            else:
-                lst.append(textwrap.indent(str(self.geofields[field]),
-                           ' ' * 8))
-
         lst.append("    Dimension Maps:")
         for name, map in self.dimmaps.items():
             msg = "        {0}:  offset={1}, increment={2}"
@@ -148,6 +138,16 @@ class _Swath(object):
         for name, idx in self.idxmaps.items():
             msg = "        {0}:  index={1}".format(name, idx)
             lst.append(msg)
+
+        lst.append("    Geolocation Fields:")
+        for field in self.geofields.keys():
+            if sys.hexversion <= 0x03000000:
+                textstr = str(self.geofields[field])
+                field_lst = [(' ' * 8 + line) for line in textstr.split('\n')]
+                lst.extend(field_lst)
+            else:
+                lst.append(textwrap.indent(str(self.geofields[field]),
+                           ' ' * 8))
 
         lst.append("    Data Fields:")
         for field in self.datafields.keys():
