@@ -25,15 +25,15 @@ Swath:  Swath1
         Bands:  15
         IndxTrack:  12
         Unlim:  0
-    Geolocation Fields:
-        float64 Time[GeoTrack]:
-        float32 Longitude[GeoTrack, GeoXtrack]:
-        float32 Latitude[GeoTrack, GeoXtrack]:
     Dimension Maps:
         GeoTrack/Res2tr:  offset=0, increment=2
         GeoXtrack/Res2xtr:  offset=1, increment=2
     Index Maps:
         IndxTrack/Res2tr:  index=[ 0  1  3  6  7  8 11 12 14 24 32 39]
+    Geolocation Fields:
+        float64 Time[GeoTrack]:
+        float32 Longitude[GeoTrack, GeoXtrack]:
+        float32 Latitude[GeoTrack, GeoXtrack]:
     Data Fields:
         float32 Density[GeoTrack]:
         float32 Temperature[GeoTrack, GeoXtrack]:
