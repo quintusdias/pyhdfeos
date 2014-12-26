@@ -39,6 +39,8 @@ def library_config(libraries):
     for libname in libraries:
         for library_dir in library_dir_candidates:
             for suffix in suffix_list:
+                if libname is None:
+                    continue
                 path = os.path.join(library_dir,
                                     'lib' + libname + '.' + suffix)
                 if os.path.exists(path):
