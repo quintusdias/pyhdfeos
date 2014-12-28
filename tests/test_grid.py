@@ -74,44 +74,6 @@ class TestRead(unittest.TestCase):
                                      os.path.join('data', 'Point219.hdf'))
         cls.test_driver_pointfile4 = file
 
-    @unittest.skipIf('HDFEOS_ZOO_DIR' not in os.environ,
-                     'HDFEOS_ZOO_DIR environment variable not set.')
-    def test_som_offset(self):
-        """
-        test GDblkSOMoffset for hdfeos2
-        """
-        file = 'MISR_AM1_GRP_ELLIPSOID_GM_P117_O058421_BA_F03_0024.hdf'
-        file = fixtures.test_file_path(file)
-        gdfid = he4.gdopen(file)
-        gridid = he4.gdattach(gdfid, 'BlueBand')
-        actual = he4.gdblksomoffset(gridid)
-        he4.gddetach(gridid)
-        he4.gdclose(gdfid)
-        self.assertEqual(len(actual), 179)
-
-        expected_offset = [0, 16, 0, 16, 0, 0, 0, 16, 0, 0, 0, 0, 16, 0, 0,
-                           0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -16, 0, 0, 0,
-                           -16, 0, 0, -16, 0, 0, -16, 0, -16, 0, -16, 0, -16,
-                           -16, 0,
-                           -16, 0, -16, -16, 0, -16, -16, -16, 0, -16, -16,
-                           -16, -16, 0, -16,
-                           -16, -16, -16, -16, -16, -16, -16, -16, -16, -16,
-                           -16, -16, -16, -16, -16,
-                           -16, -16, -16, -16, -16, -16, -16, -16, -16, -32,
-                           -16, -16, -16, -16, -16,
-                           -16, -16, -16, -16, -16, -32, -16, -16, -16, -16,
-                           -16, -16, -16, -16, -16,
-                           -16, -16, -16, -16, -16, -16, -16, -16, -16, -16,
-                           -16, -16, -16, -16, 0,
-                           -16, -16, -16, -16, -16, 0, -16, -16, -16, 0, -16,
-                           -16, 0, -16, 0,
-                           -16, -16, 0, -16, 0, -16, 0, 0, -16, 0, -16, 0, 0,
-                           -16, 0,
-                           0, 0, 0, -16, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                           0, 0, 0, 0, 0, 0, 16, 0, 0, 16, 0, 0, 16, 0]
-        expected = np.array(expected_offset)
-        np.testing.assert_array_equal(actual, expected)
-
     def test_strides(self):
         """
         array-style indexing case of [::rs, ::cs]

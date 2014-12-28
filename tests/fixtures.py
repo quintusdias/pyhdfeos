@@ -2,8 +2,8 @@ import os
 
 
 def test_file_exists(file):
-    if 'HDFEOS_ZOO_DIR' in os.environ:
-        fullpath = os.path.join(os.environ['HDFEOS_ZOO_DIR'], file)
+    if 'HDFEOS_DATA_ROOT' in os.environ:
+        fullpath = os.path.join(os.environ['HDFEOS_DATA_ROOT'], file)
         if os.path.exists(fullpath):
             return True
         else:
@@ -11,7 +11,7 @@ def test_file_exists(file):
 
 
 def test_file_path(file):
-    return os.path.join(os.environ['HDFEOS_ZOO_DIR'], file)
+    return os.path.join(os.environ['HDFEOS_DATA_ROOT'], file)
 
 not_hdfeos = """No HDF-EOS structures detected."""
 

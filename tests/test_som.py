@@ -4,12 +4,13 @@ import unittest
 import numpy as np
 
 from pyhdfeos import GridFile
+from pyhdfeos.lib import he4
 
 from . import fixtures
 
 
-@unittest.skipIf('HDFEOS_ZOO_DIR' not in os.environ,
-                 'HDFEOS_ZOO_DIR environment variable not set.')
+@unittest.skipIf('HDFEOS_DATA_ROOT' not in os.environ,
+                 'HDFEOS_DATA_ROOT environment variable not set.')
 class TestSuite(unittest.TestCase):
 
     @classmethod
@@ -131,3 +132,41 @@ class TestSuite(unittest.TestCase):
         # last point of first block
         np.testing.assert_almost_equal(lat[-1, -1], -66.207, 3)
         np.testing.assert_almost_equal(lon[-1, -1], -58.865, 3)
+
+    def test_som_offset(self):
+        """
+        test GDblkSOMoffset for hdfeos2
+        """
+        file = 'MISR_AM1_GRP_ELLIPSOID_GM_P117_O058421_BA_F03_0024.hdf'
+        file = fixtures.test_file_path(file)
+        gdf = GridFile(file)
+        gdfid = he4.gdopen(file)
+        gridid = he4.gdattach(gdfid, 'BlueBand')
+        actual = he4.gdblksomoffset(gridid)
+        he4.gddetach(gridid)
+        he4.gdclose(gdfid)
+        self.assertEqual(len(actual), 179)
+
+        expected_offset = [0, 16, 0, 16, 0, 0, 0, 16, 0, 0, 0, 0, 16, 0, 0,
+                           0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -16, 0, 0, 0,
+                           -16, 0, 0, -16, 0, 0, -16, 0, -16, 0, -16, 0, -16,
+                           -16, 0,
+                           -16, 0, -16, -16, 0, -16, -16, -16, 0, -16, -16,
+                           -16, -16, 0, -16,
+                           -16, -16, -16, -16, -16, -16, -16, -16, -16, -16,
+                           -16, -16, -16, -16, -16,
+                           -16, -16, -16, -16, -16, -16, -16, -16, -16, -32,
+                           -16, -16, -16, -16, -16,
+                           -16, -16, -16, -16, -16, -32, -16, -16, -16, -16,
+                           -16, -16, -16, -16, -16,
+                           -16, -16, -16, -16, -16, -16, -16, -16, -16, -16,
+                           -16, -16, -16, -16, 0,
+                           -16, -16, -16, -16, -16, 0, -16, -16, -16, 0, -16,
+                           -16, 0, -16, 0,
+                           -16, -16, 0, -16, 0, -16, 0, 0, -16, 0, -16, 0, 0,
+                           -16, 0,
+                           0, 0, 0, -16, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                           0, 0, 0, 0, 0, 0, 16, 0, 0, 16, 0, 0, 16, 0]
+        expected = np.array(expected_offset)
+        np.testing.assert_array_equal(actual, expected)
+
