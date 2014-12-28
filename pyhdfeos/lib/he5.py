@@ -127,7 +127,7 @@ cast_string_dict = {np.int32: "int *",
                     np.uint64: "unsigned long long int *",
                     np.float32: "float *",
                     np.float64: "double *",
-                    57: "char *"}
+                    np.str: "char *"}
 
 
 def _handle_error(status):
@@ -517,7 +517,7 @@ def gdlocattrinfo(grid_id, fieldname, attrname):
                                     ntypep, countp)
     _handle_error(status)
 
-    return ntypep[0], countp[0]
+    return number_type_dict[ntypep[0]], countp[0]
 
 
 def gdnentries(gridid, entry_code):
@@ -703,9 +703,8 @@ def gdreadlocattr(gridid, fieldname, attrname):
     value : object
         grid field attribute value
     """
-    [ntype, count] = gdlocattrinfo(gridid, fieldname, attrname)
-    if ntype == 57:
-        # buffer = ffi.new("char[]", b'\0' * (count + 1))
+    [dtype, count] = gdlocattrinfo(gridid, fieldname, attrname)
+    if dtype is np.str:
         buffer = ffi.new("char[]", b'\0' * (1000 + 1))
         status = _lib.HE5_GDreadlocattr(gridid,
                                         fieldname.encode(), attrname.encode(),
@@ -713,8 +712,8 @@ def gdreadlocattr(gridid, fieldname, attrname):
         _handle_error(status)
         return ffi.string(buffer).decode('ascii')
 
-    buffer = np.zeros(count, dtype=number_type_dict[ntype])
-    bufferp = ffi.cast(cast_string_dict[ntype], buffer.ctypes.data)
+    buffer = np.zeros(count, dtype=dtype)
+    bufferp = ffi.cast(cast_string_dict[dtype], buffer.ctypes.data)
 
     status = _lib.HE5_GDreadlocattr(gridid,
                                     fieldname.encode(), attrname.encode(),

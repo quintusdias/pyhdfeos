@@ -25,10 +25,10 @@ ext_modules = [pyhdfeos.lib.he4.ffi.verifier.get_extension(),
 
 from distutils.extension import Extension
 cythonize("pyhdfeos/_som.pyx")
-e = Extension("pyhdfeos/_som", ["pyhdfeos/_som.c"],
-              include_dirs = include_dirs,
-              libraries    = [true_gctp_lib],
-              library_dirs = library_dirs)
+kwargs = {'include_dirs': include_dirs,
+          'libraries':   [true_gctp_lib],
+          'library_dirs': library_dirs}
+e = Extension("pyhdfeos/_som", ["pyhdfeos/_som.c"], **kwargs)
 ext_modules.append(e)
 
 install_requires = ['numpy>=1.8.0', 'cffi>=0.8.2', 'cython>=0.20']
@@ -50,19 +50,20 @@ classifiers = ["Programming Language :: Python",
 entry_points = {'console_scripts':
                 ['hedump=pyhdfeos.command_line:dump_metadata']}
 
-setup(name             = 'pyhdfeos',
-      description      = 'Tools for accessing HDF-EOS grids',
-      long_description = open('README.md').read(),
-      author           = 'John Evans, Joe Lee',
-      author_email     = 'john.g.evans.ne@gmail.com',
-      url              = 'http://hdfeos.org',
-      packages         = ['pyhdfeos', 'pyhdfeos.lib'],
-      version          = '0.1.1',
-      zip_safe         =  False,
-      ext_package      = 'pyhdfeos',
-      ext_modules      = ext_modules,
-      include_dirs     = [numpy.get_include()],
-      entry_points     = entry_points,
-      install_requires = install_requires,
-      license          = 'MIT',
-      classifiers      = classifiers)
+kwargs = {'name':             'pyhdfeos',
+          'description':      'Tools for accessing HDF-EOS grids',
+          'long_description': open('README.md').read(),
+          'author':           'John Evans, Joe Lee',
+          'author_email':     'john.g.evans.ne@gmail.com',
+          'url':              'http://hdfeos.org',
+          'packages':         ['pyhdfeos', 'pyhdfeos.lib'],
+          'version':          '0.1.1',
+          'zip_safe':         False,
+          'ext_package':      'pyhdfeos',
+          'ext_modules':      ext_modules,
+          'include_dirs':     [numpy.get_include()],
+          'entry_points':     entry_points,
+          'install_requires': install_requires,
+          'license':          'MIT',
+          'classifiers':      classifiers}
+setup(**kwargs)

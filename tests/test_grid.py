@@ -10,6 +10,7 @@ from pyhdfeos import GridFile
 from . import fixtures
 
 issue52file = 'SBUV2-NOAA17_L2-SBUV2N17L2_2011m1231_v01-01-2012m0905t152911.h5'
+issue60file = 'GSSTF.3.2008.12.31.he5'
 
 
 class TestNegative5(unittest.TestCase):
@@ -23,6 +24,14 @@ class TestNegative5(unittest.TestCase):
         """
         with self.assertRaises(RuntimeError):
             GridFile(fixtures.test_file_path(issue52file))
+
+    @unittest.skipIf(not fixtures.test_file_exists(issue60file),
+                     'test file not available')
+    def test_issue60(self):
+        """
+        don't error out on float32 attributes
+        """
+        GridFile(fixtures.test_file_path(issue60file))
 
 
 class TestReadGridCoords(unittest.TestCase):
