@@ -63,6 +63,15 @@ class TestSuite(unittest.TestCase):
         actual = swf.swaths['Swath1'].datafields['Temperature'][:]
         self.assertEqual(actual.dtype, np.float32)
 
+    def test_read_3d_32bit_floatdata(self):
+        """
+        should not error out
+        """
+        swf = SwathFile(self.swathfile)
+        actual = swf.swaths['Swath1'].datafields['Temperature_3D'][:, :, 9]
+        self.assertEqual(actual.dtype, np.float32)
+        self.assertEqual(actual.shape, (15, 20))
+
 
 class TestMetadata4(unittest.TestCase):
     """

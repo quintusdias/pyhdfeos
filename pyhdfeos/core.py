@@ -197,5 +197,4 @@ class _EosField(object):
             else:
                 edge[j] = np.floor((index[j].stop - start[j]) / stride[j])
 
-        return self._he.gdreadfield(self.struct_id, self.fieldname,
-                                    start, stride, edge)
+        return self._readfield(start, stride, edge)
