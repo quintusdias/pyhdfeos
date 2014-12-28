@@ -139,7 +139,6 @@ class TestSuite(unittest.TestCase):
         """
         file = 'MISR_AM1_GRP_ELLIPSOID_GM_P117_O058421_BA_F03_0024.hdf'
         file = fixtures.test_file_path(file)
-        gdf = GridFile(file)
         gdfid = he4.gdopen(file)
         gridid = he4.gdattach(gdfid, 'BlueBand')
         actual = he4.gdblksomoffset(gridid)
@@ -169,4 +168,3 @@ class TestSuite(unittest.TestCase):
                            0, 0, 0, 0, 0, 0, 16, 0, 0, 16, 0, 0, 16, 0]
         expected = np.array(expected_offset)
         np.testing.assert_array_equal(actual, expected)
-
