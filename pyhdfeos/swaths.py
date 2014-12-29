@@ -177,6 +177,14 @@ class _SwathVariable(_EosField):
         x = self._he.swfieldinfo(self.struct_id, fieldname)
         self.shape, self.dtype, self.dimlist = x[0:3]
 
+        # HDFEOS5 only.
+        self.attrs = collections.OrderedDict()
+        if hasattr(self._he, 'swinqlocattrs'):
+            attr_names = self._he.swinqlocattrs(self.struct_id, self.fieldname)
+            for attrname in attr_names:
+                self.attrs[attrname] = self._he.swreadlocattr(self.struct_id,
+                                                              self.fieldname,
+                                                              attrname)
     def __str__(self):
         dimstr = ", ".join(self.dimlist)
         dtype_str = str(self.dtype).split('.')[1].split("'")[0]
