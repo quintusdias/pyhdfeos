@@ -61,6 +61,7 @@ CDEF = """
     herr_t HE5_SWfieldinfo(hid_t gridID, const char *fieldname, int *rank,
                            hsize_t dims[], hid_t *ntype, char *dimlist,
                            char *maxdimlist);
+    hsize_t HE5_SWidxmapinfo(hid_t swathID, char *geodim, char *datadim, long index []);
     long   HE5_SWinqattrs(hid_t gridID, char *attrnames, long *strbufsize);
     int    HE5_SWinqdims(hid_t swathid, char *dims, hsize_t *dims);
     int    HE5_SWinqdatafields(hid_t gridID, char *fieldlist, int rank[],
@@ -73,9 +74,18 @@ CDEF = """
     long   HE5_SWinqmaps(hid_t, char *, long [], long []);
     long   HE5_SWinqswath(const char *filename, char *swathlist,
                           long *strbufsize);
+    long   HE5_SWlocattrinfo(hid_t swathID, char *fieldname, char *attrname,
+                             hid_t *ntype, hsize_t *count);
     long   HE5_SWnentries(hid_t swathID, int entrycode, long *strbufsize);
     hid_t  HE5_SWopen(const char *filename, uintn access);
-    herr_t HE5_SWreadattr(hid_t gridID, const char* attrname, void *buffer);
+    herr_t HE5_SWreadattr(hid_t swathID, const char* attrname, void *buffer);
+    herr_t HE5_SWreadfield(hid_t swathID, const char* fieldname,
+                           const hsize_t start[],
+                           const hsize_t stride[],
+                           const hsize_t edge[],
+                           void *buffer);
+    herr_t HE5_SWreadlocattr(hid_t swathID, const char *fieldname,
+                             const char *attrname, void *databuf);
     herr_t HE5_SWclose(hid_t fid);
 """
 
@@ -814,7 +824,7 @@ def swattrinfo(swathid, attrname):
     status = _lib.HE5_SWattrinfo(swathid, attrname.encode(), ntypep, countp)
     _handle_error(status)
 
-    return ntypep[0], countp[0]
+    return number_type_dict[ntypep[0]], countp[0]
 
 
 def swinqattrs(swathid):
@@ -919,6 +929,48 @@ def swfieldinfo(swathid, fieldname):
     return tuple(shape), number_type_dict[ntypep[0]], dimlist, maxdimlist
 
 
+def swidxmapinfo(swathid, geodim, datadim):
+    """retrieve indexed array of specified geolocation mapping
+
+    This function wraps the HDF-EOS library HE5_SWidxmapinfo function.
+
+    Parameters
+    ----------
+    swathid : int
+        swath identifier
+    geodim : str
+        indexed geolocation dimension name
+    datadim : str
+        indexed data dimension name
+
+    Returns
+    -------
+    index : ndarray
+        index mapping
+
+    Raises
+    ------
+    IOError
+        If associated library routine fails.
+    """
+    idxsize = _lib.HE5_SWidxmapinfo(swathid, geodim.encode(), datadim.encode(),
+                                    ffi.NULL)
+    _handle_error(idxsize)
+    if idxsize == 0:
+        return np.array([], dtype=np.int64)
+
+    if sys.maxsize < 2**32 and platform.system().startswith('Linux'):
+        index = np.zeros(idxsize, dtype=np.int32)
+    else:
+        index = np.zeros(idxsize, dtype=np.int64)
+    indexp = ffi.cast("long *", index.ctypes.data)
+
+    idxsize = _lib.HE5_SWidxmapinfo(swathid, geodim.encode(), datadim.encode(),
+                                    indexp)
+    _handle_error(idxsize)
+    return index
+
+
 def swinqdims(swathid):
     """Retrieve information about dimensions defined in a swath.
 
@@ -1003,7 +1055,8 @@ def swinqgeofields(swathid):
     if nfields == 0:
         return [], None, None
 
-    fieldlist = ffi.new("char[]", b'\0' * (strbufsize + 1))
+    #fieldlist = ffi.new("char[]", b'\0' * (strbufsize + 1))
+    fieldlist = ffi.new("char[]", b'\0' * 1000)
     ranks = np.zeros(nfields, dtype=np.int32)
     rankp = ffi.cast("int *", ranks.ctypes.data)
     numbertypes = np.zeros(nfields, dtype=np.int32)
@@ -1074,10 +1127,10 @@ def swinqidxmaps(swathid):
     if nmaps == 0:
         return [], []
 
-    idxsizes = np.zeros(nmaps, dtype=np.int64)
-    idxsizesp = ffi.cast("long *", idxsizes.ctypes.data)
+    idxsizes = np.zeros(nmaps, dtype=np.uint64)
+    idxsizesp = ffi.cast("hsize_t *", idxsizes.ctypes.data)
 
-    nmaps = _lib.HE5_SWinqidxmaps(swathid, ffi.NULL, idxsizesp)
+    nmaps = _lib.HE5_SWinqidxmaps(swathid, dimmapb, idxsizesp)
     _handle_error(nmaps)
 
     dimmap = decode_comma_delimited_ffi_string(ffi.string(dimmapb))
@@ -1165,6 +1218,34 @@ def swinqswath(filename):
     return swathlist
 
 
+def swlocattrinfo(swathid, fieldname, attrname):
+    """return information about a swath field attribute
+
+    Parameters
+    ----------
+    swathid : int
+        grid identifier
+    fieldname : str
+        attribute name
+    attrname : str
+        attribute name
+
+    Returns
+    -------
+    numbertype : type
+        numpy datatype of the attribute
+    count : int
+        number of attribute elements
+    """
+    ntypep = ffi.new("hid_t *")
+    countp = ffi.new("hsize_t *")
+    status = _lib.HE5_SWlocattrinfo(swathid,
+                                    fieldname.encode(), attrname.encode(),
+                                    ntypep, countp)
+    _handle_error(status)
+
+    return number_type_dict[ntypep[0]], countp[0]
+
 def swnentries(swathid, entry_code):
     """Return number of specified objects in a swath.
 
@@ -1206,15 +1287,15 @@ def swreadattr(swathid, attrname):
     value : object
         swath field attribute value
     """
-    [ntype, count] = swattrinfo(swathid, attrname)
-    if ntype == 57:
+    [dtype, count] = swattrinfo(swathid, attrname)
+    if dtype is np.str:
         buffer = ffi.new("char[]", b'\0' * (1000 + 1))
         status = _lib.HE5_SWreadattr(swathid, attrname.encode(), buffer)
         _handle_error(status)
         return ffi.string(buffer).decode('ascii')
 
-    buffer = np.zeros(count, dtype=number_type_dict[ntype])
-    bufferp = ffi.cast(cast_string_dict[ntype], buffer.ctypes.data)
+    buffer = np.zeros(count, dtype=dtype)
+    bufferp = ffi.cast(cast_string_dict[dtype], buffer.ctypes.data)
 
     status = _lib.HE5_SWreadattr(swathid, attrname.encode(), bufferp)
     _handle_error(status)
@@ -1245,3 +1326,89 @@ def swopen(filename, access=H5F_ACC_RDONLY):
     fid = _lib.HE5_SWopen(filename.encode(), access)
     _handle_error(fid)
     return fid
+
+def swreadfield(swathid, fieldname, start, stride, edge):
+    """read data from swath field
+
+    This function wraps the HDF-EOS5 library HE5_SWreadfield function.
+
+    Parameters
+    ----------
+    swathid : int
+        swath identifier
+    fieldname : str
+        attribute name
+    start : array-like
+        specifies starting location within each dimension
+    stride : array-like
+        specifies number of values to skip along each dimension
+    edge : array-like
+        specifies number of values to read along each dimension
+
+    Returns
+    -------
+    data : ndarray
+        data read from field
+    """
+    info = swfieldinfo(swathid, fieldname)
+    dtype = info[1]
+    shape = tuple([int(x) for x in edge])
+    buffer = np.zeros(shape, dtype=dtype)
+    pbuffer = ffi.cast(cast_string_dict[dtype], buffer.ctypes.data)
+
+    startp = ffi.new("const hsize_t []", len(shape))
+    stridep = ffi.new("const hsize_t []", len(shape))
+    edgep = ffi.new("const hsize_t []", len(shape))
+
+    for j in range(len(shape)):
+        startp[j] = np.uint64(start[j])
+        stridep[j] = np.uint64(stride[j])
+        edgep[j] = np.uint64(edge[j])
+
+    status = _lib.HE5_SWreadfield(swathid, fieldname.encode(), startp, stridep,
+                                  edgep, pbuffer)
+    _handle_error(status)
+    return buffer
+
+def swreadlocattr(swathid, fieldname, attrname):
+    """read swath field attribute
+
+    This function wraps the HDF-EOS5 library HE5_SWreadlocattr function.
+
+    Parameters
+    ----------
+    swathid : int
+        grid identifier
+    fieldname : str
+        name of grid field
+    attrname : str
+        attribute name
+
+    Returns
+    -------
+    value : object
+        swath field attribute value
+    """
+    [dtype, count] = swlocattrinfo(swathid, fieldname, attrname)
+    if dtype == np.str:
+        buffer = ffi.new("char[]", b'\0' * (1000 + 1))
+        status = _lib.HE5_SWreadlocattr(swathid,
+                                        fieldname.encode(), attrname.encode(),
+                                        buffer)
+        _handle_error(status)
+        return ffi.string(buffer).decode('ascii')
+
+    buffer = np.zeros(count, dtype=dtype)
+    bufferp = ffi.cast(cast_string_dict[dtype], buffer.ctypes.data)
+
+    status = _lib.HE5_SWreadlocattr(swathid,
+                                    fieldname.encode(), attrname.encode(),
+                                    bufferp)
+    _handle_error(status)
+
+    if count == 1:
+        # present as a scalar rather than an array.
+        buffer = buffer[0]
+    return buffer
+
+

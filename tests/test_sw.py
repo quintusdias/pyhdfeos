@@ -126,7 +126,6 @@ class TestMetadata4(unittest.TestCase):
         self.assertEqual(field.dtype, np.float32)
 
 
-@unittest.skip("HDFEOS5 interface problematic")
 class TestMetadata5(unittest.TestCase):
     """
     """
@@ -139,7 +138,7 @@ class TestMetadata5(unittest.TestCase):
     def test_inqgeofields(self):
         swf = SwathFile(self.swathfile)
         self.assertEqual(list(swf.swaths['INDEX'].geofields.keys()),
-                         ['Latitude', 'Longi'])
+                         ['Latitude', 'Longitude'])
         self.assertEqual(list(swf.swaths['SIMPLE'].geofields.keys()),
                          ['Time', 'Latitude', 'Longitude'])
 
