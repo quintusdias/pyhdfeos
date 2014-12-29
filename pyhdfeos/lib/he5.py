@@ -61,7 +61,8 @@ CDEF = """
     herr_t HE5_SWfieldinfo(hid_t gridID, const char *fieldname, int *rank,
                            hsize_t dims[], hid_t *ntype, char *dimlist,
                            char *maxdimlist);
-    hsize_t HE5_SWidxmapinfo(hid_t swathID, char *geodim, char *datadim, long index []);
+    hsize_t HE5_SWidxmapinfo(hid_t swathID, char *geodim, char *datadim,
+                             long index []);
     long   HE5_SWinqattrs(hid_t gridID, char *attrnames, long *strbufsize);
     int    HE5_SWinqdims(hid_t swathid, char *dims, hsize_t *dims);
     int    HE5_SWinqdatafields(hid_t gridID, char *fieldlist, int rank[],
@@ -1054,7 +1055,7 @@ def swinqgeofields(swathid):
     if nfields == 0:
         return [], None, None
 
-    #fieldlist = ffi.new("char[]", b'\0' * (strbufsize + 1))
+    # 1000 chars should be enough to hold names of all geolocation fields
     fieldlist = ffi.new("char[]", b'\0' * 1000)
     ranks = np.zeros(nfields, dtype=np.int32)
     rankp = ffi.cast("int *", ranks.ctypes.data)
@@ -1245,6 +1246,7 @@ def swlocattrinfo(swathid, fieldname, attrname):
 
     return number_type_dict[ntypep[0]], countp[0]
 
+
 def swnentries(swathid, entry_code):
     """Return number of specified objects in a swath.
 
@@ -1326,6 +1328,7 @@ def swopen(filename, access=H5F_ACC_RDONLY):
     _handle_error(fid)
     return fid
 
+
 def swreadfield(swathid, fieldname, start, stride, edge):
     """read data from swath field
 
@@ -1369,6 +1372,7 @@ def swreadfield(swathid, fieldname, start, stride, edge):
     _handle_error(status)
     return buffer
 
+
 def swreadlocattr(swathid, fieldname, attrname):
     """read swath field attribute
 
@@ -1409,5 +1413,3 @@ def swreadlocattr(swathid, fieldname, attrname):
         # present as a scalar rather than an array.
         buffer = buffer[0]
     return buffer
-
-
