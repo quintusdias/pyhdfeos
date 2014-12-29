@@ -185,6 +185,7 @@ class _SwathVariable(_EosField):
                 self.attrs[attrname] = self._he.swreadlocattr(self.struct_id,
                                                               self.fieldname,
                                                               attrname)
+
     def __str__(self):
         dimstr = ", ".join(self.dimlist)
         dtype_str = str(self.dtype).split('.')[1].split("'")[0]

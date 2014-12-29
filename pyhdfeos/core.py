@@ -120,7 +120,8 @@ class _EosField(object):
         edge = list(self.shape)
 
         if isinstance(index, int):
-            # Retrieve a row.
+            # Retrieve a row, unless this is a 1D array.  If that is the case,
+            # then return a scalar.
             start[0] = index
             stride[0] = 1
             edge[0] = 1
@@ -130,8 +131,12 @@ class _EosField(object):
                 edge[j] = self.shape[j]
             data = self._readfield(start, stride, edge)
 
-            # Reduce dimensionality in the row dimension.
-            data = np.squeeze(data, axis=0)
+            # If a 1D dataset, just return a scalar.
+            if len(self.shape) == 1:
+                data = data[0]
+            else:
+                # Squeeze out the row dimension, i.e. no singleton dimensions.
+                data = np.squeeze(data, axis=0)
             return data
 
         if index is Ellipsis:

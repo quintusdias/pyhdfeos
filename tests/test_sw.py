@@ -73,8 +73,24 @@ class TestSuite(unittest.TestCase):
         self.assertEqual(actual.shape, (15, 20))
 
 
+class TestSuite5(unittest.TestCase):
+    """
+    """
+    @classmethod
+    def setUpClass(cls):
+        file = pkg.resource_filename(__name__,
+                                     os.path.join('data', 'SimpleSwath.h5'))
+        cls.swathfile = file
+
+    def test_issue_50(self):
+        swath = SwathFile(self.swathfile).swaths['SIMPLE']
+        datum = swath.geofields['Time'][0]
+        self.assertTrue(isinstance(datum, np.float64))
+
+
 class TestMetadata4(unittest.TestCase):
     """
+    metadata tests for HDF-EOS files (not HDF-EOS5)
     """
     @classmethod
     def setUpClass(cls):
