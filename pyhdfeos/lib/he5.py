@@ -113,6 +113,9 @@ _lib = ffi.verify(SOURCE,
 H5F_ACC_RDONLY = 0x0000
 
 HE5_HDFE_NENTDIM = 0
+HE5_HDFE_NENTMAP = 1
+HE5_HDFE_NENTIMAP = 2
+HE5_HDFE_NENTGFLD = 3
 HE5_HDFE_NENTDFLD = 4
 
 number_type_dict = {0: np.int32,
@@ -1051,12 +1054,11 @@ def swinqgeofields(swathid):
     numbertypes : list
         list of numbertypes corresponding to the fields
     """
-    nfields, strbufsize = swnentries(swathid, HE5_HDFE_NENTDFLD)
+    nfields, strbufsize = swnentries(swathid, HE5_HDFE_NENTGFLD)
     if nfields == 0:
         return [], None, None
 
-    # 1000 chars should be enough to hold names of all geolocation fields
-    fieldlist = ffi.new("char[]", b'\0' * 1000)
+    fieldlist = ffi.new("char[]", b'\0' * (strbufsize + 1))
     ranks = np.zeros(nfields, dtype=np.int32)
     rankp = ffi.cast("int *", ranks.ctypes.data)
     numbertypes = np.zeros(nfields, dtype=np.int32)
@@ -1120,7 +1122,8 @@ def swinqidxmaps(swathid):
     IOError
         If associated library routine fails.
     """
-    dimmapb = ffi.new("char[]", b'\0' * 1000)
+    nmaps, strbufsize = swnentries(swathid, HE5_HDFE_NENTIMAP)
+    dimmapb = ffi.new("char[]", b'\0' * (strbufsize + 1))
     nmaps = _lib.HE5_SWinqidxmaps(swathid, dimmapb, ffi.NULL)
     _handle_error(nmaps)
 
@@ -1161,10 +1164,8 @@ def swinqmaps(swathid):
     IOError
         If associated library routine fails.
     """
-    _, strbufsize = swnentries(swathid, HE5_HDFE_NENTDIM)
-    # dimmapb = ffi.new("char[]", b'\0' * (strbufsize + 1))
-    # TODO:  why does swnenetries not work here?
-    dimmapb = ffi.new("char[]", b'\0' * (10000 + 1))
+    _, strbufsize = swnentries(swathid, HE5_HDFE_NENTMAP)
+    dimmapb = ffi.new("char[]", b'\0' * (strbufsize + 1))
     nmaps = _lib.HE5_SWinqmaps(swathid, dimmapb, ffi.NULL, ffi.NULL)
     _handle_error(nmaps)
 
