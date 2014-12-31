@@ -160,3 +160,26 @@ class TestSwathPrinting(unittest.TestCase):
                 actual = stdout.getvalue().strip()
         expected = fixtures.swath4
         self.assertEqual(actual, expected)
+
+
+class TestSwath5Printing(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        file = pkg.resource_filename(__name__, os.path.join('data',
+                                                            'SimpleSwath.h5'))
+        cls.swathfile = file
+
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
+
+    def test_print_swathfile(self):
+        swf = SwathFile(self.swathfile)
+        with patch('sys.stdout', new=StringIO()) as stdout:
+            print(swf)
+            actual = stdout.getvalue().strip()
+        expected = fixtures.swath5
+        self.assertEqual(actual, expected)
