@@ -26,11 +26,12 @@ Swath:  INDEX
     Index Maps:
         GeoDim/TrackDim:  index=[1 2 3 5 6 7]
         GeoXDim/XtrackDim:  index=[1 2 3 5 6 7]
-    Geolocation Fields:
+    Geolocation Group Attributes:
+    Geolocation Group Fields:
         float32 Latitude[GeoDim, GeoXDim]:
         float32 Longitude[GeoDim, GeoXDim]:
-    Data Field Group Attributes:
-    Data Fields:
+    Data Group Attributes:
+    Data Group Fields:
         float32 Indexed_Data[TrackDim, XtrackDim]:
             _FillValue:  -555.0
     Swath Attributes:
@@ -47,13 +48,15 @@ Swath:  SIMPLE
         GeoTrack/GeoXtrack:  offset=0, increment=1
         GeoTrack/GeoTrack:  offset=0, increment=1
     Index Maps:
-    Geolocation Fields:
+    Geolocation Group Attributes:
+        ScalarFloat:  3.140000104904175
+    Geolocation Group Fields:
         float64 Time[GeoTrack]:
         float64 Latitude[GeoTrack, GeoXtrack]:
         float64 Longitude[GeoTrack, GeoXtrack]:
-    Data Field Group Attributes:
+    Data Group Attributes:
         GroupAttribute:  [4 3 2 1]
-    Data Fields:
+    Data Group Fields:
         float64 Temperature[DataTrack, DataXtrack]:
             _FillValue:  -777.0
         int32 Count[DataTrack]:
@@ -77,11 +80,11 @@ Swath:  Swath1
         GeoXtrack/Res2xtr:  offset=1, increment=2
     Index Maps:
         IndxTrack/Res2tr:  index=[ 0  1  3  6  7  8 11 12 14 24 32 39]
-    Geolocation Fields:
+    Geolocation Group Fields:
         float64 Time[GeoTrack]:
         float32 Longitude[GeoTrack, GeoXtrack]:
         float32 Latitude[GeoTrack, GeoXtrack]:
-    Data Fields:
+    Data Group Fields:
         float32 Density[GeoTrack]:
         float32 Temperature[GeoTrack, GeoXtrack]:
         float32 Temperature_3D[Bands, GeoTrack, GeoXtrack]:

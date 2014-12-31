@@ -61,6 +61,8 @@ CDEF = """
     herr_t HE5_SWfieldinfo(hid_t gridID, const char *fieldname, int *rank,
                            hsize_t dims[], hid_t *ntype, char *dimlist,
                            char *maxdimlist);
+    long   HE5_SWgeogrpattrinfo(hid_t gridID, const char *attrname,
+                                hid_t *ntype, hsize_t *count);
     long   HE5_SWgrpattrinfo(hid_t gridID, const char *attrname,
                              hid_t *ntype, hsize_t *count);
     hsize_t HE5_SWidxmapinfo(hid_t swathID, char *geodim, char *datadim,
@@ -71,6 +73,8 @@ CDEF = """
                                hid_t ntype[]);
     int    HE5_SWinqgeofields(hid_t gridID, char *fieldlist, int rank[],
                               hid_t ntype[]);
+    long   HE5_SWinqgeogrpattrs(hid_t gridID, char *attrnames,
+                                long *strbufsize);
     long   HE5_SWinqgrpattrs(hid_t gridID, char *attrnames, long *strbufsize);
     long   HE5_SWinqlocattrs(hid_t swathID, char *fieldname, char *attrnames,
                              long *strbufsize);
@@ -83,6 +87,8 @@ CDEF = """
     long   HE5_SWnentries(hid_t swathID, int entrycode, long *strbufsize);
     hid_t  HE5_SWopen(const char *filename, uintn access);
     herr_t HE5_SWreadattr(hid_t swathID, const char* attrname, void *buffer);
+    herr_t HE5_SWreadgeogrpattr(hid_t swathID, const char* attrname,
+                                void *buffer);
     herr_t HE5_SWreadgrpattr(hid_t swathID, const char* attrname,
                              void *buffer);
     herr_t HE5_SWreadfield(hid_t swathID, const char* fieldname,
@@ -937,6 +943,33 @@ def swfieldinfo(swathid, fieldname):
     return tuple(shape), number_type_dict[ntypep[0]], dimlist, maxdimlist
 
 
+def swgeogrpattrinfo(swathid, attrname):
+    """return information about attribute in the "Geolocation Fields" group
+
+    Parameters
+    ----------
+    swathid : int
+        swath identifier
+    attrname : str
+        attribute name
+
+    Returns
+    -------
+    ntype : int
+        number type of attribute, see Appendix A in "HDF-EOS Interface Based
+        on HDF5, Volume 2: Function Reference Guide"
+    count : int
+        number of attribute elements
+    """
+    ntypep = ffi.new("hid_t *")
+    countp = ffi.new("hsize_t *")
+    status = _lib.HE5_SWgeogrpattrinfo(swathid, attrname.encode(), ntypep,
+                                       countp)
+    _handle_error(status)
+
+    return number_type_dict[ntypep[0]], countp[0]
+
+
 def swgrpattrinfo(swathid, attrname):
     """return information about a group attribute in the "Data Fields" group
 
@@ -1109,6 +1142,33 @@ def swinqgeofields(swathid):
     fieldlist = decode_comma_delimited_ffi_string(ffi.string(fieldlist))
 
     return fieldlist, ranks, numbertypes
+
+
+def swinqgeogrpattrs(swathid):
+    """retrieve information about attributes in "Geolocation Fields" group
+
+    This function wraps the HDF-EOS5 HE5_SWinqgeogrpattrs library function.
+
+    Parameters
+    ----------
+    swathid : int
+        swath identifier
+
+    Returns
+    -------
+    attrlist : list
+        list of attributes defined for the swath
+    """
+    strbufsizep = ffi.new("long *")
+    nattrs = _lib.HE5_SWinqgeogrpattrs(swathid, ffi.NULL, strbufsizep)
+    if nattrs == 0:
+        return []
+    strbufsize = strbufsizep[0]
+    attr_buffer = ffi.new("char[]", b'\0' * (strbufsize + 1))
+    nattrs = _lib.HE5_SWinqgeogrpattrs(swathid, attr_buffer, strbufsizep)
+    _handle_error(nattrs)
+    attr_list = decode_comma_delimited_ffi_string(ffi.string(attr_buffer))
+    return attr_list
 
 
 def swinqgrpattrs(swathid):
@@ -1368,6 +1428,42 @@ def swreadattr(swathid, attrname):
     bufferp = ffi.cast(cast_string_dict[dtype], buffer.ctypes.data)
 
     status = _lib.HE5_SWreadattr(swathid, attrname.encode(), bufferp)
+    _handle_error(status)
+
+    if count == 1:
+        # present as a scalar rather than an array.
+        buffer = buffer[0]
+    return buffer
+
+
+def swreadgeogrpattr(swathid, attrname):
+    """read group attribute from the "Geolocation Fields" group.
+
+    This function wraps the HDF-EOS5 HE5_SWreadgeogrpattr library function.
+
+    Parameters
+    ----------
+    swathid : int
+        swath identifier
+    attrname : str
+        attribute name
+
+    Returns
+    -------
+    value : object
+        swath field attribute value
+    """
+    [dtype, count] = swgeogrpattrinfo(swathid, attrname)
+    if dtype is np.str:
+        buffer = ffi.new("char[]", b'\0' * (1000 + 1))
+        status = _lib.HE5_SWreadgeogrpattr(swathid, attrname.encode(), buffer)
+        _handle_error(status)
+        return ffi.string(buffer).decode('ascii')
+
+    buffer = np.zeros(count, dtype=dtype)
+    bufferp = ffi.cast(cast_string_dict[dtype], buffer.ctypes.data)
+
+    status = _lib.HE5_SWreadgeogrpattr(swathid, attrname.encode(), bufferp)
     _handle_error(status)
 
     if count == 1:
