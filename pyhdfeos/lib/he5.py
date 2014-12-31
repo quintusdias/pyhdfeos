@@ -954,19 +954,29 @@ def swidxmapinfo(swathid, geodim, datadim):
     Raises
     ------
     IOError
-        If associated library routine fails.
+        if associated library routine fails
+    RuntimeError
+        if no such index map exists
     """
-    idxsize = _lib.HE5_SWidxmapinfo(swathid, geodim.encode(), datadim.encode(),
-                                    ffi.NULL)
-    _handle_error(idxsize)
+    [dimmaps, idxsizes] = swinqidxmaps(swathid)
+    if len(dimmaps) == 0:
+        raise RuntimeError("No index maps in swath.")
+
+    map = '{0}/{1}'.format(geodim, datadim)
+    if map not in dimmaps:
+        raise RuntimeError("No such index map in swath.")
+
+    idx = dimmaps.index(map)
+    idxsize = idxsizes[idx]
     if idxsize == 0:
         return np.array([], dtype=np.int64)
 
     if sys.maxsize < 2**32 and platform.system().startswith('Linux'):
-        index = np.zeros(idxsize, dtype=np.int32)
+        index = np.zeros(idxsize, dtype=np.int64)
+        indexp = ffi.cast("long *", index.ctypes.data)
     else:
         index = np.zeros(idxsize, dtype=np.int64)
-    indexp = ffi.cast("long *", index.ctypes.data)
+        indexp = ffi.cast("long *", index.ctypes.data)
 
     idxsize = _lib.HE5_SWidxmapinfo(swathid, geodim.encode(), datadim.encode(),
                                     indexp)
