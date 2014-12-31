@@ -177,6 +177,7 @@ class TestSwath5Printing(unittest.TestCase):
         pass
 
     def test_print_swathfile(self):
+        self.maxDiff = None
         swf = SwathFile(self.swathfile)
         with patch('sys.stdout', new=StringIO()) as stdout:
             print(swf)

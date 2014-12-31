@@ -125,6 +125,13 @@ class _Swath(object):
                 val = self._he.swreadgrpattr(self.swathid, attr)
                 self.data_field_attrs[attr] = val
 
+        if hasattr(self._he, 'swinqgeogrpattrs'):
+            attr_list = self._he.swinqgeogrpattrs(self.swathid)
+            self.geo_field_attrs = collections.OrderedDict()
+            for attr in attr_list:
+                val = self._he.swreadgeogrpattr(self.swathid, attr)
+                self.geo_field_attrs[attr] = val
+
     def __del__(self):
         self._he.swdetach(self.swathid)
         self._he.swclose(self.swfid)
@@ -146,7 +153,13 @@ class _Swath(object):
             msg = "        {0}:  index={1}".format(name, idx)
             lst.append(msg)
 
-        lst.append("    Geolocation Fields:")
+        if hasattr(self._he, 'swinqgeogrpattrs'):
+            lst.append("    Geolocation Group Attributes:")
+            fmt = "        {0}:  {1}"
+            for attr in self.geo_field_attrs.keys():
+                lst.append(fmt.format(attr, self.geo_field_attrs[attr]))
+
+        lst.append("    Geolocation Group Fields:")
         for field in self.geofields.keys():
             if sys.hexversion <= 0x03000000:
                 textstr = str(self.geofields[field])
@@ -157,12 +170,12 @@ class _Swath(object):
                            ' ' * 8))
 
         if hasattr(self._he, 'swinqgrpattrs'):
-            lst.append("    Data Field Group Attributes:")
+            lst.append("    Data Group Attributes:")
             fmt = "        {0}:  {1}"
             for attr in self.data_field_attrs.keys():
                 lst.append(fmt.format(attr, self.data_field_attrs[attr]))
 
-        lst.append("    Data Fields:")
+        lst.append("    Data Group Fields:")
         for field in self.datafields.keys():
             if sys.hexversion <= 0x03000000:
                 textstr = str(self.datafields[field])
