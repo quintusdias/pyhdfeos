@@ -193,7 +193,7 @@ def gdattrinfo(grid_id, attrname):
     Returns
     -------
     ntype : int
-        number type of attribute, see Appendix A in "HDF-EOS Interface Based
+        numpy datatype of attribute, see Appendix A in "HDF-EOS Interface Based
         on HDF5, Volume 2: Function Reference Guide"
     count : int
         number of attribute elements
@@ -203,7 +203,7 @@ def gdattrinfo(grid_id, attrname):
     status = _lib.HE5_GDattrinfo(grid_id, attrname.encode(), ntypep, countp)
     _handle_error(status)
 
-    return ntypep[0], countp[0]
+    return number_type_dict[ntypep[0]], countp[0]
 
 
 def gdclose(fid):
@@ -689,16 +689,16 @@ def gdreadattr(gridid, attrname):
     value : object
         grid field attribute value
     """
-    [ntype, count] = gdattrinfo(gridid, attrname)
-    if ntype == 57:
+    [dtype, count] = gdattrinfo(gridid, attrname)
+    if dtype is np.str:
         # buffer = ffi.new("char[]", b'\0' * (count + 1))
         buffer = ffi.new("char[]", b'\0' * (1000 + 1))
         status = _lib.HE5_GDreadattr(gridid, attrname.encode(), buffer)
         _handle_error(status)
         return ffi.string(buffer).decode('ascii')
 
-    buffer = np.zeros(count, dtype=number_type_dict[ntype])
-    bufferp = ffi.cast(cast_string_dict[ntype], buffer.ctypes.data)
+    buffer = np.zeros(count, dtype=dtype)
+    bufferp = ffi.cast(cast_string_dict[dtype], buffer.ctypes.data)
 
     status = _lib.HE5_GDreadattr(gridid, attrname.encode(), bufferp)
     _handle_error(status)
