@@ -11,11 +11,12 @@ from . import fixtures
 
 issue52file = 'SBUV2-NOAA17_L2-SBUV2N17L2_2011m1231_v01-01-2012m0905t152911.h5'
 issue60file = 'GSSTF.3.2008.12.31.he5'
+issue67file = 'GSSTF_NCEP.3.2008.12.31.he5'
 
 
-class TestNegative5(unittest.TestCase):
+class TestRegression5(unittest.TestCase):
     """
-    Negative tests for HDF-EOS5 grids.
+    Regression tests for HDF-EOS5 grids.
     """
     @unittest.skipIf(not fixtures.test_file_exists(issue52file),
                      'test file not available')
@@ -32,6 +33,16 @@ class TestNegative5(unittest.TestCase):
         don't error out on float32 attributes
         """
         GridFile(fixtures.test_file_path(issue60file))
+
+    @unittest.skipIf(not fixtures.test_file_exists(issue67file),
+                     'test file not available')
+    def test_issue67(self):
+        """
+        dimensions should be 'XDim', 'YDim'.  'Xdim' and 'Ydim' should not
+        be there
+        """
+        grid = GridFile(fixtures.test_file_path(issue67file)).grids['NCEP']
+        self.assertEqual(list(grid.dims.keys()), ['Xdim', 'Ydim'])
 
 
 class TestReadGridCoords(unittest.TestCase):

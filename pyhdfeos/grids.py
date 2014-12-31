@@ -76,10 +76,18 @@ class _Grid(object):
 
         _tuple = self._he.gdgridinfo(self.gridid)
         self.xdimsize, self.ydimsize, self.upleft, self.lowright = _tuple
-        if 'XDim' not in self.dims:
-            self.dims['XDim'] = self.xdimsize
-        if 'YDim' not in self.dims:
-            self.dims['YDim'] = self.ydimsize
+        if hasattr(self._he, 'gdinqlocattrs'):
+            # HDF-EOS5
+            if 'Xdim' not in self.dims:
+                self.dims['Xdim'] = self.xdimsize
+            if 'Ydim' not in self.dims:
+                self.dims['Ydim'] = self.ydimsize
+        else:
+            # HDF-EOS
+            if 'XDim' not in self.dims:
+                self.dims['XDim'] = self.xdimsize
+            if 'YDim' not in self.dims:
+                self.dims['YDim'] = self.ydimsize
 
         _tuple = self._he.gdprojinfo(self.gridid)
         projcode, zonecode, spherecode, projparms = _tuple
@@ -391,7 +399,7 @@ class _Grid(object):
                      self.dims['YDim'])
         else:
             # The grid consists of the NBlocks, XDimSize, YDimSize
-            shape = (self.dims['YDim'], self.dims['XDim'])
+            shape = (self.ydimsize, self.xdimsize)
 
         if isinstance(index, int):
             raise RuntimeError("A scalar integer is not a legal argument.")
@@ -485,8 +493,8 @@ class _Grid(object):
         rows = index[0]
         cols = index[1]
 
-        numrows = self.dims['YDim']
-        numcols = self.dims['XDim']
+        numrows = self.ydimsize
+        numcols = self.xdimsize
 
         rows_start = 0 if rows.start is None else rows.start
         rows_step = 1 if rows.step is None else rows.step

@@ -150,8 +150,8 @@ utm_grid = """Grid:  UTMGrid
         Time:  10
         ExtDim:  60
         Unlim:  18446744073709551615
-        XDim:  120
-        YDim:  200
+        Xdim:  120
+        Ydim:  200
     Upper Left (x,y):  [  210584.50041  3322395.95445]
     Lower Right (x,y):  [  813931.10959  2214162.53278]
     Sphere:  Clarke 1866
@@ -191,8 +191,8 @@ som_grid = """Grid:  GeometricParameters
 polar_stereographic_grid = """Grid:  PolarGrid
     Dimensions:
         Bands:  3
-        XDim:  100
-        YDim:  100
+        Xdim:  100
+        Ydim:  100
     Upper Left (x,y):  [ 0.  0.]
     Lower Right (x,y):  [ 0.  0.]
     Sphere:  International 1967
