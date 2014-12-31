@@ -821,14 +821,14 @@ def swattrinfo(swathid, attrname):
     Parameters
     ----------
     swathid : int
-        grid identifier
+        swath identifier
     attrname : str
         attribute name
 
     Returns
     -------
     ntype : int
-        number type of attribute, see Appendix A in "HDF-EOS Interface Based
+        numpy datatype of attribute, see Appendix A in "HDF-EOS Interface Based
         on HDF5, Volume 2: Function Reference Guide"
     count : int
         number of attribute elements
@@ -848,8 +848,8 @@ def swinqattrs(swathid):
 
     Parameters
     ----------
-    grid_id : int
-        grid identifier
+    swathid : int
+        swath identifier
 
     Returns
     -------
@@ -914,7 +914,7 @@ def swfieldinfo(swathid, fieldname):
     shape : tuple
         size of the field
     ntype : type
-        datatype of the field
+        numpy datatype of the field
     dimlist, maxdimlist : list
         list of dimensions
     """
@@ -956,7 +956,7 @@ def swgeogrpattrinfo(swathid, attrname):
     Returns
     -------
     ntype : int
-        number type of attribute, see Appendix A in "HDF-EOS Interface Based
+        numpy datatype of attribute, see Appendix A in "HDF-EOS Interface Based
         on HDF5, Volume 2: Function Reference Guide"
     count : int
         number of attribute elements
@@ -976,14 +976,14 @@ def swgrpattrinfo(swathid, attrname):
     Parameters
     ----------
     swathid : int
-        grid identifier
+        swath identifier
     attrname : str
         attribute name
 
     Returns
     -------
     ntype : int
-        number type of attribute, see Appendix A in "HDF-EOS Interface Based
+        numpy datatype of attribute, see Appendix A in "HDF-EOS Interface Based
         on HDF5, Volume 2: Function Reference Guide"
     count : int
         number of attribute elements
@@ -1061,7 +1061,7 @@ def swinqdims(swathid):
     Returns
     -------
     dimlist : list
-        list of dimensions defined for the grid
+        list of dimensions defined for the swath
     dimlens : ndarray
         corresponding length of each dimension
     """
@@ -1178,8 +1178,8 @@ def swinqgrpattrs(swathid):
 
     Parameters
     ----------
-    grid_id : int
-        grid identifier
+    swathid : int
+        swath identifier
 
     Returns
     -------
@@ -1198,7 +1198,7 @@ def swinqgrpattrs(swathid):
     return attr_list
 
 
-def swinqlocattrs(gridid, fieldname):
+def swinqlocattrs(swathid, fieldname):
     """Retrieve information about local swath field attributes.
 
     This function wraps the HDF-EOS5 HE5_SWinqlocattrs library function.
@@ -1206,7 +1206,7 @@ def swinqlocattrs(gridid, fieldname):
     Parameters
     ----------
     swathid : int
-        grid identifier
+        swath identifier
     fieldname : str
         retrieve attribute names for this field
 
@@ -1216,12 +1216,12 @@ def swinqlocattrs(gridid, fieldname):
         list of attributes defined for the field
     """
     strbufsize = ffi.new("long *")
-    nattrs = _lib.HE5_SWinqlocattrs(gridid, fieldname.encode(),
+    nattrs = _lib.HE5_SWinqlocattrs(swathid, fieldname.encode(),
                                     ffi.NULL, strbufsize)
     if nattrs == 0:
         return []
     attr_buffer = ffi.new("char[]", b'\0' * (strbufsize[0] + 1))
-    nattrs = _lib.HE5_SWinqlocattrs(gridid, fieldname.encode(),
+    nattrs = _lib.HE5_SWinqlocattrs(swathid, fieldname.encode(),
                                     attr_buffer, strbufsize)
     _handle_error(nattrs)
     attr_list = decode_comma_delimited_ffi_string(ffi.string(attr_buffer))
@@ -1353,7 +1353,7 @@ def swlocattrinfo(swathid, fieldname, attrname):
     Parameters
     ----------
     swathid : int
-        grid identifier
+        swath identifier
     fieldname : str
         attribute name
     attrname : str
@@ -1361,7 +1361,7 @@ def swlocattrinfo(swathid, fieldname, attrname):
 
     Returns
     -------
-    numbertype : type
+    ntype : type
         numpy datatype of the attribute
     count : int
         number of attribute elements
@@ -1408,7 +1408,7 @@ def swreadattr(swathid, attrname):
     Parameters
     ----------
     swathid : int
-        grid identifier
+        swath identifier
     attrname : str
         attribute name
 
@@ -1480,7 +1480,7 @@ def swreadgrpattr(swathid, attrname):
     Parameters
     ----------
     swathid : int
-        grid identifier
+        swath identifier
     attrname : str
         attribute name
 
@@ -1582,9 +1582,9 @@ def swreadlocattr(swathid, fieldname, attrname):
     Parameters
     ----------
     swathid : int
-        grid identifier
+        swath identifier
     fieldname : str
-        name of grid field
+        name of swath field
     attrname : str
         attribute name
 
