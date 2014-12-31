@@ -118,6 +118,13 @@ class _Swath(object):
         for attr in attr_list:
             self.attrs[attr] = self._he.swreadattr(self.swathid, attr)
 
+        if hasattr(self._he, 'swinqgrpattrs'):
+            attr_list = self._he.swinqgrpattrs(self.swathid)
+            self.data_field_attrs = collections.OrderedDict()
+            for attr in attr_list:
+                val = self._he.swreadgrpattr(self.swathid, attr)
+                self.data_field_attrs[attr] = val
+
     def __del__(self):
         self._he.swdetach(self.swathid)
         self._he.swclose(self.swfid)
@@ -148,6 +155,12 @@ class _Swath(object):
             else:
                 lst.append(textwrap.indent(str(self.geofields[field]),
                            ' ' * 8))
+
+        if hasattr(self._he, 'swinqgrpattrs'):
+            lst.append("    Data Field Group Attributes:")
+            fmt = "        {0}:  {1}"
+            for attr in self.data_field_attrs.keys():
+                lst.append(fmt.format(attr, self.data_field_attrs[attr]))
 
         lst.append("    Data Fields:")
         for field in self.datafields.keys():

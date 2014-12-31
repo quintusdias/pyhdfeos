@@ -15,6 +15,53 @@ def test_file_path(file):
 
 not_hdfeos = """No HDF-EOS structures detected."""
 
+swath5 = """SimpleSwath.h5
+Swath:  INDEX
+    Dimensions:
+        TrackDim:  8
+        XtrackDim:  8
+        GeoDim:  6
+        GeoXDim:  6
+    Dimension Maps:
+    Index Maps:
+        GeoDim/TrackDim:  index=[1 2 3 5 6 7]
+        GeoXDim/XtrackDim:  index=[1 2 3 5 6 7]
+    Geolocation Fields:
+        float32 Latitude[GeoDim, GeoXDim]:
+        float32 Longitude[GeoDim, GeoXDim]:
+    Data Field Group Attributes:
+    Data Fields:
+        float32 Indexed_Data[TrackDim, XtrackDim]:
+            _FillValue:  -555.0
+    Swath Attributes:
+Swath:  SIMPLE
+    Dimensions:
+        DataTrack:  10
+        DataXtrack:  4
+        GeoTrack:  5
+        GeoXtrack:  4
+        Unlim:  18446744073709551615
+    Dimension Maps:
+        GeoTrack/DataTrack:  offset=0, increment=2
+        GeoXtrack/DataXtrack:  offset=0, increment=1
+        GeoTrack/GeoXtrack:  offset=0, increment=1
+        GeoTrack/GeoTrack:  offset=0, increment=1
+    Index Maps:
+    Geolocation Fields:
+        float64 Time[GeoTrack]:
+        float64 Latitude[GeoTrack, GeoXtrack]:
+        float64 Longitude[GeoTrack, GeoXtrack]:
+    Data Field Group Attributes:
+        GroupAttribute:  [4 3 2 1]
+    Data Fields:
+        float64 Temperature[DataTrack, DataXtrack]:
+            _FillValue:  -777.0
+        int32 Count[DataTrack]:
+            LocalAttribute:  [100 200 300 400]
+        float64 Conduction[DataTrack, DataXtrack]:
+    Swath Attributes:
+        Drift:  [1 2 3 4]"""
+
 swath4 = """Swath219.hdf
 Swath:  Swath1
     Dimensions:
