@@ -22,27 +22,38 @@ from . import _som
 class _GridVariable(_EosField):
     """
     Grid field object (data, dimensions, attributes)
+
+    Attributes
+    ----------
+    fieldname : str
+        name of field
+    shape : tuple
+        dimension extents of field
+    dtype : numpy datatype
+        numpy datatype class that corresponds to the in-file datatype
+    dims : list
+        list of dimension names that define the field extents
     """
     def __init__(self, gridid, fieldname, he_module):
         _EosField.__init__(self)
-        self.struct_id = gridid
+        self._id = gridid
         self.fieldname = fieldname
         self._he = he_module
 
-        x = self._he.gdfieldinfo(self.struct_id, fieldname)
-        self.shape, self.dtype, self.dimlist = x[0:3]
+        x = self._he.gdfieldinfo(self._id, fieldname)
+        self.shape, self.dtype, self.dims = x[0:3]
 
         # HDFEOS5 only.
         self.attrs = collections.OrderedDict()
         if hasattr(self._he, 'gdinqlocattrs'):
-            attr_names = self._he.gdinqlocattrs(self.struct_id, self.fieldname)
+            attr_names = self._he.gdinqlocattrs(self._id, self.fieldname)
             for attrname in attr_names:
-                self.attrs[attrname] = self._he.gdreadlocattr(self.struct_id,
+                self.attrs[attrname] = self._he.gdreadlocattr(self._id,
                                                               self.fieldname,
                                                               attrname)
 
     def __str__(self):
-        dimstr = ", ".join(self.dimlist)
+        dimstr = ", ".join(self.dims)
         dtype_str = str(self.dtype).split('.')[1].split("'")[0]
         lst = ["{0} {1}[{2}]:".format(dtype_str, self.fieldname, dimstr)]
 
@@ -51,7 +62,7 @@ class _GridVariable(_EosField):
         return '\n'.join(lst)
 
     def _readfield(self, start, stride, edge):
-        return self._he.gdreadfield(self.struct_id, self.fieldname,
+        return self._he.gdreadfield(self._id, self.fieldname,
                                     start, stride, edge)
 
 
@@ -61,20 +72,47 @@ class _Grid(object):
 
     Attributes
     ----------
-    projcode : scalar
+    name : str
+       name of grid
+    fields : dictionary
+        collection of data field objects defined in the grid
+    dims : dict
+       list of dimension names and extents defined in the grid
+    attrs : dict
+        collection of swath attributes
+    xdimsize, ydimsize : int
+        number of columns and rows defining the grid
+    upleft, lowright : 2-element numpy ndarray
+        upper left and lower right coordinate points of grid
+    projcode : int
+        GCTP projection code
+    zonecode : int
+        UTM zone code
+    spherecode : int
+        identifies the GCTP spheroid
+    projparms : array
+        GCTP projection parameters
+    origincode : int
+        identifies the origin of the pixels in grid data
+    pixregcode : int
+        identifies the pixel registration
+
+    For complete details concerning projcode, zonecode, spherecode, projparms,
+    origincode, pixregcode, please consult "The HDF-EOS Library Users Guide
+    for the EOSDIS Evolution and Development (EED) Contract"
     """
     def __init__(self, filename, gridname, he_module):
-        self.filename = filename
+        self._filename = filename
         self._he = he_module
-        self.gdfid = self._he.gdopen(filename)
-        self.gridid = self._he.gdattach(self.gdfid, gridname)
-        self.gridname = gridname
+        self._gdfid = self._he.gdopen(filename)
+        self._gridid = self._he.gdattach(self._gdfid, gridname)
+        self.name = gridname
 
-        dimnames, dimlens = self._he.gdinqdims(self.gridid)
+        dimnames, dimlens = self._he.gdinqdims(self._gridid)
         dims = [(k, v) for (k, v) in zip(dimnames, dimlens)]
         self.dims = collections.OrderedDict(dims)
 
-        _tuple = self._he.gdgridinfo(self.gridid)
+        _tuple = self._he.gdgridinfo(self._gridid)
         self.xdimsize, self.ydimsize, self.upleft, self.lowright = _tuple
         if hasattr(self._he, 'gdinqlocattrs'):
             # HDF-EOS5
@@ -89,7 +127,7 @@ class _Grid(object):
             if 'YDim' not in self.dims:
                 self.dims['YDim'] = self.ydimsize
 
-        _tuple = self._he.gdprojinfo(self.gridid)
+        _tuple = self._he.gdprojinfo(self._gridid)
         projcode, zonecode, spherecode, projparms = _tuple
         self.projcode = projcode
         self.zonecode = zonecode
@@ -97,29 +135,29 @@ class _Grid(object):
         self._sphere = _SPHERE[spherecode]
         self.projparms = projparms
 
-        self.origincode = self._he.gdorigininfo(self.gridid)
-        self.pixregcode = self._he.gdpixreginfo(self.gridid)
+        self.origincode = self._he.gdorigininfo(self._gridid)
+        self.pixregcode = self._he.gdpixreginfo(self._gridid)
 
         if self.projcode == 22:
-            self.offsets = self._he.gdblksomoffset(self.gridid)
+            self.offsets = self._he.gdblksomoffset(self._gridid)
             self.num_offsets = len(self.offsets) + 1
 
         # collect the fieldnames
-        self._fields, _, _ = self._he.gdinqfields(self.gridid)
+        self._fields, _, _ = self._he.gdinqfields(self._gridid)
         self.fields = collections.OrderedDict()
         for fieldname in self._fields:
-            self.fields[fieldname] = _GridVariable(self.gridid,
+            self.fields[fieldname] = _GridVariable(self._gridid,
                                                    fieldname,
                                                    self._he)
 
-        attr_list = self._he.gdinqattrs(self.gridid)
+        attr_list = self._he.gdinqattrs(self._gridid)
         self.attrs = collections.OrderedDict()
         for attr in attr_list:
-            self.attrs[attr] = self._he.gdreadattr(self.gridid, attr)
+            self.attrs[attr] = self._he.gdreadattr(self._gridid, attr)
 
     def __del__(self):
-        self._he.gddetach(self.gridid)
-        self._he.gdclose(self.gdfid)
+        self._he.gddetach(self._gridid)
+        self._he.gdclose(self._gdfid)
 
     def _projection_str(self):
         """
@@ -202,7 +240,7 @@ class _Grid(object):
         return msg
 
     def __str__(self):
-        lst = ["Grid:  {0}".format(self.gridname)]
+        lst = ["Grid:  {0}".format(self.name)]
         lst.append("    Dimensions:")
         for dimname, dimlen in self.dims.items():
             lst.append("        {0}:  {1}".format(dimname, dimlen))
@@ -538,13 +576,13 @@ class GridFile(EosFile):
         EosFile.__init__(self)
         self.filename = filename
         try:
-            self.gdfid = he4.gdopen(filename)
+            self._gdfid = he4.gdopen(filename)
             self._he = he4
             self._is_hdf4 = True
         except IOError:
             # try hdf5
             try:
-                self.gdfid = he5.gdopen(filename)
+                self._gdfid = he5.gdopen(filename)
             except IOError:
                 msg = "Unable to open {0} as either an HDF-EOS or HDF-EOS5 "
                 msg += "grid file."
@@ -582,7 +620,7 @@ class GridFile(EosFile):
 
     def __del__(self):
         if self._he is not None:
-            self._he.gdclose(self.gdfid)
+            self._he.gdclose(self._gdfid)
 
 
 _SPHERE = {-1: 'Unspecified',

@@ -59,13 +59,13 @@ class EosFile(object):
                 # Descend into a vgroup if we find it.
                 vg0 = hdf.vattach(fid, ref_i)
                 name = hdf.vgetname(vg0)
-                if (((hasattr(self, 'swfid')) and
+                if (((hasattr(self, '_swfid')) and
                      ((geolocation and name == 'Geolocation Fields') or
                       (not geolocation and name == 'Data Fields')))):
                     attrs = self.collect_attrs_from_sds_in_vgroup(sd_id,
                                                                   vg0,
                                                                   fieldname)
-                elif hasattr(self, 'gdfid') and name == 'Data Fields':
+                elif hasattr(self, '_gdfid') and name == 'Data Fields':
                     attrs = self.collect_attrs_from_sds_in_vgroup(sd_id,
                                                                   vg0,
                                                                   fieldname)
