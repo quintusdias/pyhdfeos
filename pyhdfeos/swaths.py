@@ -29,16 +29,18 @@ class SwathFile(EosFile):
         try:
             self.swfid = he4.swopen(filename)
             self._he = he4
+            self._is_hdf4 = True
         except IOError:
             # try hdf5
             self.swfid = he5.swopen(filename)
             self._he = he5
+            self._is_hdf4 = False
 
         swathlist = self._he.swinqswath(filename)
         self.swaths = collections.OrderedDict()
         for swathname in swathlist:
             self.swaths[swathname] = _Swath(self.filename, swathname, self._he)
-            if not hasattr(self._he, 'swinqlocattrs'):
+            if self._is_hdf4:
                 # Inquire about hdf4 attributes using SD interface
                 for fieldname in self.swaths[swathname].geofields.keys():
                     attrs = self._hdf4_attrs(filename, swathname, fieldname,
