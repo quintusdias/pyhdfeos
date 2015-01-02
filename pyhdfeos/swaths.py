@@ -27,12 +27,12 @@ class SwathFile(EosFile):
         EosFile.__init__(self)
         self.filename = filename
         try:
-            self.swfid = he4.swopen(filename)
+            self._swfid = he4.swopen(filename)
             self._he = he4
             self._is_hdf4 = True
         except IOError:
             # try hdf5
-            self.swfid = he5.swopen(filename)
+            self._swfid = he5.swopen(filename)
             self._he = he5
             self._is_hdf4 = False
 
@@ -70,76 +70,97 @@ class SwathFile(EosFile):
         return '\n'.join(lst)
 
     def __del__(self):
-        self._he.swclose(self.swfid)
+        self._he.swclose(self._swfid)
 
 
 class _Swath(object):
     """
     Swath object.
+
+    Attributes
+    ----------
+    attrs : dictionary
+        collection of swath attributes
+    dimmaps : dictionary
+        collections of dimension maps defined in the swath
+    dims : list
+        list of dimension names and extents defined in the swath
+    name : str
+        name of swath
+    datafield_attrs : dictionary
+        collection of data field group attributes (empty in HDF4)
+    datafields : dictionary
+        collection of data field objects defined in the swath
+    geofield_attrs : dictionary
+        collection of geolocation field group attributes (empty in HDF4)
+    geofields : dictionary
+        collection of geolocation field objects defined in the swath
+    idxmaps : dictionary
+        collections of index maps defined in the swath
     """
     def __init__(self, filename, swathname, he_module):
-        self.filename = filename
+        self._filename = filename
         self._he = he_module
-        self.swfid = self._he.swopen(filename)
-        self.swathid = self._he.swattach(self.swfid, swathname)
-        self.swathname = swathname
+        self._swfid = self._he.swopen(filename)
+        self._swathid = self._he.swattach(self._swfid, swathname)
+        self.name = swathname
 
-        dimnames, dimlens = self._he.swinqdims(self.swathid)
+        dimnames, dimlens = self._he.swinqdims(self._swathid)
         dims = [(k, v) for (k, v) in zip(dimnames, dimlens)]
         self.dims = collections.OrderedDict(dims)
 
         # collect the fieldnames
-        geofields, _, _ = self._he.swinqgeofields(self.swathid)
+        geofields, _, _ = self._he.swinqgeofields(self._swathid)
         self.geofields = collections.OrderedDict()
         for fieldname in geofields:
             self.geofields[fieldname] = _SwathVariable(fieldname,
-                                                       self.swathid,
+                                                       self._swathid,
                                                        self._he)
-        datafields, _, _ = self._he.swinqdatafields(self.swathid)
+        datafields, _, _ = self._he.swinqdatafields(self._swathid)
         self.datafields = collections.OrderedDict()
         for fieldname in datafields:
             self.datafields[fieldname] = _SwathVariable(fieldname,
-                                                        self.swathid,
+                                                        self._swathid,
                                                         self._he)
 
-        dimmap_names, offsets, increments = self._he.swinqmaps(self.swathid)
+        dimmap_names, offsets, increments = self._he.swinqmaps(self._swathid)
         self.dimmaps = collections.OrderedDict()
         for j in range(len(offsets)):
             dimmap = DimensionMap(offset=offsets[j], increment=increments[j])
             self.dimmaps[dimmap_names[j]] = dimmap
 
-        dimmap_names, idxsizes = self._he.swinqidxmaps(self.swathid)
+        dimmap_names, idxsizes = self._he.swinqidxmaps(self._swathid)
         self.idxmaps = collections.OrderedDict()
         for j in range(len(idxsizes)):
             geodim, datadim = dimmap_names[j].split('/')
-            index = self._he.swidxmapinfo(self.swathid, geodim, datadim)
+            index = self._he.swidxmapinfo(self._swathid, geodim, datadim)
             self.idxmaps[dimmap_names[j]] = index
 
-        attr_list = self._he.swinqattrs(self.swathid)
+        attr_list = self._he.swinqattrs(self._swathid)
         self.attrs = collections.OrderedDict()
         for attr in attr_list:
-            self.attrs[attr] = self._he.swreadattr(self.swathid, attr)
+            self.attrs[attr] = self._he.swreadattr(self._swathid, attr)
 
         if hasattr(self._he, 'swinqgrpattrs'):
-            attr_list = self._he.swinqgrpattrs(self.swathid)
-            self.data_field_attrs = collections.OrderedDict()
+            attr_list = self._he.swinqgrpattrs(self._swathid)
+            self.datafield_attrs = collections.OrderedDict()
             for attr in attr_list:
-                val = self._he.swreadgrpattr(self.swathid, attr)
-                self.data_field_attrs[attr] = val
+                val = self._he.swreadgrpattr(self._swathid, attr)
+                self.datafield_attrs[attr] = val
 
         if hasattr(self._he, 'swinqgeogrpattrs'):
-            attr_list = self._he.swinqgeogrpattrs(self.swathid)
-            self.geo_field_attrs = collections.OrderedDict()
+            attr_list = self._he.swinqgeogrpattrs(self._swathid)
+            self.geofield_attrs = collections.OrderedDict()
             for attr in attr_list:
-                val = self._he.swreadgeogrpattr(self.swathid, attr)
-                self.geo_field_attrs[attr] = val
+                val = self._he.swreadgeogrpattr(self._swathid, attr)
+                self.geofield_attrs[attr] = val
 
     def __del__(self):
-        self._he.swdetach(self.swathid)
-        self._he.swclose(self.swfid)
+        self._he.swdetach(self._swathid)
+        self._he.swclose(self._swfid)
 
     def __str__(self):
-        lst = ["Swath:  {0}".format(self.swathname)]
+        lst = ["Swath:  {0}".format(self.name)]
         lst.append("    Dimensions:")
         for dimname, dimlen in self.dims.items():
             lst.append("        {0}:  {1}".format(dimname, dimlen))
@@ -158,8 +179,8 @@ class _Swath(object):
         if hasattr(self._he, 'swinqgeogrpattrs'):
             lst.append("    Geolocation Group Attributes:")
             fmt = "        {0}:  {1}"
-            for attr in self.geo_field_attrs.keys():
-                lst.append(fmt.format(attr, self.geo_field_attrs[attr]))
+            for attr in self.geofield_attrs.keys():
+                lst.append(fmt.format(attr, self.geofield_attrs[attr]))
 
         lst.append("    Geolocation Group Fields:")
         for field in self.geofields.keys():
@@ -174,8 +195,8 @@ class _Swath(object):
         if hasattr(self._he, 'swinqgrpattrs'):
             lst.append("    Data Group Attributes:")
             fmt = "        {0}:  {1}"
-            for attr in self.data_field_attrs.keys():
-                lst.append(fmt.format(attr, self.data_field_attrs[attr]))
+            for attr in self.datafield_attrs.keys():
+                lst.append(fmt.format(attr, self.datafield_attrs[attr]))
 
         lst.append("    Data Group Fields:")
         for field in self.datafields.keys():
@@ -195,27 +216,39 @@ class _Swath(object):
 
 class _SwathVariable(_EosField):
     """
+    Swath field object (data, dimensions, attributes)
+
+    Attributes
+    ----------
+    fieldname : str
+        name of field
+    shape : tuple
+        dimension extents of field
+    dtype : numpy datatype
+        numpy datatype class that corresponds to the in-file datatype
+    dims : list
+        list of dimension names that define the field extents
     """
     def __init__(self, fieldname, swathid, he_module):
         _EosField.__init__(self)
         self.fieldname = fieldname
-        self.struct_id = swathid
+        self._id = swathid
         self._he = he_module
 
-        x = self._he.swfieldinfo(self.struct_id, fieldname)
-        self.shape, self.dtype, self.dimlist = x[0:3]
+        x = self._he.swfieldinfo(self._id, fieldname)
+        self.shape, self.dtype, self.dims = x[0:3]
 
         # HDFEOS5 only.
         self.attrs = collections.OrderedDict()
         if hasattr(self._he, 'swinqlocattrs'):
-            attr_names = self._he.swinqlocattrs(self.struct_id, self.fieldname)
+            attr_names = self._he.swinqlocattrs(self._id, self.fieldname)
             for attrname in attr_names:
-                self.attrs[attrname] = self._he.swreadlocattr(self.struct_id,
+                self.attrs[attrname] = self._he.swreadlocattr(self._id,
                                                               self.fieldname,
                                                               attrname)
 
     def __str__(self):
-        dimstr = ", ".join(self.dimlist)
+        dimstr = ", ".join(self.dims)
         dtype_str = str(self.dtype).split('.')[1].split("'")[0]
         lst = ["{0} {1}[{2}]:".format(dtype_str, self.fieldname, dimstr)]
 
@@ -224,5 +257,5 @@ class _SwathVariable(_EosField):
         return '\n'.join(lst)
 
     def _readfield(self, start, stride, edge):
-        return self._he.swreadfield(self.struct_id, self.fieldname,
+        return self._he.swreadfield(self._id, self.fieldname,
                                     start, stride, edge)

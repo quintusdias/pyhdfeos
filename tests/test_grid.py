@@ -496,12 +496,12 @@ class TestMetadata(unittest.TestCase):
     def test_fielddims_4(self):
         gdf = GridFile(self.test_driver_gridfile4)
         field = gdf.grids['UTMGrid'].fields['Vegetation']
-        self.assertEqual(list(field.dimlist), ['YDim', 'XDim'])
+        self.assertEqual(list(field.dims), ['YDim', 'XDim'])
 
     def test_fielddims_5(self):
         gdf = GridFile(self.test_driver_gridfile5)
         field = gdf.grids['UTMGrid'].fields['Vegetation']
-        self.assertEqual(list(field.dimlist), ['YDim', 'XDim'])
+        self.assertEqual(list(field.dims), ['YDim', 'XDim'])
 
     def test_gridattrs_4(self):
         gdf = GridFile(self.test_driver_gridfile4)
