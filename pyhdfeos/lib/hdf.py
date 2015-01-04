@@ -225,7 +225,9 @@ def hopen(filename):
     fid : int32
         file identifier
     """
-    return _lib.Hopen(filename.encode(), DFACC_READ, 0)
+    fid = _lib.Hopen(filename.encode(), DFACC_READ, 0)
+    _handle_error(fid)
+    return fid
 
 
 def sdreadattr(obj_id, idx):
