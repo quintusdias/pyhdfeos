@@ -19,14 +19,20 @@ DimensionMap = collections.namedtuple('DimensionMap', ['offset', 'increment'])
 
 class EosFile(object):
     """
+    Attributes
+    ----------
+    filename : str
+        path to HDF-EOS file
     """
-    def __init__(self):
+    def __init__(self, filename):
+
+        self.filename = filename
+
         # "_he" is an internal mechanism for storing the correct interface
         # to the correct HDF-EOS library.  Establish a placeholder here.
         self._he = None
-        pass
 
-    def _hdf4_attrs(self, filename, eos_vg_name, fieldname, geolocation=False):
+    def _hdf4_attrs(self, eos_vg_name, fieldname, geolocation=False):
         """
         Retrieve field attributes using HDF4 interface.
 
@@ -46,51 +52,45 @@ class EosFile(object):
 
         attrs = None
 
-        fid = hdf.hopen(filename)
-        sd_id = hdf.sdstart(filename)
-        hdf.vstart(fid)
+        hdf.vstart(self._fid)
 
-        grid_ref = hdf.vfind(fid, eos_vg_name)
-        grid_vg = hdf.vattach(fid, grid_ref)
+        grid_ref = hdf.vfind(self._fid, eos_vg_name)
+        grid_vg = hdf.vattach(self._fid, grid_ref)
 
         members = hdf.vgettagrefs(grid_vg)
         for tag_i, ref_i in members:
             if tag_i == hdf.DFTAG_VG:
                 # Descend into a vgroup if we find it.
-                vg0 = hdf.vattach(fid, ref_i)
+                vg0 = hdf.vattach(self._fid, ref_i)
                 name = hdf.vgetname(vg0)
                 if (((hasattr(self, 'swfid')) and
                      ((geolocation and name == 'Geolocation Fields') or
                       (not geolocation and name == 'Data Fields')))):
-                    attrs = self.collect_attrs_from_sds_in_vgroup(sd_id,
-                                                                  vg0,
+                    attrs = self.collect_attrs_from_sds_in_vgroup(vg0,
                                                                   fieldname)
                 elif hasattr(self, 'gdfid') and name == 'Data Fields':
-                    attrs = self.collect_attrs_from_sds_in_vgroup(sd_id,
-                                                                  vg0,
+                    attrs = self.collect_attrs_from_sds_in_vgroup(vg0,
                                                                   fieldname)
                 hdf.vdetach(vg0)
 
         hdf.vdetach(grid_vg)
 
-        hdf.vend(fid)
-        hdf.sdend(sd_id)
-        hdf.hclose(fid)
+        hdf.vend(self._fid)
 
         if attrs is None:
             # No attributes.
             attrs = collections.OrderedDict()
         return attrs
 
-    def collect_attrs_from_sds_in_vgroup(self, sd_id, vgroup, fieldname):
+    def collect_attrs_from_sds_in_vgroup(self, vgroup, fieldname):
 
         attrs = None
         df_members = hdf.vgettagrefs(vgroup)
         for tag_j, ref_j in df_members:
             if tag_j == hdf.DFTAG_NDG:
                 # SDS dataset.
-                idx = hdf.sdreftoindex(sd_id, ref_j)
-                sds_id = hdf.sdselect(sd_id, idx)
+                idx = hdf.sdreftoindex(self._sd_id, ref_j)
+                sds_id = hdf.sdselect(self._sd_id, idx)
                 name, dims, dtype, nattrs = hdf.sdgetinfo(sds_id)
                 if name == fieldname:
                     alst = []

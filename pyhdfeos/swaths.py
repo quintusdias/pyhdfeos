@@ -8,7 +8,7 @@ import textwrap
 
 import numpy as np
 
-from .lib import he4, he5
+from .lib import he4, he5, hdf
 from .core import EosFile, _EosField, DimensionMap
 
 
@@ -24,8 +24,7 @@ class SwathFile(EosFile):
         collection of swaths
     """
     def __init__(self, filename):
-        EosFile.__init__(self)
-        self.filename = filename
+        EosFile.__init__(self, filename)
         try:
             self.swfid = he4.swopen(filename)
             self._he = he4
@@ -36,6 +35,10 @@ class SwathFile(EosFile):
             self._he = he5
             self._is_hdf4 = False
 
+        if self._is_hdf4:
+            self._fid = hdf.hopen(filename)
+            self._sd_id = hdf.sdstart(filename)
+
         swathlist = self._he.swinqswath(filename)
         self.swaths = collections.OrderedDict()
         for swathname in swathlist:
@@ -43,12 +46,10 @@ class SwathFile(EosFile):
             if self._is_hdf4:
                 # Inquire about hdf4 attributes using SD interface
                 for fieldname in self.swaths[swathname].geofields.keys():
-                    attrs = self._hdf4_attrs(filename, swathname, fieldname,
-                                             True)
+                    attrs = self._hdf4_attrs(swathname, fieldname, True)
                     self.swaths[swathname].geofields[fieldname].attrs = attrs
                 for fieldname in self.swaths[swathname].datafields.keys():
-                    attrs = self._hdf4_attrs(filename, swathname, fieldname,
-                                             False)
+                    attrs = self._hdf4_attrs(swathname, fieldname, False)
                     self.swaths[swathname].datafields[fieldname].attrs = attrs
 
     def __enter__(self):
@@ -71,6 +72,11 @@ class SwathFile(EosFile):
 
     def __del__(self):
         self._he.swclose(self.swfid)
+
+        # Close the HDF4 raw file IDs
+        if self._is_hdf4:
+            hdf.sdend(self._sd_id)
+            hdf.hclose(self._fid)
 
 
 class _Swath(object):
