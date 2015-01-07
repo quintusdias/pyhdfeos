@@ -14,7 +14,7 @@ else:
 
 import numpy as np
 
-from .lib import he4, he5
+from .lib import he4, he5, hdf
 from .core import EosFile, _EosField
 from . import _som
 
@@ -573,12 +573,10 @@ class GridFile(EosFile):
         collection of grids
     """
     def __init__(self, filename):
-        EosFile.__init__(self)
-        self.filename = filename
+        EosFile.__init__(self, filename)
         try:
             self._gdfid = he4.gdopen(filename)
             self._he = he4
-            self._is_hdf4 = True
         except IOError:
             # try hdf5
             try:
@@ -588,16 +586,16 @@ class GridFile(EosFile):
                 msg += "grid file."
                 raise RuntimeError(msg.format(filename))
             self._he = he5
-            self._is_hdf4 = False
 
         gridlist = self._he.gdinqgrid(filename)
         self.grids = collections.OrderedDict()
         for gridname in gridlist:
             self.grids[gridname] = _Grid(self.filename, gridname, self._he)
             if self._is_hdf4:
+                self._position_to_hdf4_vgroup(gridname)
                 # Inquire about hdf4 attributes using SD interface
                 for fieldname in self.grids[gridname].fields.keys():
-                    attrs = self._hdf4_attrs(filename, gridname, fieldname)
+                    attrs = self._get_sds_attributes(fieldname)
                     self.grids[gridname].fields[fieldname].attrs = attrs
 
     def __repr__(self):
@@ -621,6 +619,12 @@ class GridFile(EosFile):
     def __del__(self):
         if self._he is not None:
             self._he.gdclose(self._gdfid)
+
+        # Close the HDF4 raw file IDs
+        if self._is_hdf4:
+            hdf.vend(self._fid)
+            hdf.sdend(self._sd_id)
+            hdf.hclose(self._fid)
 
 
 _SPHERE = {-1: 'Unspecified',

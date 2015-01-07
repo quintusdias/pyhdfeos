@@ -24,17 +24,14 @@ class SwathFile(EosFile):
         collection of swaths
     """
     def __init__(self, filename):
-        EosFile.__init__(self)
-        self.filename = filename
+        EosFile.__init__(self, filename)
         try:
             self._swfid = he4.swopen(filename)
             self._he = he4
-            self._is_hdf4 = True
         except IOError:
             # try hdf5
             self._swfid = he5.swopen(filename)
             self._he = he5
-            self._is_hdf4 = False
 
         swathlist = self._he.swinqswath(filename)
         self.swaths = collections.OrderedDict()
@@ -42,13 +39,14 @@ class SwathFile(EosFile):
             self.swaths[swathname] = _Swath(self.filename, swathname, self._he)
             if self._is_hdf4:
                 # Inquire about hdf4 attributes using SD interface
+                self._position_to_hdf4_vgroup(swathname, True)
                 for fieldname in self.swaths[swathname].geofields.keys():
-                    attrs = self._hdf4_attrs(filename, swathname, fieldname,
-                                             True)
+                    attrs = self._get_sds_attributes(fieldname)
                     self.swaths[swathname].geofields[fieldname].attrs = attrs
+
+                self._position_to_hdf4_vgroup(swathname, False)
                 for fieldname in self.swaths[swathname].datafields.keys():
-                    attrs = self._hdf4_attrs(filename, swathname, fieldname,
-                                             False)
+                    attrs = self._get_sds_attributes(fieldname)
                     self.swaths[swathname].datafields[fieldname].attrs = attrs
 
     def __enter__(self):
