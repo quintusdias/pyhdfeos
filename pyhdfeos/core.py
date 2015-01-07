@@ -83,7 +83,7 @@ class EosFile(object):
                     hdf.vdetach(vg0)
                     return
                 elif (((hasattr(self, '_swfid')) and
-                       (geolocation and name == 'Data Fields'))):
+                       (not geolocation and name == 'Data Fields'))):
                     self._hdf4_vgroup_ref = ref_i
                     hdf.vdetach(vg0)
                     return

@@ -176,8 +176,9 @@ class TestSwath5Printing(unittest.TestCase):
     def tearDown(self):
         pass
 
+    @unittest.skipIf(sys.hexversion <= 0x03040000,
+                     "Floats printed differently on 2.x")
     def test_print_swathfile(self):
-        self.maxDiff = None
         swf = SwathFile(self.swathfile)
         with patch('sys.stdout', new=StringIO()) as stdout:
             print(swf)
