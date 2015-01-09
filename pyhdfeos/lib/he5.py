@@ -99,6 +99,38 @@ CDEF = """
     herr_t HE5_SWreadlocattr(hid_t swathID, const char *fieldname,
                              const char *attrname, void *databuf);
     herr_t HE5_SWclose(hid_t fid);
+    hid_t  HE5_ZAattach(hid_t fid, char *zaname);
+    long   HE5_ZAattrinfo(hid_t zaid, const char *attrname,
+                             hid_t *ntype, hsize_t *count);
+    hid_t  HE5_ZAopen(const char *filename, uintn access);
+    herr_t HE5_ZAclose(hid_t fid);
+    herr_t HE5_ZAdetach(hid_t zaid);
+    long   HE5_ZAgrpattrinfo(hid_t zaid, const char *attrname,
+                             hid_t *ntype, hsize_t *count);
+    herr_t HE5_ZAinfo(hid_t zaid, const char *fieldname, int *rank,
+                      hsize_t dims[], hid_t *ntype, char *dimlist,
+                      char *maxdimlist);
+    long   HE5_ZAinqattrs(hid_t zaid, char *attrnames, long *strbufsize);
+    long   HE5_ZAinqdims(hid_t zaid, char *dims, hsize_t *dims);
+    long   HE5_ZAinqgrpattrs(hid_t zaid, char *attrnames, long *strbufsize);
+    long   HE5_ZAinqlocattrs(hid_t zaid, char *fieldname, char *attrnames,
+                             long *strbufsize);
+    long   HE5_ZAinqza(const char *filename, char *zalist, long *strbufsize);
+    long   HE5_ZAinquire(hid_t zaid, char *fieldlist, int rank[],
+                         hid_t ntype[]);
+    long   HE5_ZAlocattrinfo(hid_t zaid, char *fieldname, char *attrname,
+                             hid_t *ntype, hsize_t *count);
+    long   HE5_ZAnentries(hid_t zaid, int entrycode, long *strbufsize);
+    herr_t HE5_ZAreadattr(hid_t zaid, const char* attrname, void *buffer);
+    herr_t HE5_ZAreadgrpattr(hid_t zaid, const char* attrname,
+                             void *buffer);
+    herr_t HE5_ZAread(hid_t zaid, const char* fieldname,
+                      const hsize_t start[],
+                      const hsize_t stride[],
+                      const hsize_t edge[],
+                      void *buffer);
+    herr_t HE5_ZAreadlocattr(hid_t zaid, const char *fieldname,
+                             const char *attrname, void *databuf);
 """
 
 SOURCE = """
@@ -135,6 +167,7 @@ number_type_dict = {0: np.int32,
                     3: np.uint16,
                     4: np.int8,
                     5: np.uint8,
+                    6: np.int64,
                     8: np.int64,
                     9: np.uint64,
                     10: np.float32,
@@ -1606,6 +1639,562 @@ def swreadlocattr(swathid, fieldname, attrname):
     bufferp = ffi.cast(cast_string_dict[dtype], buffer.ctypes.data)
 
     status = _lib.HE5_SWreadlocattr(swathid,
+                                    fieldname.encode(), attrname.encode(),
+                                    bufferp)
+    _handle_error(status)
+
+    if count == 1:
+        # present as a scalar rather than an array.
+        buffer = buffer[0]
+    return buffer
+
+
+def zaattach(fid, zaname):
+    """attach to an existing zonal average within the file
+
+    This function wraps the HDF-EOS5 HE5_ZAattach library function.
+
+    Parameters
+    ----------
+    swfid : int
+        swath file id
+    swathname : str
+        name of swath to be attached
+
+    Returns
+    -------
+    zaid : int
+        zonal average identifier
+    """
+    zaid = _lib.HE5_ZAattach(fid, zaname.encode())
+    _handle_error(zaid)
+    return zaid
+
+
+def zaattrinfo(zaid, attrname):
+    """return information about a zonal average attribute
+
+    Parameters
+    ----------
+    zaid : int
+        zonal average identifier
+    attrname : str
+        attribute name
+
+    Returns
+    -------
+    numbertype : type
+        numpy datatype of the attribute
+    count : int
+        number of attribute elements
+    """
+    ntypep = ffi.new("hid_t *")
+    countp = ffi.new("hsize_t *")
+    status = _lib.HE5_ZAattrinfo(zaid, attrname.encode(), ntypep, countp)
+    _handle_error(status)
+
+    return number_type_dict[ntypep[0]], countp[0]
+
+
+def zaopen(filename, access=H5F_ACC_RDONLY):
+    """opens HDF-EOS file in order to read a zonal averagee.
+
+    This function wraps the HDF-EOS5 HE5_ZAopen library function.
+
+    Parameters
+    ----------
+    filename : str
+        name of file
+    access : int
+        one of H5F_ACC_RDONLY, H5F_ACC_RDWR, or H5F_ACC_TRUNC
+
+    Returns
+    -------
+    fid : int
+        zonal average file ID handle
+    """
+    fid = _lib.HE5_ZAopen(filename.encode(), access)
+    _handle_error(fid)
+    return fid
+
+
+def zaclose(fid):
+    """closes the HDF-EOS zonal average file
+
+    This function wraps the HDF-EOS5 HE5_ZAclose library function.
+
+    Parameters
+    ----------
+    fid : int
+        zonal average file ID
+    """
+    status = _lib.HE5_ZAclose(fid)
+    _handle_error(status)
+
+
+def zadetach(zaid):
+    """detach from zonal average structure
+
+    This function wraps the HDF-EOS5 HE5_ZAdetach library function.
+
+    Parameters
+    ----------
+    zaid : int
+        zonal average identifier
+    """
+    status = _lib.HE5_ZAdetach(zaid)
+    _handle_error(status)
+
+
+def zagrpattrinfo(zaid, attrname):
+    """return information about attribute in the "Data Fields" group
+
+    Parameters
+    ----------
+    zaid : int
+        zonal average identifier
+    attrname : str
+        attribute name
+
+    Returns
+    -------
+    ntype : int
+        numpy datatype of attribute, see Appendix A in "HDF-EOS Interface Based
+        on HDF5, Volume 2: Function Reference Guide"
+    count : int
+        number of attribute elements
+    """
+    ntypep = ffi.new("hid_t *")
+    countp = ffi.new("hsize_t *")
+    status = _lib.HE5_ZAgrpattrinfo(zaid, attrname.encode(), ntypep, countp)
+    _handle_error(status)
+
+    return number_type_dict[ntypep[0]], countp[0]
+
+
+def zainfo(zaid, fieldname):
+    """Return information about a data field in a zonal average.
+
+    This function wraps the HDF-EOS5 HE5_ZAinfo library function.
+
+    Parameters
+    ----------
+    zaid : int
+        zonal average identifier.
+    fieldname : str
+        field name
+
+    Returns
+    -------
+    shape : tuple
+        size of the field
+    ntype : type
+        datatype of the field
+    dimlist, maxdimlist : list
+        list of dimensions
+    """
+    _, strbufsize = zanentries(zaid, HE5_HDFE_NENTDIM)
+    dimlistb = ffi.new("char[]", b'\0' * (strbufsize + 1))
+    maxdimlistb = ffi.new("char[]", b'\0' * (strbufsize + 1))
+
+    rankp = ffi.new("int *")
+    ntypep = ffi.new("hid_t *")
+
+    # Assume that no field has more than 8 dimensions.  Seems like a safe bet.
+    dims = np.zeros(8, dtype=np.uint64)
+    dimsp = ffi.cast("hsize_t *", dims.ctypes.data)
+
+    status = _lib.HE5_ZAinfo(zaid, fieldname.encode(), rankp, dimsp,
+                             ntypep, dimlistb, maxdimlistb)
+    _handle_error(status)
+
+    shape = []
+    for j in range(rankp[0]):
+        shape.append(dimsp[j])
+
+    dimlist = decode_comma_delimited_ffi_string(ffi.string(dimlistb))
+    maxdimlist = decode_comma_delimited_ffi_string(ffi.string(maxdimlistb))
+
+    return tuple(shape), number_type_dict[ntypep[0]], dimlist, maxdimlist
+
+
+def zainqattrs(zaid):
+    """retrieve information about attributes for a specific zonal average
+
+    This function wraps the HDF-EOS5 HE5_ZAinqattrs library function.
+
+    Parameters
+    ----------
+    zaid : int
+        zonal average identifier
+
+    Returns
+    -------
+    attrlist : list
+        list of attributes defined for the zonal average
+    """
+    strbufsizep = ffi.new("long *")
+    nattrs = _lib.HE5_ZAinqattrs(zaid, ffi.NULL, strbufsizep)
+    if nattrs == 0:
+        return []
+    strbufsize = strbufsizep[0]
+    strbufsize = max(strbufsize, 1000)
+    attr_buffer = ffi.new("char[]", b'\0' * (strbufsize + 1))
+    nattrs = _lib.HE5_ZAinqattrs(zaid, attr_buffer, strbufsizep)
+    _handle_error(nattrs)
+    attr_list = decode_comma_delimited_ffi_string(ffi.string(attr_buffer))
+    return attr_list
+
+
+def zainqdims(zaid):
+    """retrieve information about dimensions defined in a zonal average
+
+    This function wraps the HDF-EOS5 HE5_ZAinqdims library function.
+
+    Parameters
+    ----------
+    zaid : int
+        zonal average identifier
+
+    Returns
+    -------
+    dimlist : list
+        list of dimensions defined for the zonal average
+    dimlens : ndarray
+        corresponding length of each dimension
+    """
+    ndims, strbufsize = zanentries(zaid, HE5_HDFE_NENTDIM)
+    dim_buffer = ffi.new("char[]", b'\0' * (strbufsize + 1))
+    dimlens = np.zeros(ndims, dtype=np.uint64)
+    dimlensp = ffi.cast("unsigned long long *", dimlens.ctypes.data)
+    status = _lib.HE5_ZAinqdims(zaid, dim_buffer, dimlensp)
+    _handle_error(status)
+    dimlist = ffi.string(dim_buffer).decode('ascii').split(',')
+    return dimlist, dimlens
+
+
+def zainqgrpattrs(zaid):
+    """retrieve information about group attributes in "Data Fields" group
+
+    This function wraps the HDF-EOS5 HE5_ZAinqgrpattrs library function.
+
+    Parameters
+    ----------
+    zaid : int
+        swath identifier
+
+    Returns
+    -------
+    attrlist : list
+        list of attributes defined for the swath
+    """
+    strbufsizep = ffi.new("long *")
+    nattrs = _lib.HE5_ZAinqgrpattrs(zaid, ffi.NULL, strbufsizep)
+    if nattrs == 0:
+        return []
+    strbufsize = strbufsizep[0]
+    attr_buffer = ffi.new("char[]", b'\0' * (strbufsize + 1))
+    nattrs = _lib.HE5_ZAinqgrpattrs(zaid, attr_buffer, strbufsizep)
+    _handle_error(nattrs)
+    attr_list = decode_comma_delimited_ffi_string(ffi.string(attr_buffer))
+    return attr_list
+
+
+def zainqlocattrs(zaid, fieldname):
+    """retrieve information about zonal average field attributes
+
+    This function wraps the HDF-EOS5 HE5_ZAinqlocattrs library function.
+
+    Parameters
+    ----------
+    zaid : int
+        zonal average identifier
+    fieldname : str
+        retrieve attribute names for this field
+
+    Returns
+    -------
+    attrlist : list
+        list of attributes defined for the zonal average
+    """
+    strbufsize = ffi.new("long *")
+    nattrs = _lib.HE5_ZAinqlocattrs(zaid, fieldname.encode(),
+                                    ffi.NULL, strbufsize)
+    if nattrs == 0:
+        return []
+    attr_buffer = ffi.new("char[]", b'\0' * (strbufsize[0] + 1))
+    nattrs = _lib.HE5_ZAinqlocattrs(zaid, fieldname.encode(),
+                                    attr_buffer, strbufsize)
+    _handle_error(nattrs)
+    attr_list = decode_comma_delimited_ffi_string(ffi.string(attr_buffer))
+    return attr_list
+
+
+def zainquire(zaid):
+    """retrieve information about the data fields defined in a zonal average
+
+    This function wraps the HDF-EOS5 HE5_ZAinquire library function.
+
+    Parameters
+    ----------
+    zaid : int
+        zonal average identifier
+
+    Returns
+    -------
+    fields : list
+        List of fields in the grid.
+    ranks : list
+        List of ranks corresponding to the fields
+    numbertypes : list
+        List of numbertypes corresponding to the fields
+    """
+    nfields, strbufsize = zanentries(zaid, HE5_HDFE_NENTDFLD)
+    if nfields == 0:
+        return [], None, None
+
+    fieldlist_buffer = ffi.new("char[]", b'\0' * (strbufsize + 1))
+    ranks = np.zeros(nfields, dtype=np.int32)
+    rankp = ffi.cast("int *", ranks.ctypes.data)
+    numbertypes = np.zeros(nfields, dtype=np.int32)
+    numbertypep = ffi.cast("hid_t *", numbertypes.ctypes.data)
+    nfields = _lib.HE5_ZAinquire(zaid, fieldlist_buffer, rankp, numbertypep)
+    _handle_error(nfields)
+    fieldlist = decode_comma_delimited_ffi_string(ffi.string(fieldlist_buffer))
+
+    return fieldlist, ranks, numbertypes
+
+
+def zainqza(filename):
+    """retrieve names of zonal averages defined in HDF-EOS5 file.
+
+    This function wraps the HDF-EOS5 HE5_ZAinqza library function.
+
+    Parameters
+    ----------
+    filename : str
+        name of file
+
+    Returns
+    -------
+    zalist : list
+        List of zonal averages defined in HDF-EOS file.
+    """
+    strbufsizep = ffi.new("long *")
+    nzas = _lib.HE5_ZAinqza(filename.encode(), ffi.NULL, strbufsizep)
+    if nzas == 0:
+        return []
+    zabuffer = ffi.new("char[]", b'\0' * (strbufsizep[0] + 1))
+    nzas = _lib.HE5_ZAinqza(filename.encode(), zabuffer, ffi.NULL)
+    _handle_error(nzas)
+    if sys.hexversion < 0x03000000:
+        zalist = ffi.string(zabuffer).split(',')
+    else:
+        zalist = ffi.string(zabuffer).decode('ascii').split(',')
+    return zalist
+
+
+def zalocattrinfo(zaid, fieldname, attrname):
+    """return information about a zonal average field attribute
+
+    Parameters
+    ----------
+    zaid : int
+        zonal average identifier
+    fieldname : str
+        attribute name
+    attrname : str
+        attribute name
+
+    Returns
+    -------
+    numbertype : type
+        numpy datatype of the attribute
+    count : int
+        number of attribute elements
+    """
+    ntypep = ffi.new("hid_t *")
+    countp = ffi.new("hsize_t *")
+    status = _lib.HE5_ZAlocattrinfo(zaid,
+                                    fieldname.encode(), attrname.encode(),
+                                    ntypep, countp)
+    _handle_error(status)
+
+    return number_type_dict[ntypep[0]], countp[0]
+
+
+def zanentries(zaid, entry_code):
+    """Return number of specified objects in a swath.
+
+    This function wraps the HDF-EOS5 HE5_ZAnentries library function.
+
+    Parameters
+    ----------
+    swathid : int
+        swath identifier
+    entry_code : int
+        Entry code, either HE5_HDFE_NENTDIM or HE5_HDFE_NENTDFLD
+
+    Returns
+    -------
+    nentries, strbufsize : int
+       Number of specified entries, number of bytes in descriptive strings.
+    """
+    strbufsizep = ffi.new("long *")
+    nentries = _lib.HE5_ZAnentries(zaid, entry_code, strbufsizep)
+
+    strbufsize = strbufsizep[0]
+    return nentries, strbufsize
+
+
+def zareadattr(zaid, attrname):
+    """read zonal average attribute
+
+    This function wraps the HDF-EOS5 HE5_ZAreadattr library function.
+
+    Parameters
+    ----------
+    zaid : int
+        zonal average identifier
+    attrname : str
+        attribute name
+
+    Returns
+    -------
+    value : object
+        grid field attribute value
+    """
+    [dtype, count] = zaattrinfo(zaid, attrname)
+    if dtype is np.str:
+        buffer = ffi.new("char[]", b'\0' * (1000 + 1))
+        status = _lib.HE5_ZAreadattr(zaid, attrname.encode(), buffer)
+        _handle_error(status)
+        return ffi.string(buffer).decode('ascii')
+
+    buffer = np.zeros(count, dtype=dtype)
+    bufferp = ffi.cast(cast_string_dict[dtype], buffer.ctypes.data)
+
+    status = _lib.HE5_ZAreadattr(zaid, attrname.encode(), bufferp)
+    _handle_error(status)
+
+    if count == 1:
+        # present as a scalar rather than an array.
+        buffer = buffer[0]
+    return buffer
+
+
+def zaread(zaid, fieldname, start, stride, edge):
+    """read data from zonal average field
+
+    This function wraps the HDF-EOS5 library HE5_ZAread function.
+
+    Parameters
+    ----------
+    zaid : int
+        grid identifier
+    fieldname : str
+        attribute name
+    start : array-like
+        specifies starting location within each dimension
+    stride : array-like
+        specifies number of values to skip along each dimension
+    edge : array-like
+        specifies number of values to read along each dimension
+
+    Returns
+    -------
+    data : ndarray
+        data read from field
+    """
+    info = zainfo(zaid, fieldname)
+    dtype = info[1]
+    shape = tuple([int(x) for x in edge])
+    buffer = np.zeros(shape, dtype=dtype)
+    pbuffer = ffi.cast(cast_string_dict[dtype], buffer.ctypes.data)
+
+    startp = ffi.new("const hsize_t []", len(shape))
+    stridep = ffi.new("const hsize_t []", len(shape))
+    edgep = ffi.new("const hsize_t []", len(shape))
+
+    for j in range(len(shape)):
+        startp[j] = np.uint64(start[j])
+        stridep[j] = np.uint64(stride[j])
+        edgep[j] = np.uint64(edge[j])
+
+    status = _lib.HE5_ZAread(zaid, fieldname.encode(), startp, stridep,
+                             edgep, pbuffer)
+    _handle_error(status)
+    return buffer
+
+
+def zareadgrpattr(zaid, attrname):
+    """read group attribute from the "Data Fields" group
+
+    This function wraps the HDF-EOS5 HE5_ZAreadgrpattr library function.
+
+    Parameters
+    ----------
+    zaid : int
+        zonal average identifier
+    attrname : str
+        attribute name
+
+    Returns
+    -------
+    value : object
+        swath field attribute value
+    """
+    [dtype, count] = zagrpattrinfo(zaid, attrname)
+    if dtype is np.str:
+        buffer = ffi.new("char[]", b'\0' * (1000 + 1))
+        status = _lib.HE5_ZAreadgrpattr(zaid, attrname.encode(), buffer)
+        _handle_error(status)
+        return ffi.string(buffer).decode('ascii')
+
+    buffer = np.zeros(count, dtype=dtype)
+    bufferp = ffi.cast(cast_string_dict[dtype], buffer.ctypes.data)
+
+    status = _lib.HE5_ZAreadgrpattr(zaid, attrname.encode(), bufferp)
+    _handle_error(status)
+
+    if count == 1:
+        # present as a scalar rather than an array.
+        buffer = buffer[0]
+    return buffer
+
+
+def zareadlocattr(zaid, fieldname, attrname):
+    """read zonal average field attribute
+
+    This function wraps the HDF-EOS5 library HE5_ZAreadlocattr function.
+
+    Parameters
+    ----------
+    zaid : int
+        zonal average identifier
+    fieldname : str
+        name of zonal average field
+    attrname : str
+        attribute name
+
+    Returns
+    -------
+    value : object
+        zonal average field attribute value
+    """
+    [dtype, count] = zalocattrinfo(zaid, fieldname, attrname)
+    if dtype is np.str:
+        buffer = ffi.new("char[]", b'\0' * (1000 + 1))
+        status = _lib.HE5_ZAreadlocattr(zaid,
+                                        fieldname.encode(), attrname.encode(),
+                                        buffer)
+        _handle_error(status)
+        return ffi.string(buffer).decode('ascii')
+
+    buffer = np.zeros(count, dtype=dtype)
+    bufferp = ffi.cast(cast_string_dict[dtype], buffer.ctypes.data)
+
+    status = _lib.HE5_ZAreadlocattr(zaid,
                                     fieldname.encode(), attrname.encode(),
                                     bufferp)
     _handle_error(status)

@@ -2,6 +2,7 @@ import argparse
 
 from .grids import GridFile
 from .swaths import SwathFile
+from .za import ZonalAverageFile
 
 
 def dump_metadata():
@@ -22,5 +23,10 @@ def dump_metadata():
     if numswaths > 0:
         print(swf)
 
-    if numgrids == 0 and numswaths == 0:
+    zaf = ZonalAverageFile(args.filename)
+    numzas = len(zaf.zas)
+    if numzas > 0:
+        print(zaf)
+
+    if numgrids == 0 and numswaths == 0 and numzas:
         print('No HDF-EOS structures detected.')
