@@ -112,7 +112,11 @@ CDEF = """
     long   HE5_ZAinqza(const char *filename, char *zalist, long *strbufsize);
     long   HE5_ZAinquire(hid_t zaid, char *fieldlist, int rank[],
                          hid_t ntype[]);
+    long   HE5_ZAlocattrinfo(hid_t zaid, char *fieldname, char *attrname,
+                             hid_t *ntype, hsize_t *count);
     long   HE5_ZAnentries(hid_t zaid, int entrycode, long *strbufsize);
+    herr_t HE5_ZAreadlocattr(hid_t zaid, const char *fieldname,
+                             const char *attrname, void *databuf);
 """
 
 SOURCE = """
@@ -1868,6 +1872,35 @@ def zainqza(filename):
     return zalist
 
 
+def zalocattrinfo(zaid, fieldname, attrname):
+    """return information about a zonal average field attribute
+
+    Parameters
+    ----------
+    zaid : int
+        zonal average identifier
+    fieldname : str
+        attribute name
+    attrname : str
+        attribute name
+
+    Returns
+    -------
+    numbertype : type
+        numpy datatype of the attribute
+    count : int
+        number of attribute elements
+    """
+    ntypep = ffi.new("hid_t *")
+    countp = ffi.new("hsize_t *")
+    status = _lib.HE5_ZAlocattrinfo(zaid,
+                                    fieldname.encode(), attrname.encode(),
+                                    ntypep, countp)
+    _handle_error(status)
+
+    return number_type_dict[ntypep[0]], countp[0]
+
+
 def zanentries(zaid, entry_code):
     """Return number of specified objects in a swath.
 
@@ -1890,5 +1923,47 @@ def zanentries(zaid, entry_code):
 
     strbufsize = strbufsizep[0]
     return nentries, strbufsize
+
+
+def zareadlocattr(zaid, fieldname, attrname):
+    """read zonal average field attribute
+
+    This function wraps the HDF-EOS5 library HE5_ZAreadlocattr function.
+
+    Parameters
+    ----------
+    zaid : int
+        zonal average identifier
+    fieldname : str
+        name of zonal average field
+    attrname : str
+        attribute name
+
+    Returns
+    -------
+    value : object
+        zonal average field attribute value
+    """
+    [dtype, count] = zalocattrinfo(zaid, fieldname, attrname)
+    if dtype is np.str:
+        buffer = ffi.new("char[]", b'\0' * (1000 + 1))
+        status = _lib.HE5_ZAreadlocattr(zaid,
+                                        fieldname.encode(), attrname.encode(),
+                                        buffer)
+        _handle_error(status)
+        return ffi.string(buffer).decode('ascii')
+
+    buffer = np.zeros(count, dtype=dtype)
+    bufferp = ffi.cast(cast_string_dict[dtype], buffer.ctypes.data)
+
+    status = _lib.HE5_ZAreadlocattr(zaid,
+                                    fieldname.encode(), attrname.encode(),
+                                    bufferp)
+    _handle_error(status)
+
+    if count == 1:
+        # present as a scalar rather than an array.
+        buffer = buffer[0]
+    return buffer
 
 
