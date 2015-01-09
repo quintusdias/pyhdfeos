@@ -99,6 +99,9 @@ CDEF = """
     herr_t HE5_SWreadlocattr(hid_t swathID, const char *fieldname,
                              const char *attrname, void *databuf);
     herr_t HE5_SWclose(hid_t fid);
+    hid_t  HE5_ZAopen(const char *filename, uintn access);
+    herr_t HE5_ZAclose(hid_t fid);
+    long   HE5_ZAinqza(const char *filename, char *zalist, long *strbufsize);
 """
 
 SOURCE = """
@@ -1614,3 +1617,69 @@ def swreadlocattr(swathid, fieldname, attrname):
         # present as a scalar rather than an array.
         buffer = buffer[0]
     return buffer
+
+def zaopen(filename, access=H5F_ACC_RDONLY):
+    """opens HDF-EOS file in order to read a zonal averagee.
+
+    This function wraps the HDF-EOS5 HE5_ZAopen library function.
+
+    Parameters
+    ----------
+    filename : str
+        name of file
+    access : int
+        one of H5F_ACC_RDONLY, H5F_ACC_RDWR, or H5F_ACC_TRUNC
+
+    Returns
+    -------
+    fid : int
+        zonal average file ID handle
+    """
+    fid = _lib.HE5_ZAopen(filename.encode(), access)
+    _handle_error(fid)
+    return fid
+
+
+def zaclose(fid):
+    """closes the HDF-EOS zonal average file
+
+    This function wraps the HDF-EOS5 HE5_ZAclose library function.
+
+    Parameters
+    ----------
+    fid : int
+        zonal average file ID
+    """
+    status = _lib.HE5_ZAclose(fid)
+    _handle_error(status)
+
+
+def zainqza(filename):
+    """retrieve names of zonal averages defined in HDF-EOS5 file.
+
+    This function wraps the HDF-EOS5 HE5_ZAinqza library function.
+
+    Parameters
+    ----------
+    filename : str
+        name of file
+
+    Returns
+    -------
+    zalist : list
+        List of zonal averages defined in HDF-EOS file.
+    """
+    strbufsizep = ffi.new("long *")
+    nzas = _lib.HE5_ZAinqza(filename.encode(), ffi.NULL, strbufsizep)
+    if nzas == 0:
+        return []
+    zabuffer = ffi.new("char[]", b'\0' * (strbufsizep[0] + 1))
+    nzas = _lib.HE5_ZAinqza(filename.encode(), zabuffer, ffi.NULL)
+    _handle_error(nzas)
+    if sys.hexversion < 0x03000000:
+        zalist = ffi.string(zabuffer).split(',')
+    else:
+        zalist = ffi.string(zabuffer).decode('ascii').split(',')
+    return zalist
+
+
