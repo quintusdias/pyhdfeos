@@ -8,8 +8,8 @@ import textwrap
 
 import numpy as np
 
-from .lib import he4, he5
-from .core import EosFile, _EosField, DimensionMap
+from .lib import he5
+from .core import EosFile, _EosField
 
 
 class ZonalAverageFile(EosFile):
@@ -101,18 +101,17 @@ class _ZonalAverage(object):
 
         lst.append("    Group Attributes:")
         fmt = "        {0}:  {1}"
-        for attr in self.field_attrs.keys():
-            lst.append(fmt.format(attr, self.field_attrs[attr]))
+        for attr in self.data_field_attrs.keys():
+            lst.append(fmt.format(attr, self.data_field_attrs[attr]))
 
         lst.append("    Data Fields:")
-        for field in self.datafields.keys():
+        for field in self.fields.keys():
             if sys.hexversion <= 0x03000000:
-                textstr = str(self.datafields[field])
+                textstr = str(self.fields[field])
                 field_lst = [(' ' * 8 + line) for line in textstr.split('\n')]
                 lst.extend(field_lst)
             else:
-                lst.append(textwrap.indent(str(self.datafields[field]),
-                           ' ' * 8))
+                lst.append(textwrap.indent(str(self.fields[field]), ' ' * 8))
 
         lst.append("    Zonal Average Attributes:")
         for attr in self.attrs.keys():
@@ -141,7 +140,10 @@ class _ZonalAverageVariable(_EosField):
 
     def __str__(self):
         dimstr = ", ".join(self.dimlist)
-        dtype_str = str(self.dtype).split('.')[1].split("'")[0]
+        if self.dtype is np.str:
+            dtype_str = "str"
+        else:
+            dtype_str = str(self.dtype).split('.')[1].split("'")[0]
         lst = ["{0} {1}[{2}]:".format(dtype_str, self.fieldname, dimstr)]
 
         for name, value in self.attrs.items():
@@ -151,4 +153,3 @@ class _ZonalAverageVariable(_EosField):
     def _readfield(self, start, stride, edge):
         return self._he.zareadfield(self.struct_id, self.fieldname,
                                     start, stride, edge)
-
