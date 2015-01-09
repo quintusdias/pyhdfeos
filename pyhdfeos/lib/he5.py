@@ -99,9 +99,15 @@ CDEF = """
     herr_t HE5_SWreadlocattr(hid_t swathID, const char *fieldname,
                              const char *attrname, void *databuf);
     herr_t HE5_SWclose(hid_t fid);
+    hid_t  HE5_ZAattach(hid_t fid, char *zaname);
     hid_t  HE5_ZAopen(const char *filename, uintn access);
     herr_t HE5_ZAclose(hid_t fid);
+    herr_t HE5_ZAdetach(hid_t zaid);
+    long   HE5_ZAinqdims(hid_t zaid, char *dims, hsize_t *dims);
     long   HE5_ZAinqza(const char *filename, char *zalist, long *strbufsize);
+    long   HE5_ZAinquire(hid_t zaid, char *fieldlist, int rank[],
+                         hid_t ntype[]);
+    long   HE5_ZAnentries(hid_t zaid, int entrycode, long *strbufsize);
 """
 
 SOURCE = """
@@ -1618,6 +1624,28 @@ def swreadlocattr(swathid, fieldname, attrname):
         buffer = buffer[0]
     return buffer
 
+def zaattach(fid, zaname):
+    """attach to an existing zonal average within the file
+
+    This function wraps the HDF-EOS5 HE5_ZAattach library function.
+
+    Parameters
+    ----------
+    swfid : int
+        swath file id
+    swathname : str
+        name of swath to be attached
+
+    Returns
+    -------
+    zaid : int
+        zonal average identifier
+    """
+    zaid = _lib.HE5_ZAattach(fid, zaname.encode())
+    _handle_error(zaid)
+    return zaid
+
+
 def zaopen(filename, access=H5F_ACC_RDONLY):
     """opens HDF-EOS file in order to read a zonal averagee.
 
@@ -1654,6 +1682,82 @@ def zaclose(fid):
     _handle_error(status)
 
 
+def zadetach(zaid):
+    """detach from zonal average structure
+
+    This function wraps the HDF-EOS5 HE5_ZAdetach library function.
+
+    Parameters
+    ----------
+    zaid : int
+        zonal average identifier
+    """
+    status = _lib.HE5_ZAdetach(zaid)
+    _handle_error(status)
+
+
+def zainqdims(zaid):
+    """retrieve information about dimensions defined in a zonal average
+
+    This function wraps the HDF-EOS5 HE5_ZAinqdims library function.
+
+    Parameters
+    ----------
+    zaid : int
+        zonal average identifier
+
+    Returns
+    -------
+    dimlist : list
+        list of dimensions defined for the zonal average
+    dimlens : ndarray
+        corresponding length of each dimension
+    """
+    ndims, strbufsize = zanentries(zaid, HE5_HDFE_NENTDIM)
+    dim_buffer = ffi.new("char[]", b'\0' * (strbufsize + 1))
+    dimlens = np.zeros(ndims, dtype=np.uint64)
+    dimlensp = ffi.cast("unsigned long long *", dimlens.ctypes.data)
+    status = _lib.HE5_ZAinqdims(zaid, dim_buffer, dimlensp)
+    _handle_error(status)
+    dimlist = ffi.string(dim_buffer).decode('ascii').split(',')
+    return dimlist, dimlens
+
+
+def zainquire(zaid):
+    """retrieve information about the data fields defined in a zonal average
+
+    This function wraps the HDF-EOS5 HE5_ZAinquire library function.
+
+    Parameters
+    ----------
+    zaid : int
+        zonal average identifier
+
+    Returns
+    -------
+    fields : list
+        List of fields in the grid.
+    ranks : list
+        List of ranks corresponding to the fields
+    numbertypes : list
+        List of numbertypes corresponding to the fields
+    """
+    nfields, strbufsize = zanentries(zaid, HE5_HDFE_NENTDFLD)
+    if nfields == 0:
+        return [], None, None
+
+    fieldlist_buffer = ffi.new("char[]", b'\0' * (strbufsize + 1))
+    ranks = np.zeros(nfields, dtype=np.int32)
+    rankp = ffi.cast("int *", ranks.ctypes.data)
+    numbertypes = np.zeros(nfields, dtype=np.int32)
+    numbertypep = ffi.cast("hid_t *", numbertypes.ctypes.data)
+    nfields = _lib.HE5_ZAinquire(zaid, fieldlist_buffer, rankp, numbertypep)
+    _handle_error(nfields)
+    fieldlist = decode_comma_delimited_ffi_string(ffi.string(fieldlist_buffer))
+
+    return fieldlist, ranks, numbertypes
+
+
 def zainqza(filename):
     """retrieve names of zonal averages defined in HDF-EOS5 file.
 
@@ -1681,5 +1785,29 @@ def zainqza(filename):
     else:
         zalist = ffi.string(zabuffer).decode('ascii').split(',')
     return zalist
+
+
+def zanentries(zaid, entry_code):
+    """Return number of specified objects in a swath.
+
+    This function wraps the HDF-EOS5 HE5_ZAnentries library function.
+
+    Parameters
+    ----------
+    swathid : int
+        swath identifier
+    entry_code : int
+        Entry code, either HE5_HDFE_NENTDIM or HE5_HDFE_NENTDFLD
+
+    Returns
+    -------
+    nentries, strbufsize : int
+       Number of specified entries, number of bytes in descriptive strings.
+    """
+    strbufsizep = ffi.new("long *")
+    nentries = _lib.HE5_ZAnentries(zaid, entry_code, strbufsizep)
+
+    strbufsize = strbufsizep[0]
+    return nentries, strbufsize
 
 

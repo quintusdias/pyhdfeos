@@ -72,7 +72,7 @@ class _ZonalAverage(object):
         self.dims = collections.OrderedDict(dims)
 
         # collect the fieldnames
-        fields, _, _ = self._he.inquire(self.zaid)
+        fields, _, _ = self._he.zainquire(self.zaid)
         self.fields = collections.OrderedDict()
         for fieldname in fields:
             self.fields[fieldname] = _ZonalAverageVariable(fieldname,
@@ -123,11 +123,11 @@ class _ZonalAverage(object):
 class _ZonalAverageVariable(_EosField):
     """
     """
-    def __init__(self, fieldname, zaid, he_module):
+    def __init__(self, fieldname, zaid):
         _EosField.__init__(self)
         self.fieldname = fieldname
         self.struct_id = zaid
-        self._he = he_module
+        self._he = he5
 
         x = self._he.zafieldinfo(self.struct_id, fieldname)
         self.shape, self.dtype, self.dimlist = x[0:3]
