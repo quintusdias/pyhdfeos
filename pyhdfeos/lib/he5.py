@@ -103,7 +103,12 @@ CDEF = """
     hid_t  HE5_ZAopen(const char *filename, uintn access);
     herr_t HE5_ZAclose(hid_t fid);
     herr_t HE5_ZAdetach(hid_t zaid);
+    herr_t HE5_ZAinfo(hid_t zaid, const char *fieldname, int *rank,
+                      hsize_t dims[], hid_t *ntype, char *dimlist,
+                      char *maxdimlist);
     long   HE5_ZAinqdims(hid_t zaid, char *dims, hsize_t *dims);
+    long   HE5_ZAinqlocattrs(hid_t zaid, char *fieldname, char *attrnames,
+                             long *strbufsize);
     long   HE5_ZAinqza(const char *filename, char *zalist, long *strbufsize);
     long   HE5_ZAinquire(hid_t zaid, char *fieldlist, int rank[],
                          hid_t ntype[]);
@@ -1696,6 +1701,52 @@ def zadetach(zaid):
     _handle_error(status)
 
 
+def zainfo(zaid, fieldname):
+    """Return information about a data field in a zonal average.
+
+    This function wraps the HDF-EOS5 HE5_ZAinfo library function.
+
+    Parameters
+    ----------
+    zaid : int
+        zonal average identifier.
+    fieldname : str
+        field name
+
+    Returns
+    -------
+    shape : tuple
+        size of the field
+    ntype : type
+        datatype of the field
+    dimlist, maxdimlist : list
+        list of dimensions
+    """
+    _, strbufsize = zanentries(zaid, HE5_HDFE_NENTDIM)
+    dimlistb = ffi.new("char[]", b'\0' * (strbufsize + 1))
+    maxdimlistb = ffi.new("char[]", b'\0' * (strbufsize + 1))
+
+    rankp = ffi.new("int *")
+    ntypep = ffi.new("hid_t *")
+
+    # Assume that no field has more than 8 dimensions.  Seems like a safe bet.
+    dims = np.zeros(8, dtype=np.uint64)
+    dimsp = ffi.cast("hsize_t *", dims.ctypes.data)
+
+    status = _lib.HE5_ZAinfo(zaid, fieldname.encode(), rankp, dimsp,
+                             ntypep, dimlistb, maxdimlistb)
+    _handle_error(status)
+
+    shape = []
+    for j in range(rankp[0]):
+        shape.append(dimsp[j])
+
+    dimlist = decode_comma_delimited_ffi_string(ffi.string(dimlistb))
+    maxdimlist = decode_comma_delimited_ffi_string(ffi.string(maxdimlistb))
+
+    return tuple(shape), number_type_dict[ntypep[0]], dimlist, maxdimlist
+
+
 def zainqdims(zaid):
     """retrieve information about dimensions defined in a zonal average
 
@@ -1721,6 +1772,36 @@ def zainqdims(zaid):
     _handle_error(status)
     dimlist = ffi.string(dim_buffer).decode('ascii').split(',')
     return dimlist, dimlens
+
+
+def zainqlocattrs(zaid, fieldname):
+    """retrieve information about zonal average field attributes
+
+    This function wraps the HDF-EOS5 HE5_ZAinqlocattrs library function.
+
+    Parameters
+    ----------
+    zaid : int
+        zonal average identifier
+    fieldname : str
+        retrieve attribute names for this field
+
+    Returns
+    -------
+    attrlist : list
+        list of attributes defined for the zonal average
+    """
+    strbufsize = ffi.new("long *")
+    nattrs = _lib.HE5_ZAinqlocattrs(zaid, fieldname.encode(),
+                                    ffi.NULL, strbufsize)
+    if nattrs == 0:
+        return []
+    attr_buffer = ffi.new("char[]", b'\0' * (strbufsize[0] + 1))
+    nattrs = _lib.HE5_ZAinqlocattrs(zaid, fieldname.encode(),
+                                    attr_buffer, strbufsize)
+    _handle_error(nattrs)
+    attr_list = decode_comma_delimited_ffi_string(ffi.string(attr_buffer))
+    return attr_list
 
 
 def zainquire(zaid):

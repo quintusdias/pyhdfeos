@@ -129,7 +129,7 @@ class _ZonalAverageVariable(_EosField):
         self.struct_id = zaid
         self._he = he5
 
-        x = self._he.zafieldinfo(self.struct_id, fieldname)
+        x = self._he.zainfo(self.struct_id, fieldname)
         self.shape, self.dtype, self.dimlist = x[0:3]
 
         self.attrs = collections.OrderedDict()
