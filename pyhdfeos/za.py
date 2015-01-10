@@ -24,8 +24,7 @@ class ZonalAverageFile(EosFile):
         collection of zonal average structures
     """
     def __init__(self, filename):
-        EosFile.__init__(self)
-        self.filename = filename
+        EosFile.__init__(self, filename)
         self.zafid = he5.zaopen(filename)
         self._he = he5
 
