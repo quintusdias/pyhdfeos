@@ -260,3 +260,37 @@ he2_geo = r"""Grid:  GEOGrid
         float64 GeoSpectra[YDim, XDim]:
             _FillValue:  1.78006040052e-307
     Grid Attributes:"""
+
+zonalavgfile = r"""ZA.he5
+Zonal Average:  ZA1
+    Dimensions:
+        MyTrack1:  20
+        MyTrack2:  10
+        Res2tr:  40
+        Res2xtr:  20
+        Bands:  15
+        IndxTrack:  12
+        ExtDim:  60
+        Unlim:  18446744073709551615
+    Group Attributes:
+        GroupAttribute:  [10 20 30 40]
+    Data Fields:
+        float32 Density[MyTrack1]:
+            _FillValue:  0.0
+            LocalAttribute:  [100 200 300 400]
+        float32 Temperature[MyTrack1, MyTrack2]:
+            _FillValue:  0.0
+        float64 Presure[Res2tr, Res2xtr]:
+            _FillValue:  0.0
+        str Test_string[MyTrack2]:
+            ARRAYOFSTRINGS:  57
+            StringLengthAttribute:  72
+        float32 Spectra[Bands, Res2tr, Res2xtr]:
+            _FillValue:  0.0
+        int32 Count[MyTrack1]:
+            _FillValue:  0
+    Zonal Average Attributes:
+        GlobalAttribute:  [1 2 3 4]
+        GLOBAL_CHAR_ATTR:  ABCDEF
+        GLOBAL_LONG_ATTR:  [1111111 2222222 3333333 4444444]
+        GLOBAL_DOUBLE_ATTR:  [ 1.111111  2.222222  3.333333  4.444444]"""

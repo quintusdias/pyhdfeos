@@ -11,7 +11,7 @@ else:
     from unittest.mock import patch
 
 import pyhdfeos
-from pyhdfeos import GridFile, SwathFile
+from pyhdfeos import GridFile, SwathFile, ZonalAverageFile
 
 from . import fixtures
 from .fixtures import test_file_exists, test_file_path
@@ -31,6 +31,10 @@ class TestPrinting(unittest.TestCase):
         file = pkg.resource_filename(__name__,
                                      os.path.join('data', 'Grid219.hdf'))
         cls.test_driver_gridfile4 = file
+
+        file = pkg.resource_filename(__name__,
+                                     os.path.join('data', 'ZA.he5'))
+        cls.zonalavgfile = file
 
     def setUp(self):
         pass
@@ -80,6 +84,15 @@ class TestPrinting(unittest.TestCase):
             glist1 = [grid for grid in gdf1.grids.keys()]
             glist2 = [grid for grid in gdf2.grids.keys()]
             self.assertEqual(glist1, glist2)
+
+    def test_zonal_average(self):
+        zf = ZonalAverageFile(self.zonalavgfile)
+        with patch('sys.stdout', new=StringIO()) as stdout:
+            print(zf)
+            actual = stdout.getvalue().strip()
+
+        expected = fixtures.zonalavgfile
+        self.assertEqual(actual, expected)
 
     def test_testdriver_he2_utm(self):
         with GridFile(self.test_driver_gridfile4) as gdf:
