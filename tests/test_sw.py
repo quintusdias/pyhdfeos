@@ -134,11 +134,11 @@ class TestMetadata4(unittest.TestCase):
     def test_datafieldinfo(self):
         swf = SwathFile(self.swathfile)
         field = swf.swaths['Swath1'].datafields['Temperature_3D']
-        self.assertEqual(field.dimlist, ['Bands', 'GeoTrack', 'GeoXtrack'])
+        self.assertEqual(field.dims, ['Bands', 'GeoTrack', 'GeoXtrack'])
         self.assertEqual(field.dtype, np.float32)
 
         field = swf.swaths['Swath1'].geofields['Longitude']
-        self.assertEqual(field.dimlist, ['GeoTrack', 'GeoXtrack'])
+        self.assertEqual(field.dims, ['GeoTrack', 'GeoXtrack'])
         self.assertEqual(field.dtype, np.float32)
 
 

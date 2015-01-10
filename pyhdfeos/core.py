@@ -77,17 +77,17 @@ class EosFile(object):
                 # Descend into a vgroup if we find it.
                 vg0 = hdf.vattach(self._fid, ref_i)
                 name = hdf.vgetname(vg0)
-                if (((hasattr(self, 'swfid')) and
+                if (((hasattr(self, '_swfid')) and
                      (geolocation and name == 'Geolocation Fields'))):
                     self._hdf4_vgroup_ref = ref_i
                     hdf.vdetach(vg0)
                     return
-                elif (((hasattr(self, 'swfid')) and
+                elif (((hasattr(self, '_swfid')) and
                        (geolocation and name == 'Data Fields'))):
                     self._hdf4_vgroup_ref = ref_i
                     hdf.vdetach(vg0)
                     return
-                elif hasattr(self, 'gdfid') and (name == 'Data Fields'):
+                elif hasattr(self, '_gdfid') and (name == 'Data Fields'):
                     self._hdf4_vgroup_ref = ref_i
                     hdf.vdetach(vg0)
                     return
