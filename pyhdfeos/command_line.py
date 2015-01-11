@@ -28,5 +28,5 @@ def dump_metadata():
     if numzas > 0:
         print(zaf)
 
-    if numgrids == 0 and numswaths == 0 and numzas:
+    if numgrids == 0 and numswaths == 0 and numzas == 0:
         print('No HDF-EOS structures detected.')
