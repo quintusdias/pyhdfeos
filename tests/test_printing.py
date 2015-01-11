@@ -21,6 +21,49 @@ ceafile = 'AMSR_E_L3_DailyLand_V06_20050118.hdf'
 nothdfeosfile = 'SW_S3E_2003100.20053531923.hdf'
 
 
+class TestHedump(unittest.TestCase):
+    """
+    Tests for command line utility HEDUMP
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        file = pkg.resource_filename(__name__,
+                                     os.path.join('data', 'ZA.he5'))
+        cls.zonalavgfile = file
+
+    @unittest.skipIf(not test_file_exists(nothdfeosfile),
+                     'test file not available')
+    def test_not_hdfeos(self):
+        file = test_file_path(nothdfeosfile)
+        with patch('sys.stdout', new=StringIO()) as stdout:
+            with patch('sys.argv', ['', file]):
+                pyhdfeos.command_line.dump_metadata()
+
+            actual = stdout.getvalue().strip()
+
+        expected = fixtures.not_hdfeos
+        self.assertEqual(actual, expected)
+
+    @unittest.skip("unresolved segfault")
+    def test_za_artifact(self):
+        """
+        don't say that no hdf-eos constructs were found when they were
+
+        issue 73
+        """
+        with patch('sys.argv', ['', fixtures.zonalavgfile]):
+            pyhdfeos.command_line.dump_metadata()
+        return
+        with patch('sys.stdout', new=StringIO()) as stdout:
+            with patch('sys.argv', ['', fixtures.zonalavgfile]):
+                pyhdfeos.command_line.dump_metadata()
+
+            output = stdout.getvalue().strip()
+
+        self.assertTrue("No HDF-EOS structures detected" not in output)
+
+
 class TestPrinting(unittest.TestCase):
 
     @classmethod
@@ -41,19 +84,6 @@ class TestPrinting(unittest.TestCase):
 
     def tearDown(self):
         pass
-
-    @unittest.skipIf(not test_file_exists(nothdfeosfile),
-                     'test file not available')
-    def test_not_hdfeos(self):
-        file = test_file_path(nothdfeosfile)
-        with patch('sys.stdout', new=StringIO()) as stdout:
-            with patch('sys.argv', ['', file]):
-                pyhdfeos.command_line.dump_metadata()
-
-            actual = stdout.getvalue().strip()
-
-        expected = fixtures.not_hdfeos
-        self.assertEqual(actual, expected)
 
     @unittest.skipIf(not test_file_exists(ceafile), 'test file not available')
     def test_cea_grid(self):
