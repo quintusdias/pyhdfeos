@@ -2108,6 +2108,9 @@ def zaread(zaid, fieldname, start, stride, edge):
     """
     info = zainfo(zaid, fieldname)
     dtype = info[1]
+    if dtype is np.str:
+        msg = "Read operation not supported yet for string fields."
+        raise NotImplementedError(msg)
     shape = tuple([int(x) for x in edge])
     buffer = np.zeros(shape, dtype=dtype)
     pbuffer = ffi.cast(cast_string_dict[dtype], buffer.ctypes.data)

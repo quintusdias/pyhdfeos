@@ -24,3 +24,11 @@ class TestSuite(unittest.TestCase):
         actual = zf.zas['ZA1'].fields['Spectra'][14, 25, 0:2]
         expected = np.array([0, 4.58936])
         np.testing.assert_array_almost_equal(actual, expected, decimal=5)
+
+    def test_strings(self):
+        """
+        cannot handle this case easily, should error out gracefully
+        """
+        zf = ZonalAverageFile(self.zafile)
+        with self.assertRaises(NotImplementedError):
+            zf.zas['ZA1'].fields['Test_string'][:]
