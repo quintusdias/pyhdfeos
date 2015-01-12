@@ -72,6 +72,16 @@ _lib = ffi.verify(SOURCE,
                                                        SOURCE,
                                                        sys.version))
 
+# Map the HDF4 datatypes to numpy.
+hdf4_to_np = {DFNT_INT8: np.int8,
+              DFNT_UINT8: np.uint8,
+              DFNT_INT16: np.int16,
+              DFNT_UINT16: np.uint16,
+              DFNT_INT32: np.int32,
+              DFNT_UINT32: np.uint32,
+              DFNT_FLOAT: np.float32,
+              DFNT_FLOAT64: np.float64}
+
 
 def _handle_error(status):
     if status < 0:
@@ -259,22 +269,7 @@ def sdreadattr(obj_id, idx):
         _handle_error(status)
         return ffi.string(buffer).decode('ascii')
 
-    if dtype == DFNT_INT8:
-        buffer = np.zeros(count, dtype=np.int8)
-    elif dtype == DFNT_UINT8:
-        buffer = np.zeros(count, dtype=np.uint8)
-    elif dtype == DFNT_INT16:
-        buffer = np.zeros(count, dtype=np.int16)
-    elif dtype == DFNT_UINT16:
-        buffer = np.zeros(count, dtype=np.uint16)
-    elif dtype == DFNT_INT32:
-        buffer = np.zeros(count, dtype=np.int32)
-    elif dtype == DFNT_UINT32:
-        buffer = np.zeros(count, dtype=np.uint32)
-    elif dtype == DFNT_FLOAT:
-        buffer = np.zeros(count, dtype=np.float32)
-    elif dtype == DFNT_FLOAT64:
-        buffer = np.zeros(count, dtype=np.float64)
+    buffer = np.zeros(count, dtype=hdf4_to_np[dtype])
     pbuffer = ffi.cast("void *", buffer.ctypes.data)
 
     status = _lib.SDreadattr(obj_id, idx, pbuffer)

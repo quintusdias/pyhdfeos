@@ -436,7 +436,7 @@ class _Grid(object):
                      self.dims['XDim'],
                      self.dims['YDim'])
         else:
-            # The grid consists of the NBlocks, XDimSize, YDimSize
+            # The grid consists of the YDimSize, XDimSize
             shape = (self.ydimsize, self.xdimsize)
 
         if isinstance(index, int):
@@ -455,6 +455,9 @@ class _Grid(object):
                 return self.__getitem__((rows, cols))
 
         if isinstance(index, slice):
+            # Usually this case means that the user invoked something like
+            #     data = obj.grid[:]
+            # i.e. wants the entire grid.
             if (((index.start is None) and
                  (index.stop is None) and
                  (index.step is None))):
@@ -466,8 +469,12 @@ class _Grid(object):
                     # Other projections are 2D.
                     return self.__getitem__((index, index))
 
-            msg = "Single slice argument integer is only legal "
-            msg += "if providing ':'"
+            # If we are still here, then the user supplied a single custom
+            # slice argument, something like
+            #     rows = slice(2,8,2)
+            #     data = obj.grid[rows]
+            # We don't want to have to deal with that.
+            msg = "A Single slice argument is only legal if providing ':'"
             raise RuntimeError(msg)
 
         if isinstance(index, tuple) and len(index) > 2:
@@ -477,28 +484,8 @@ class _Grid(object):
                 raise RuntimeError(msg)
 
         if isinstance(index, tuple) and any(x is Ellipsis for x in index):
-            # Remove the first ellipsis we find.
-            if self.projcode == 22:
-                # SOM projection is 3D
-                rows = slice(0, self.xdimsize)
-                cols = slice(0, self.ydimsize)
-                bands = slice(0, self.dims['SOMBlockDim'])
-                if index[0] is Ellipsis:
-                    newindex = (bands, index[1], index[2])
-                elif index[1] is Ellipsis:
-                    newindex = (index[0], rows, index[2])
-                else:
-                    newindex = (index[0], index[1], cols)
-            else:
-                # Non-SOM projections are a lot easier.
-                rows = slice(0, self.ydimsize)
-                cols = slice(0, self.xdimsize)
-                if index[0] is Ellipsis:
-                    newindex = (rows, index[1])
-                else:
-                    newindex = (index[0], cols)
-
-            # Easiest to just run it again.
+            # Remove the first ellipsis we find, then just rerun.
+            newindex = self._remove_first_ellipsis_from_index(index)
             return self.__getitem__(newindex)
 
         if isinstance(index, tuple) and any(isinstance(x, int) for x in index):
@@ -559,6 +546,38 @@ class _Grid(object):
                                     rows, cols,
                                     self.pixregcode, self.origincode)
         return lat, lon
+
+    def _remove_first_ellipsis_from_index(self, index):
+        """
+        resolve first ellipsis into appropriate values
+
+        Parameters
+        ----------
+        index : tuple
+            the index passed into the __getitem__ method is a tuple with at
+            least one ellipsis
+        """
+        if self.projcode == 22:
+            # SOM projection is 3D
+            rows = slice(0, self.xdimsize)
+            cols = slice(0, self.ydimsize)
+            bands = slice(0, self.dims['SOMBlockDim'])
+            if index[0] is Ellipsis:
+                newindex = (bands, index[1], index[2])
+            elif index[1] is Ellipsis:
+                newindex = (index[0], rows, index[2])
+            else:
+                newindex = (index[0], index[1], cols)
+        else:
+            # Non-SOM projections are a lot easier.
+            rows = slice(0, self.ydimsize)
+            cols = slice(0, self.xdimsize)
+            if index[0] is Ellipsis:
+                newindex = (rows, index[1])
+            else:
+                newindex = (index[0], cols)
+
+        return newindex
 
 
 class GridFile(EosFile):

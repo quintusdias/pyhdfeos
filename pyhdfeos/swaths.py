@@ -140,13 +140,14 @@ class _Swath(object):
             self.attrs[attr] = self._he.swreadattr(self._swathid, attr)
 
         if hasattr(self._he, 'swinqgrpattrs'):
+            # data field group attributes are HDF-EOS5 only
             attr_list = self._he.swinqgrpattrs(self._swathid)
             self.datafield_attrs = collections.OrderedDict()
             for attr in attr_list:
                 val = self._he.swreadgrpattr(self._swathid, attr)
                 self.datafield_attrs[attr] = val
 
-        if hasattr(self._he, 'swinqgeogrpattrs'):
+            # geolocation field group attributes are HDF-EOS5 only
             attr_list = self._he.swinqgeogrpattrs(self._swathid)
             self.geofield_attrs = collections.OrderedDict()
             for attr in attr_list:
