@@ -137,10 +137,6 @@ class _EosField(object):
             start[0] = index
             stride[0] = 1
             edge[0] = 1
-            for j in range(1, ndims):
-                start[j] = 0
-                stride[j] = 1
-                edge[j] = self.shape[j]
             data = self._readfield(start, stride, edge)
 
             # If a 1D dataset, just return a scalar.
@@ -167,19 +163,8 @@ class _EosField(object):
             raise RuntimeError(msg)
 
         if isinstance(index, tuple) and any(x is Ellipsis for x in index):
-            # Remove the first ellipsis we find.
-            newindex = []
-            first_ellipsis = True
-            for j, idx in enumerate(index):
-                if idx is Ellipsis and first_ellipsis:
-                    newindex.append(slice(0, self.shape[j]))
-                    first_ellipsis = False
-                else:
-                    newindex.append(idx)
-
-            # Run once again because it is possible that there's another
-            # Ellipsis object.
-            newindex = tuple(newindex)
+            # Remove the first ellipsis we find and try again.
+            newindex = self._resolve_first_ellipsis(index)
             return self.__getitem__(newindex)
 
         if isinstance(index, tuple) and any(isinstance(x, int) for x in index):
@@ -215,3 +200,25 @@ class _EosField(object):
                 edge[j] = np.floor((index[j].stop - start[j]) / stride[j])
 
         return self._readfield(start, stride, edge)
+
+    def _resolve_first_ellipsis(self, index):
+        """
+        Find the first ellipsis index argument and resolve it into a slice.
+
+        Parameters
+        ----------
+        index : tuple
+            index argument passed to __getitem__ method, contains at least
+            one ellipsis
+        """
+        newindex = []
+        first_ellipsis = True
+        for j, idx in enumerate(index):
+            if idx is Ellipsis and first_ellipsis:
+                newindex.append(slice(0, self.shape[j]))
+                first_ellipsis = False
+            else:
+                newindex.append(idx)
+
+        newindex = tuple(newindex)
+        return newindex
