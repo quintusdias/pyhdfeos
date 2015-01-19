@@ -1,3 +1,4 @@
+import os
 import platform
 import sys
 
@@ -143,10 +144,43 @@ ffi.cdef(CDEF)
 libraries = config.hdfeos5_libs
 library_dirs = config.library_config(libraries)
 
+libraries = ["hdf5_hl", "hdf5"]
+library_dirs = ["/usr/lib"]
+include_dirs = ["/usr/include", "pyhdfeos/lib/source/hdfeos5"]
+
+he5_srcs = ["EHapi.c", "GDapi.c", "PTapi.c",
+            "SWapi.c", "TSapi.c", "ZAapi.c"]
+sources = [os.path.join('pyhdfeos', 'lib', 'source', 'hdfeos5', file) for file in he5_srcs]
+
+gctp_src = ["alberfor.c", "alberinv.c", "alconfor.c", "alconinv.c",
+            "azimfor.c", "aziminv.c", "bceafor.c", "bceainv.c",
+            "br_gctp.c", "ceafor.c", "ceainv.c", "cproj.c",
+            "eqconfor.c", "eqconinv.c", "equifor.c", "equiinv.c",
+            "for_init.c", "gctp.c", "gnomfor.c", "gnominv.c",
+            "goodfor.c", "goodinv.c", "gvnspfor.c", "gvnspinv.c",
+            "hamfor.c", "haminv.c", "imolwfor.c", "imolwinv.c",
+            "inv_init.c", "isinusfor.c", "isinusinv.c", "lamazfor.c",
+            "lamazinv.c", "lamccfor.c", "lamccinv.c", "merfor.c",
+            "merinv.c", "millfor.c", "millinv.c", "molwfor.c",
+            "molwinv.c", "obleqfor.c", "obleqinv.c", "omerfor.c",
+            "omerinv.c", "orthfor.c", "orthinv.c", "paksz.c",
+            "polyfor.c", "polyinv.c", "psfor.c", "psinv.c",
+            "report.c", "robfor.c", "robinv.c", "sinfor.c",
+            "sininv.c", "somfor.c", "sominv.c", "sphdz.c",
+            "sterfor.c", "sterinv.c", "stplnfor.c", "stplninv.c",
+            "tmfor.c", "tminv.c", "untfz.c", "utmfor.c",
+            "utminv.c", "vandgfor.c", "vandginv.c", "wivfor.c",
+            "wivinv.c", "wviifor.c", "wviiinv.c"]
+
+lst = [os.path.join('pyhdfeos', 'lib', 'source', 'gctp', file) for file in gctp_src]
+sources.extend(lst)
+
 _lib = ffi.verify(SOURCE,
                   ext_package='pyhdfeos',
+                  sources=sources,
                   libraries=libraries,
-                  include_dirs=config.include_dirs,
+                  extra_compile_args=['-DH5_USE_16_API'],
+                  include_dirs=include_dirs,
                   library_dirs=library_dirs,
                   modulename=config._create_modulename("_hdfeos5",
                                                        CDEF,
