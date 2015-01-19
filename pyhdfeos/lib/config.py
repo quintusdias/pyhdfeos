@@ -2,25 +2,25 @@ import binascii
 import os
 
 
-def locate_gctp(library_dirs):
-    """
-    Debian systems (including Mint) have libGctp.  Most other linux systems
-    plus macports have libgctp.  Need to find out which one to use.
-    """
-    true_gctp_lib = None
-    libs = ['gctp', 'Gctp']
-    suffix_list = ['so', 'dylib', 'dll', 'a']
-    for library_dir in library_dirs:
-        for libname in libs:
-            for suffix in suffix_list:
-                path = os.path.join(library_dir,
-                                    'lib' + libname + '.' + suffix)
-                if os.path.exists(path):
-                    true_gctp_lib = libname
-                    return true_gctp_lib
-
-    return true_gctp_lib
-
+gctp_srcs = ["alberfor.c", "alberinv.c", "alconfor.c", "alconinv.c",
+             "azimfor.c", "aziminv.c", "bceafor.c", "bceainv.c",
+             "br_gctp.c", "ceafor.c", "ceainv.c", "cproj.c",
+             "eqconfor.c", "eqconinv.c", "equifor.c", "equiinv.c",
+             "for_init.c", "gctp.c", "gnomfor.c", "gnominv.c",
+             "goodfor.c", "goodinv.c", "gvnspfor.c", "gvnspinv.c",
+             "hamfor.c", "haminv.c", "imolwfor.c", "imolwinv.c",
+             "inv_init.c", "isinusfor.c", "isinusinv.c", "lamazfor.c",
+             "lamazinv.c", "lamccfor.c", "lamccinv.c", "merfor.c",
+             "merinv.c", "millfor.c", "millinv.c", "molwfor.c",
+             "molwinv.c", "obleqfor.c", "obleqinv.c", "omerfor.c",
+             "omerinv.c", "orthfor.c", "orthinv.c", "paksz.c",
+             "polyfor.c", "polyinv.c", "psfor.c", "psinv.c",
+             "report.c", "robfor.c", "robinv.c", "sinfor.c",
+             "sininv.c", "somfor.c", "sominv.c", "sphdz.c",
+             "sterfor.c", "sterinv.c", "stplnfor.c", "stplninv.c",
+             "tmfor.c", "tminv.c", "untfz.c", "utmfor.c",
+             "utminv.c", "vandgfor.c", "vandginv.c", "wivfor.c",
+             "wivinv.c", "wviifor.c", "wviiinv.c"]
 
 def library_config(libraries):
     """
@@ -49,38 +49,6 @@ def library_config(libraries):
 
     return library_dirs
 
-# Locations where we might look for HDF, HDF-EOS, and HDF-EOS5 libraries.
-include_dirs = ['/usr/include/hdf',
-                '/usr/include/x86_64-linux-gnu/hdf',
-                '/usr/include/i386-linux-gnu/hdf',
-                '/opt/local/include',
-                '/usr/local/include',
-                '/usr/include/hdf-eos5']
-if 'INCLUDE_DIRS' in os.environ:
-    lst = os.environ['INCLUDE_DIRS'].split(':')
-    lst.extend(include_dirs)
-    include_dirs = lst
-
-library_dir_candidates = ['/usr/lib',
-                          '/usr/lib/hdf',
-                          '/usr/lib64/hdf',
-                          '/usr/lib/i386-linux-gnu',
-                          '/usr/lib/x86_64-linux-gnu',
-                          '/usr/local/lib',
-                          '/opt/local/lib']
-if 'LIBRARY_DIRS' in os.environ:
-    lst = os.environ['LIBRARY_DIRS'].split(':')
-    lst.extend(library_dir_candidates)
-    library_dir_candidates = lst
-
-hdf4_libs = ['mfhdf', 'df', 'jpeg', 'z']
-
-true_gctp_lib = locate_gctp(library_dir_candidates)
-hdfeos_libs = ['hdfeos', true_gctp_lib]
-
-hdfeos5_libs = ['he5_hdfeos', true_gctp_lib]
-hdfeos5_libs.extend(['hdf5_hl', 'hdf5', 'z'])
-
 
 def _create_modulename(tag, cdef_sources, source, sys_version):
     """
@@ -96,3 +64,25 @@ def _create_modulename(tag, cdef_sources, source, sys_version):
     k2 = hex(binascii.crc32(key[1::2]) & 0xffffffff)
     k2 = k2.lstrip('0').rstrip('L')
     return '_{0}_cffi_{1}{2}'.format(tag, k1, k2)
+
+try:
+    extra_link_args = os.environ['EXTRA_LINK_ARGS'].split()
+except KeyError:
+    extra_link_args = None
+
+if extra_link_args is None:
+    hdf4_libraries = ["mfhdf", "df", "jpeg", "z"]
+    hdf5_libraries = ["hdf5_hl", "hdf5"]
+    library_dirs = ["/opt/local/lib",
+                    "/usr/lib",
+                    "/usr/lib64/hdf",
+                    "/usr/local/lib"]
+else:
+    hdf4_libraries = None
+    hdf5_libraries = None
+    library_dirs = None
+
+include_dirs = ["/opt/local/include",
+                "/usr/include",
+                "/usr/include/hdf",
+                "/usr/local/include"]

@@ -1,3 +1,4 @@
+import os
 from setuptools import setup
 import sys
 
@@ -5,17 +6,6 @@ from Cython.Build import cythonize
 import numpy
 
 import pyhdfeos
-include_dirs = pyhdfeos.lib.config.include_dirs
-library_dirs = pyhdfeos.lib.config.library_dir_candidates
-
-# We need to locate libGctp (libgctp if on a debian variant) in order to
-# compile the som grid extension module.
-true_gctp_lib = pyhdfeos.lib.config.locate_gctp(library_dirs)
-if true_gctp_lib is None:
-    msg = "Could not locate the gctp library.  Please specify a location with "
-    msg += "the INCLUDE_DIRS and LIBRARY_DIRS environment variables as "
-    msg += "specified in the README."
-    raise RuntimeError(msg)
 
 # Three CFFI extension modules, one for HDF-EOS, one for HDF-EOS5, and one
 # for augmenting HDF-EOS with HDF4.
@@ -25,10 +15,11 @@ ext_modules = [pyhdfeos.lib.he4.ffi.verifier.get_extension(),
 
 from distutils.extension import Extension
 cythonize("pyhdfeos/_som.pyx")
-kwargs = {'include_dirs': include_dirs,
-          'libraries':   [true_gctp_lib],
-          'library_dirs': library_dirs}
-e = Extension("pyhdfeos/_som", ["pyhdfeos/_som.c"], **kwargs)
+sources = ["pyhdfeos/_som.c"]
+gctp_srcs = [os.path.join("pyhdfeos", "lib", "source", "gctp", file) for file in pyhdfeos.lib.config.gctp_srcs]
+sources.extend(gctp_srcs)
+include_dirs = ["pyhdfeos/lib/source/hdfeos5"]
+e = Extension("pyhdfeos/_som", sources=sources, include_dirs=include_dirs)
 ext_modules.append(e)
 
 install_requires = ['numpy>=1.8.0', 'cffi>=0.8.2', 'cython>=0.20']
