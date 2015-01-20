@@ -141,12 +141,8 @@ SOURCE = """
 ffi = FFI()
 ffi.cdef(CDEF)
 
-libraries = config.hdfeos5_libs
-library_dirs = config.library_config(libraries)
-
-libraries = ["hdf5_hl", "hdf5"]
-library_dirs = ["/usr/lib"]
-include_dirs = ["/usr/include", "pyhdfeos/lib/source/hdfeos5"]
+include_dirs = config.include_dirs
+include_dirs.append("pyhdfeos/lib/source/hdfeos5")
 
 he5_srcs = ["EHapi.c", "GDapi.c", "PTapi.c",
             "SWapi.c", "TSapi.c", "ZAapi.c"]
@@ -178,10 +174,11 @@ sources.extend(lst)
 _lib = ffi.verify(SOURCE,
                   ext_package='pyhdfeos',
                   sources=sources,
-                  libraries=libraries,
+                  libraries=config.hdf5_libraries,
                   extra_compile_args=['-DH5_USE_16_API'],
                   include_dirs=include_dirs,
-                  library_dirs=library_dirs,
+                  library_dirs=config.library_dirs,
+                  extra_link_args=None,
                   modulename=config._create_modulename("_hdfeos5",
                                                        CDEF,
                                                        SOURCE,

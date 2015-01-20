@@ -63,27 +63,11 @@ SOURCE = """
 ffi = FFI()
 ffi.cdef(CDEF)
 
-try:
-    extra_link_args = os.environ['EXTRA_LINK_ARGS'].split()
-except KeyError:
-    extra_link_args = None
-
-if extra_link_args is None:
-    libraries = ["mfhdf", "df", "jpeg", "z"]
-    library_dirs = ["/usr/lib"]
-else:
-    libraries = None
-    library_dirs = None
-
-include_dirs = ["/usr/include",
-                "/usr/include/hdf"]
-
-#libraries = config.hdf4_libs
 _lib = ffi.verify(SOURCE,
-                  libraries=libraries,
-                  include_dirs=include_dirs,
-                  library_dirs=library_dirs,
-                  extra_link_args=extra_link_args,
+                  libraries=config.hdf4_libraries,
+                  include_dirs=config.include_dirs,
+                  library_dirs=config.library_dirs,
+                  extra_link_args=config.extra_link_args,
                   modulename=config._create_modulename("_hdf4",
                                                        CDEF,
                                                        SOURCE,
