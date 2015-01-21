@@ -73,7 +73,10 @@ except KeyError:
 if extra_link_args is None:
     hdf4_libraries = ["mfhdf", "df", "jpeg", "z"]
     hdf5_libraries = ["hdf5_hl", "hdf5"]
-    library_dirs = ["/opt/local/lib", "/usr/lib", "/usr/local/lib"]
+    library_dirs = ["/opt/local/lib",
+                    "/usr/lib",
+                    "/usr/lib64/hdf",
+                    "/usr/local/lib"]
 else:
     hdf4_libraries = None
     hdf5_libraries = None
