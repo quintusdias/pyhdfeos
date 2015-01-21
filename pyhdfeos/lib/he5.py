@@ -148,27 +148,7 @@ he5_srcs = ["EHapi.c", "GDapi.c", "PTapi.c",
             "SWapi.c", "TSapi.c", "ZAapi.c"]
 sources = [os.path.join('pyhdfeos', 'lib', 'source', 'hdfeos5', file) for file in he5_srcs]
 
-gctp_src = ["alberfor.c", "alberinv.c", "alconfor.c", "alconinv.c",
-            "azimfor.c", "aziminv.c", "bceafor.c", "bceainv.c",
-            "br_gctp.c", "ceafor.c", "ceainv.c", "cproj.c",
-            "eqconfor.c", "eqconinv.c", "equifor.c", "equiinv.c",
-            "for_init.c", "gctp.c", "gnomfor.c", "gnominv.c",
-            "goodfor.c", "goodinv.c", "gvnspfor.c", "gvnspinv.c",
-            "hamfor.c", "haminv.c", "imolwfor.c", "imolwinv.c",
-            "inv_init.c", "isinusfor.c", "isinusinv.c", "lamazfor.c",
-            "lamazinv.c", "lamccfor.c", "lamccinv.c", "merfor.c",
-            "merinv.c", "millfor.c", "millinv.c", "molwfor.c",
-            "molwinv.c", "obleqfor.c", "obleqinv.c", "omerfor.c",
-            "omerinv.c", "orthfor.c", "orthinv.c", "paksz.c",
-            "polyfor.c", "polyinv.c", "psfor.c", "psinv.c",
-            "report.c", "robfor.c", "robinv.c", "sinfor.c",
-            "sininv.c", "somfor.c", "sominv.c", "sphdz.c",
-            "sterfor.c", "sterinv.c", "stplnfor.c", "stplninv.c",
-            "tmfor.c", "tminv.c", "untfz.c", "utmfor.c",
-            "utminv.c", "vandgfor.c", "vandginv.c", "wivfor.c",
-            "wivinv.c", "wviifor.c", "wviiinv.c"]
-
-lst = [os.path.join('pyhdfeos', 'lib', 'source', 'gctp', file) for file in gctp_src]
+lst = [os.path.join('pyhdfeos', 'lib', 'source', 'gctp', file) for file in config.gctp_srcs]
 sources.extend(lst)
 
 _lib = ffi.verify(SOURCE,

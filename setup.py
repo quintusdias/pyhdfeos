@@ -1,3 +1,4 @@
+import os
 from setuptools import setup
 import sys
 
@@ -14,7 +15,11 @@ ext_modules = [pyhdfeos.lib.he4.ffi.verifier.get_extension(),
 
 from distutils.extension import Extension
 cythonize("pyhdfeos/_som.pyx")
-e = Extension("pyhdfeos/_som", ["pyhdfeos/_som.c"])
+sources = ["pyhdfeos/_som.c"]
+gctp_srcs = [os.path.join("pyhdfeos", "lib", "source", "gctp", file) for file in pyhdfeos.lib.config.gctp_srcs]
+sources.extend(gctp_srcs)
+include_dirs = ["pyhdfeos/lib/source/hdfeos5"]
+e = Extension("pyhdfeos/_som", sources=sources, include_dirs=include_dirs)
 ext_modules.append(e)
 
 install_requires = ['numpy>=1.8.0', 'cffi>=0.8.2', 'cython>=0.20']
