@@ -2,6 +2,7 @@
 Interface for HDF4 library.  Need this in order to access HDF-EOS2 field
 attributes.
 """
+import os
 import sys
 
 import numpy as np
@@ -62,11 +63,11 @@ SOURCE = """
 ffi = FFI()
 ffi.cdef(CDEF)
 
-libraries = config.hdf4_libs
 _lib = ffi.verify(SOURCE,
-                  libraries=libraries,
+                  libraries=config.hdf4_libraries,
                   include_dirs=config.include_dirs,
-                  library_dirs=config.library_config(libraries),
+                  library_dirs=config.library_dirs,
+                  extra_link_args=config.extra_link_args,
                   modulename=config._create_modulename("_hdf4",
                                                        CDEF,
                                                        SOURCE,

@@ -1,3 +1,4 @@
+import os
 import platform
 import sys
 
@@ -140,14 +141,24 @@ SOURCE = """
 ffi = FFI()
 ffi.cdef(CDEF)
 
-libraries = config.hdfeos5_libs
-library_dirs = config.library_config(libraries)
+include_dirs = config.include_dirs
+include_dirs.append("pyhdfeos/lib/source/hdfeos5")
+
+he5_srcs = ["EHapi.c", "GDapi.c", "PTapi.c",
+            "SWapi.c", "TSapi.c", "ZAapi.c"]
+sources = [os.path.join('pyhdfeos', 'lib', 'source', 'hdfeos5', file) for file in he5_srcs]
+
+lst = [os.path.join('pyhdfeos', 'lib', 'source', 'gctp', file) for file in config.gctp_srcs]
+sources.extend(lst)
 
 _lib = ffi.verify(SOURCE,
                   ext_package='pyhdfeos',
-                  libraries=libraries,
-                  include_dirs=config.include_dirs,
-                  library_dirs=library_dirs,
+                  sources=sources,
+                  libraries=config.hdf5_libraries,
+                  extra_compile_args=['-DH5_USE_16_API'],
+                  include_dirs=include_dirs,
+                  library_dirs=config.library_dirs,
+                  extra_link_args=None,
                   modulename=config._create_modulename("_hdfeos5",
                                                        CDEF,
                                                        SOURCE,

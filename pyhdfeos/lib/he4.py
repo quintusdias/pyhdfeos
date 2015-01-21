@@ -1,3 +1,4 @@
+import os
 import sys
 
 import numpy as np
@@ -75,15 +76,23 @@ SOURCE = """
 ffi = FFI()
 ffi.cdef(CDEF)
 
-libraries = config.hdfeos_libs
-libraries.extend(config.hdf4_libs)
-library_dirs = config.library_config(libraries)
+include_dirs = config.include_dirs
+include_dirs.append("pyhdfeos/lib/source/hdfeos")
+
+hdfeos_srcs = ["EHapi.c", "GDapi.c", "PTapi.c", "SWapi.c"]
+sources = [os.path.join('pyhdfeos', 'lib', 'source', 'hdfeos', file) for file in hdfeos_srcs]
+
+lst = [os.path.join('pyhdfeos', 'lib', 'source', 'gctp', file) for file in config.gctp_srcs]
+sources.extend(lst)
+
 
 _lib = ffi.verify(SOURCE,
                   ext_package='pyhdfeos',
-                  libraries=libraries,
-                  include_dirs=config.include_dirs,
-                  library_dirs=library_dirs,
+                  sources=sources,
+                  libraries=config.hdf4_libraries,
+                  include_dirs=include_dirs,
+                  library_dirs=config.library_dirs,
+                  extra_link_args=config.extra_link_args,
                   modulename=config._create_modulename("_hdfeos",
                                                        CDEF,
                                                        SOURCE,

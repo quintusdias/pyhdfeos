@@ -3,7 +3,7 @@
 # 
 # Copyright 2010-2013 by The HDF Group.  
 # All rights reserved.                                                      
-
+#
 cdef extern from "HE5_GctpFunc.h":
     void inv_init(int a,int b,double *c,int d,char *str1,char *str2,int *e,
                   int (**func)(double, double, double*, double*))
