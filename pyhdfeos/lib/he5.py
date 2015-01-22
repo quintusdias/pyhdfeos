@@ -146,9 +146,11 @@ include_dirs.append("pyhdfeos/lib/source/hdfeos5")
 
 he5_srcs = ["EHapi.c", "GDapi.c", "PTapi.c",
             "SWapi.c", "TSapi.c", "ZAapi.c"]
-sources = [os.path.join('pyhdfeos', 'lib', 'source', 'hdfeos5', file) for file in he5_srcs]
+sources = [os.path.join('pyhdfeos', 'lib', 'source', 'hdfeos5', file)
+           for file in he5_srcs]
 
-lst = [os.path.join('pyhdfeos', 'lib', 'source', 'gctp', file) for file in config.gctp_srcs]
+lst = [os.path.join('pyhdfeos', 'lib', 'source', 'gctp', file)
+       for file in config.gctp_srcs]
 sources.extend(lst)
 
 _lib = ffi.verify(SOURCE,

@@ -5,6 +5,7 @@ from .swaths import SwathFile
 from .za import ZonalAverageFile
 from .lib import hdf
 
+
 def dump_zonal_average(filename):
 
     # See if it is an HDF4 file before trying zonal averages.  This way
@@ -21,6 +22,7 @@ def dump_zonal_average(filename):
             print(zaf)
 
     return numzas
+
 
 def dump_metadata():
 

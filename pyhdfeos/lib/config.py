@@ -22,6 +22,7 @@ gctp_srcs = ["alberfor.c", "alberinv.c", "alconfor.c", "alconinv.c",
              "utminv.c", "vandgfor.c", "vandginv.c", "wivfor.c",
              "wivinv.c", "wviifor.c", "wviiinv.c"]
 
+
 def library_config(libraries):
     """
     Determine library directories where HDF4, HDFEOS, and HDFEOS5 can be found.
@@ -31,7 +32,7 @@ def library_config(libraries):
     libraries : list
         List of libraries that must be found.
     """
-    global library_dir_candidates
+    library_dir_candidates = []
     library_dirs = []
 
     # On Fedora, gctp is named libGctp, but on ubuntu variants, it is libgctp.
