@@ -16,6 +16,10 @@ ext_modules = [pyhdfeos.lib.he4.ffi.verifier.get_extension(),
 from distutils.extension import Extension
 cythonize("pyhdfeos/_som.pyx")
 sources = [os.path.join('pyhdfeos', '_som.c'),
+           os.path.join('pyhdfeos', 'lib', 'source', 'gctp', 'cproj.c'),
+           os.path.join('pyhdfeos', 'lib', 'source', 'gctp', 'report.c'),
+           os.path.join('pyhdfeos', 'lib', 'source', 'gctp', 'paksz.c'),
+           os.path.join('pyhdfeos', 'lib', 'source', 'gctp', 'sphdz.c'),
            os.path.join('pyhdfeos', 'lib', 'source', 'gctp_som', 'inv_init.c'),
            os.path.join('pyhdfeos', 'lib', 'source', 'gctp_som', 'sominv.c')]
 include_dirs = ["pyhdfeos/lib/source/gctp_som",

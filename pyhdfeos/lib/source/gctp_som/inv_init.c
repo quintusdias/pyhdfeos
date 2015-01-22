@@ -143,456 +143,87 @@ iflg64 = &thing;                /* the 8-byte pointer address           */
   if (insys == CEA)/* Cylindrical Equal-Area, used for EASE grid wghen
                       grid corners are specified in meters */
     {
-    /* this is the call to initialize CEA
-    ----------------------------------------*/
-    center_long  = paksz(inparm[4],iflg64)* 3600 * S2R;
-    *iflg = (int)*iflg64;
-    if ((int)*iflg64 != 0)
-      return ERROR;
-    
-    lat1   = paksz(inparm[5],iflg64)* 3600 * S2R;
-    *iflg = (int)*iflg64;
-    if ((int)*iflg64 != 0)
-      return ERROR;
-    
-    *iflg64 = ceainvint(r_major,r_minor,center_long,lat1,false_easting,
-                     false_northing);
-    *iflg = (int)*iflg64;
-    inv_trans[insys] = ceainv;
     }
   else 
   if (insys == BCEA)/* Cylindrical Equal-Area, used for EASE grid wghen
                       grid corners are specified in DMS degrees */
     {
-    /* this is the call to initialize BCEA
-    ----------------------------------------*/
-    center_long  = paksz(inparm[4],iflg64)* 3600 * S2R;
-    *iflg = (int)*iflg64;
-    if ((int)*iflg64 != 0)
-      return ERROR;
-    
-    lat1   = paksz(inparm[5],iflg64)* 3600 * S2R;
-    *iflg = (int)*iflg64;
-    if ((int)*iflg64 != 0)
-      return ERROR;
-    
-    *iflg64 = bceainvint(r_major,r_minor,center_long,lat1,false_easting,
-                     false_northing);
-    *iflg = (int)*iflg64;
-    inv_trans[insys] = bceainv;
     }
   else
   if (insys == UTM)
      {
-     /* this is the call to initialize U T M
-     -------------------------------------*/
-     /* set Clarke 1866 spheroid if negative datum code
-        ----------------------------------------------*/
-     if (indatum < 0)
-        {
-        tmpdatum = 0;
-        sphdz(tmpdatum,inparm,&r_major,&r_minor,&radius);
-        }
-     zone = inzone;
-     if (zone == 0)
-        {
-        lon1 = paksz(inparm[0],iflg64) * 3600 * S2R;
-        *iflg = (int)*iflg64;
-        if ((int)*iflg64 != 0)
-           return ERROR;
-        lat1 = paksz(inparm[1],iflg64) * 3600 * S2R;
-        *iflg = (int)*iflg64;
-        if ((int)*iflg64 != 0)
-           return ERROR;
-        zone = calc_utm_zone(lon1 * R2D);
-        if (lat1 < 0)
-           zone = -zone;
-        }
-     scale_factor = .9996;
-     *iflg64 = utminvint(r_major,r_minor,scale_factor,zone);
-        *iflg = (int)*iflg64;
-     inv_trans[insys] = utminv;
      }
   else
   if (insys == SPCS)
      {
-     /* this is the call to initialize STATE PLANE 
-     --------------------------------------------*/
-     *iflg64 = stplninvint( inzone,indatum,fn27,fn83);
-        *iflg = (int)*iflg64;
-        if ((int)*iflg64 != 0)
-           return ERROR;
-     inv_trans[insys] = stplninv;
      }
   else
   if (insys == ALBERS)
      {
-     /* this is the call to initialize ALBERS 
-     ---------------------------------------*/
-     lat1 = paksz(inparm[2],iflg64) * 3600 * S2R;
-        *iflg = (int)*iflg64;
-     if ((int)*iflg64 != 0)
-         return ERROR;
-     lat2 = paksz(inparm[3],iflg64) * 3600 * S2R;
-        *iflg = (int)*iflg64;
-     if ((int)*iflg64 != 0)
-         return ERROR;
-     center_long = paksz(inparm[4],iflg64) * 3600 * S2R;
-        *iflg = (int)*iflg64;
-     if ((int)*iflg64 != 0)
-        return ERROR;
-     lat_origin  = paksz(inparm[5],iflg64) * 3600 * S2R;
-        *iflg = (int)*iflg64;
-     if ((int)*iflg64 != 0)
-        return ERROR;
-     *iflg64 = alberinvint(r_major,r_minor,lat1,lat2,center_long,lat_origin,
-			false_easting, false_northing);
-        *iflg = (int)*iflg64;
-     inv_trans[insys] = alberinv;
      }
   else
   if (insys == LAMCC)
      {
-     /* this is the call to initialize LAMBERT CONFORMAL CONIC 
-     --------------------------------------------------------*/
-     lat1 = paksz(inparm[2],iflg64) * 3600 * S2R;
-        *iflg = (int)*iflg64;
-     if ((int)*iflg64 != 0)
-        return ERROR;
-     lat2 = paksz(inparm[3],iflg64) * 3600 * S2R;
-        *iflg = (int)*iflg64;
-     if ((int)*iflg64 != 0)
-        return ERROR;
-     center_long = paksz(inparm[4],iflg64) * 3600 * S2R;
-        *iflg = (int)*iflg64;
-     if ((int)*iflg64 != 0)
-        return ERROR;
-     lat_origin  = paksz(inparm[5],iflg64) * 3600 * S2R;
-        *iflg = (int)*iflg64;
-     if ((int)*iflg64 != 0)
-        return ERROR;
-     *iflg64 = lamccinvint(r_major,r_minor,lat1,lat2,center_long,lat_origin,
-			false_easting, false_northing);
-        *iflg = (int)*iflg64;
-     inv_trans[insys] = lamccinv;
      }
   else
   if (insys == MERCAT)
      {
-     /* this is the call to initialize MERCATOR
-     ----------------------------------------*/
-     center_long  = paksz(inparm[4],iflg64) * 3600 * S2R;
-        *iflg = (int)*iflg64;
-     if ((int)*iflg64 != 0)
-        return ERROR;
-     lat1   = paksz(inparm[5],iflg64) * 3600 * S2R;
-        *iflg = (int)*iflg64;
-     if ((int)*iflg64 != 0)
-        return ERROR;
-     *iflg64 = merinvint(r_major,r_minor,center_long,lat1,false_easting,
-                     false_northing);
-        *iflg = (int)*iflg64;
-     inv_trans[insys] = merinv;
      }
   else
   if (insys == PS)
      {
-     /* this is the call to initialize POLAR STEREOGRAPHIC 
-     ----------------------------------------------------*/
-     center_long = paksz(inparm[4],iflg64) * 3600 * S2R;
-     *iflg = (int)*iflg64;
-     if ((int)*iflg64 != 0)
-        return ERROR;
-     lat1  =  paksz(inparm[5],iflg64) * 3600 * S2R;
-        *iflg = (int)*iflg64;
-     if ((int)*iflg64 != 0)
-        return ERROR;
-     *iflg64 = psinvint(r_major,r_minor,center_long,lat1,false_easting,
-	      false_northing);
-        *iflg = (int)*iflg64;
-     inv_trans[insys] = psinv;
      }
   else
   if (insys == POLYC)
      {
-     /* this is the call to initialize POLYCONIC
-     -----------------------------------------*/
-     center_long  = paksz(inparm[4],iflg64) * 3600 * S2R;
-        *iflg = (int)*iflg64;
-     if ((int)*iflg64 != 0)
-        return ERROR;
-     lat_origin   = paksz(inparm[5],iflg64) * 3600 * S2R;
-        *iflg = (int)*iflg64;
-     if ((int)*iflg64 != 0)
-        return ERROR;
-     *iflg64 = polyinvint(r_major,r_minor,center_long,lat_origin,false_easting,
-		       false_northing); 
-        *iflg = (int)*iflg64;
-     inv_trans[insys] = polyinv;
      }
   else
     if (insys == EQUIDC)
     {
-     /* this is the call to initialize EQUIDISTANT CONIC
-     ---------------------------------------------------*/
-    lat1 = paksz(inparm[2],iflg64) * 3600 * S2R;
-        *iflg = (int)*iflg64;
-    if ((int)*iflg64 != 0)
-       return ERROR;
-    lat2 = paksz(inparm[3],iflg64) * 3600 * S2R;
-        *iflg = (int)*iflg64;
-    if ((int)*iflg64 != 0)
-       return ERROR;
-    center_long  = paksz(inparm[4],iflg64) * 3600 * S2R;
-        *iflg = (int)*iflg64;
-    if ((int)*iflg64 != 0)
-       return ERROR;
-    lat_origin   = paksz(inparm[5],iflg64) * 3600 * S2R;
-        *iflg = (int)*iflg64;
-    if ((int)*iflg64 != 0)
-       return ERROR;
-    if (inparm[8] == 0)
-       mode = 0;
-    else
-       mode = 1;
-    *iflg64 = eqconinvint(r_major,r_minor,lat1,lat2,center_long,lat_origin,
-		false_easting,false_northing,mode);
-        *iflg = (int)*iflg64;
-    inv_trans[insys] = eqconinv;
     }
   else
   if (insys == TM)
      {
-     /* this is the call to initialize TRANSVERSE MERCATOR
-     -------------------------------------------------*/
-     scale_factor = inparm[2];
-     center_long  = paksz(inparm[4],iflg64) * 3600 * S2R;
-        *iflg = (int)*iflg64;
-     if ((int)*iflg64 != 0)
-        return ERROR;
-     lat_origin   = paksz(inparm[5],iflg64) * 3600 * S2R;
-        *iflg = (int)*iflg64;
-     if ((int)*iflg64 != 0)
-        return ERROR;
-     *iflg64 = tminvint(r_major,r_minor,scale_factor,center_long,lat_origin,
-		     false_easting, false_northing);
-        *iflg = (int)*iflg64;
-     inv_trans[insys] = tminv;
      }
   else
   if (insys == STEREO)
      {
-     /* this is the call to initialize STEREOGRAPHIC
-     ---------------------------------------------*/
-     center_long  = paksz(inparm[4],iflg64) * 3600 * S2R;
-        *iflg = (int)*iflg64;
-     if ((int)*iflg64 != 0)
-        return ERROR;
-     center_lat   = paksz(inparm[5],iflg64) * 3600 * S2R;
-        *iflg = (int)*iflg64;
-     if ((int)*iflg64 != 0)
-        return ERROR;
-     *iflg64 = sterinvint(radius,center_long,center_lat,false_easting, 
-		       false_northing); 
-        *iflg = (int)*iflg64;
-     inv_trans[insys] = sterinv;
      }
   else
   if (insys == LAMAZ)
      {
-     /* this is the call to initialize LAMBERT AZIMUTHAL EQUAL-AREA 
-     -------------------------------------------------------------*/
-     center_long = paksz(inparm[4],iflg64) * 3600 * S2R;
-        *iflg = (int)*iflg64;
-     if ((int)*iflg64 != 0)
-        return ERROR;
-     center_lat  = paksz(inparm[5],iflg64) * 3600 * S2R;
-        *iflg = (int)*iflg64;
-     if ((int)*iflg64 != 0)
-        return ERROR;
-     *iflg64 = lamazinvint(r_major, r_minor, center_long, center_lat,false_easting,
-			false_northing);
-        *iflg = (int)*iflg64;
-     inv_trans[insys] = lamazinv;
-     }
-  else
-  if (insys == AZMEQD)
-     {
-     /* this is the call to initialize AZIMUTHAL EQUIDISTANT
-     ------------------------------------------------------*/
-     center_long  = paksz(inparm[4],iflg64) * 3600 * S2R;
-        *iflg = (int)*iflg64;
-     if ((int)*iflg64 != 0)
-        return ERROR;
-     center_lat   = paksz(inparm[5],iflg64) * 3600 * S2R;
-        *iflg = (int)*iflg64;
-     if ((int)*iflg64 != 0)
-        return ERROR;
-     *iflg64 = aziminvint(radius,center_long,center_lat,false_easting,
-		       false_northing); 
-        *iflg = (int)*iflg64;
-     inv_trans[insys] = aziminv;
      }
   else
   if (insys == GNOMON)
      {
-     /* this is the call to initialize GNOMONIC 
-     ----------------------------------------*/
-     center_long  = paksz(inparm[4],iflg64) * 3600 * S2R;
-        *iflg = (int)*iflg64;
-     if ((int)*iflg64 != 0)
-        return ERROR;
-     center_lat   = paksz(inparm[5],iflg64) * 3600 * S2R;
-        *iflg = (int)*iflg64;
-     if ((int)*iflg64 != 0)
-        return ERROR;
-     *iflg64 = gnominvint(radius,center_long,center_lat,false_easting,
-                      false_northing);
-        *iflg = (int)*iflg64;
-     inv_trans[insys] = gnominv;
      }
   else
   if (insys == ORTHO)
      {
-     /* this is the call to initialize ORTHOGRAPHIC
-     --------------------------------------------*/
-     center_long  = paksz(inparm[4],iflg64) * 3600 * S2R;
-        *iflg = (int)*iflg64;
-     if ((int)*iflg64 != 0)
-        return ERROR;
-     center_lat   = paksz(inparm[5],iflg64) * 3600 * S2R;
-        *iflg = (int)*iflg64;
-     if ((int)*iflg64 != 0)
-        return ERROR;
-     *iflg64 = orthinvint(radius,center_long,center_lat,false_easting,
-		       false_northing); 
-        *iflg = (int)*iflg64;
-     inv_trans[insys] = orthinv;
      }
   else
   if (insys == GVNSP)
      {
-     /* this is the call to initialize GENERAL VERTICAL NEAR SIDED PERSPECTIVE 
-     -----------------------------------------------------------------------*/
-     center_long  = paksz(inparm[4],iflg64) * 3600 * S2R;
-        *iflg = (int)*iflg64;
-     if ((int)*iflg64 != 0)
-        return ERROR;
-     center_lat   = paksz(inparm[5],iflg64) * 3600 * S2R;
-        *iflg = (int)*iflg64;
-     if ((int)*iflg64 != 0)
-        return ERROR;
-     h = inparm[2];
-     *iflg64 = gvnspinvint(radius,h,center_long,center_lat,false_easting,
-			false_northing);
-        *iflg = (int)*iflg64;
-     inv_trans[insys] = gvnspinv;
      }
   else
   if (insys == SNSOID)
      {
-     /* this is the call to initialize SINUSOIDAL 
-     --------------------------------------------*/
-     center_long    = paksz(inparm[4],iflg64) * 3600 * S2R;
-        *iflg = (int)*iflg64;
-     if ((int)*iflg64 != 0)
-        return ERROR;
-     *iflg64 = sininvint(radius, center_long,false_easting,false_northing);
-        *iflg = (int)*iflg64;
-     inv_trans[insys] = sininv;
      }
   else
   if (insys == EQRECT)
      {
-     /* this is the call to initialize EQUIRECTANGULAR
-     -----------------------------------------------*/
-     center_long  = paksz(inparm[4],iflg64) * 3600 * S2R;
-        *iflg = (int)*iflg64;
-     if ((int)*iflg64 != 0)
-        return ERROR;
-     lat1   = paksz(inparm[5],iflg64) * 3600 * S2R;
-        *iflg = (int)*iflg64;
-     if ((int)*iflg64 != 0)
-        return ERROR;
-     *iflg64 = equiinvint(radius,center_long,lat1,false_easting,
-		       false_northing); 
-        *iflg = (int)*iflg64;
-     inv_trans[insys] = equiinv;
      }
   else
   if (insys == MILLER)
     {
-    /* this is the call to initialize MILLER CYLINDRICAL
-    --------------------------------------------------*/
-    center_long  = paksz(inparm[4],iflg64) * 3600 * S2R;
-        *iflg = (int)*iflg64;
-    if ((int)*iflg64 != 0)
-       return ERROR;
-    *iflg64 = millinvint(radius, center_long,false_easting,false_northing);
-        *iflg = (int)*iflg64;
-    inv_trans[insys] = millinv;
     }
   else
   if (insys == VGRINT)
     {
-    /* this is the call to initialize VAN DER GRINTEN 
-    -----------------------------------------------*/
-    center_long  = paksz(inparm[4],iflg64) * 3600 * S2R;
-        *iflg = (int)*iflg64;
-    if ((int)*iflg64 != 0)
-       return ERROR;
-    *iflg64 = vandginvint(radius, center_long,false_easting,false_northing);
-        *iflg = (int)*iflg64;
-    inv_trans[insys] = vandginv;
     }
   else
   if (insys == HOM)
      {
-     /* this is the call to initialize HOTLINE OBLIQUE MERCATOR 
-     ---------------------------------------------------------*/
-     scale_factor = inparm[2];
-     lat_origin = paksz(inparm[5],iflg64) * 3600 * S2R;
-        *iflg = (int)*iflg64;
-     if ((int)*iflg64 != 0)
-        return ERROR;
-     if (inparm[12] != 0)
-        {
-        mode = 1;
-        azimuth = paksz(inparm[3],iflg64) * 3600 * S2R;
-        *iflg = (int)*iflg64;
-        if ((int)*iflg64 != 0)
-           return ERROR;
-        lon_origin = paksz(inparm[4],iflg64) * 3600 * S2R;
-        *iflg = (int)*iflg64;
-        if ((int)*iflg64 != 0)
-           return ERROR;
-        }
-     else
-        {
-        mode = 0;
-        lon1 = paksz(inparm[8],iflg64) * 3600 * S2R;
-        *iflg = (int)*iflg64;
-        if ((int)*iflg64 != 0)
-           return ERROR;
-        lat1 = paksz(inparm[9],iflg64) * 3600 * S2R;
-        *iflg = (int)*iflg64;
-        if ((int)*iflg64 != 0)
-           return ERROR;
-        lon2 = paksz(inparm[10],iflg64) * 3600 * S2R;
-        *iflg = (int)*iflg64;
-        if ((int)*iflg64 != 0)
-           return ERROR;
-        lat2 = paksz(inparm[11],iflg64) * 3600 * S2R;
-        *iflg = (int)*iflg64;
-        if ((int)*iflg64 != 0)
-           return ERROR;
-        
-        }
-     *iflg64 = omerinvint(r_major,r_minor,scale_factor,azimuth,lon_origin,
-			lat_origin,false_easting, false_northing,lon1,lat1,
-			lon2,lat2,mode);
-        *iflg = (int)*iflg64;
-     inv_trans[insys] = omerinv;
      }
   else
   if (insys == SOM)
@@ -639,137 +270,42 @@ iflg64 = &thing;                /* the 8-byte pointer address           */
   else
   if (insys == HAMMER)
     {
-    /* this is the call to initialize HAMMER 
-    --------------------------------------*/
-    center_long  = paksz(inparm[4],iflg64) * 3600 * S2R;
-        *iflg = (int)*iflg64;
-    if ((int)*iflg64 != 0)
-       return ERROR;
-    *iflg64 = haminvint(radius, center_long,false_easting,false_northing);
-        *iflg = (int)*iflg64;
-    inv_trans[insys] = haminv;
     }
   else
   if (insys == ROBIN)
     {
-    /* this is the call to initialize ROBINSON 
-    ----------------------------------------*/
-    center_long  = paksz(inparm[4],iflg64) * 3600 * S2R;
-        *iflg = (int)*iflg64;
-    if ((int)*iflg64 != 0)
-       return ERROR;
-    *iflg64 = robinvint(radius, center_long,false_easting,false_northing);
-        *iflg = (int)*iflg64;
-    inv_trans[insys] = robinv;
     }
   else
   if (insys == GOODE)
      {
-     /* this is the call to initialize GOODE'S HOMOLOSINE
-     ---------------------------------------------------*/
-     *iflg64 = goodinvint(radius);
-        *iflg = (int)*iflg64;
-     inv_trans[insys] = goodinv;
      }
   else
   if (insys == MOLL)
      {
-     /* this is the call to initialize MOLLWEIDE
-     -------------------------------------------*/
-     center_long = paksz(inparm[4],iflg64) * 3600 * S2R;
-        *iflg = (int)*iflg64;
-     if ((int)*iflg64 != 0)
-        return ERROR;
-     *iflg64 = molwinvint(radius, center_long,false_easting,false_northing);
-        *iflg = (int)*iflg64;
-     inv_trans[insys] = molwinv;
      }
   else
   if (insys == IMOLL)
      {
-     /* this is the call to initialize INTERRUPTED MOLLWEIDE 
-     -----------------------------------------------------*/
-     *iflg64 = imolwinvint(radius);
-        *iflg = (int)*iflg64;
-     inv_trans[insys] = imolwinv;
      }
   else
   if (insys == ALASKA)
      {
-     /* this is the call to initialize ALASKA CONFORMAL 
-     ------------------------------------------------*/
-     *iflg64 = alconinvint(r_major,r_minor,false_easting,false_northing);
-        *iflg = (int)*iflg64;
-     inv_trans[insys] = alconinv;
      }
   else
   if (insys == WAGIV)
      {
-     /* this is the call to initialize WAGNER IV 
-     -----------------------------------------*/
-     center_long = paksz(inparm[4],iflg64) * 3600 * S2R;
-        *iflg = (int)*iflg64;
-     if ((int)*iflg64 != 0)
-        return ERROR;
-     *iflg64 = wivinvint(radius, center_long,false_easting,false_northing);
-        *iflg = (int)*iflg64;
-     inv_trans[insys] = wivinv;
      }
   else
   if (insys == WAGVII)
      {
-     /* this is the call to initialize WAGNER VII 
-     ------------------------------------------*/
-     center_long = paksz(inparm[4],iflg64) * 3600 * S2R;
-        *iflg = (int)*iflg64;
-     if ((int)*iflg64 != 0)
-        return ERROR;
-     *iflg64 = wviiinvint(radius, center_long,false_easting,false_northing);
-        *iflg = (int)*iflg64;
-     inv_trans[insys] = wviiinv;
      }
   else
   if (insys == OBEQA)
     {
-    /* this is the call to initialize OBLATED EQUAL AREA
-    ---------------------------------------------------*/
-    center_long = paksz(inparm[4],iflg64) * 3600 * S2R;
-        *iflg = (int)*iflg64;
-    if ((int)*iflg64 != 0)
-       return ERROR;
-    center_lat  = paksz(inparm[5],iflg64) * 3600 * S2R;
-        *iflg = (int)*iflg64;
-    if ((int)*iflg64 != 0)
-       return ERROR;
-    shape_m = inparm[2];
-    shape_n = inparm[3];
-    angle = paksz(inparm[8],iflg64) * 3600 * S2R;
-        *iflg = (int)*iflg64;
-    if ((int)*iflg64 != 0)
-       return ERROR;
-    *iflg64 = obleqinvint(radius,center_long,center_lat,shape_m, shape_n,
-                angle,false_easting,false_northing);
-        *iflg = (int)*iflg64;
-    inv_trans[insys] = obleqinv;
     }
   else
     if ((insys == ISINUS) || (insys == ISINUS1))
     {
-    /* this is the call to initialize INTEGERIZED SINUSOIDAL GRID
-    ------------------------------------------------------------*/
- 
-    center_long = paksz(inparm[4],iflg64)* 3600 * S2R;
-        *iflg = (int)*iflg64;
-    if ((int)*iflg64 != 0)
-       return ERROR;
-    dzone = inparm[8];
-    djustify = inparm[10];
- 
-    *iflg64 = isinusinvinit(radius, center_long, false_easting, false_northing,
-                    dzone, djustify);
-        *iflg = (int)*iflg64;
- 
-    inv_trans[insys] = isinusinv;
     }
 
 return OK;
