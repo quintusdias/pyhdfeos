@@ -18,7 +18,7 @@ cythonize("pyhdfeos/_som.pyx")
 sources = ["pyhdfeos/_som.c"]
 gctp_srcs = [os.path.join("pyhdfeos", "lib", "source", "gctp", file) for file in pyhdfeos.lib.config.gctp_srcs]
 sources.extend(gctp_srcs)
-include_dirs = ["pyhdfeos/lib/source/hdfeos5"]
+include_dirs = ["pyhdfeos/lib/source/gctp_som"]
 e = Extension("pyhdfeos/_som", sources=sources, include_dirs=include_dirs)
 ext_modules.append(e)
 
