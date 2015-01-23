@@ -3,13 +3,11 @@ Support for HDF-EOS5 zonal average files.
 """
 import collections
 import os
-import sys
-import textwrap
 
 import numpy as np
 
 from .lib import he5
-from .core import EosFile, _EosField
+from .core import EosFile, _EosStruct, _EosField
 
 
 class ZonalAverageFile(EosFile):
@@ -55,7 +53,7 @@ class ZonalAverageFile(EosFile):
         self._he.zaclose(self.zafid)
 
 
-class _ZonalAverage(object):
+class _ZonalAverage(_EosStruct):
     """
     Zonal Average object.
     """
@@ -93,29 +91,23 @@ class _ZonalAverage(object):
         self._he.zaclose(self.zafid)
 
     def __str__(self):
-        lst = ["Zonal Average:  {0}".format(self.zaname)]
-        lst.append("    Dimensions:")
-        for dimname, dimlen in self.dims.items():
-            lst.append("        {0}:  {1}".format(dimname, dimlen))
+        title = "Zonal Average:  {0}".format(self.zaname)
 
-        lst.append("    Group Attributes:")
-        fmt = "        {0}:  {1}"
-        for attr in self.data_field_attrs.keys():
-            lst.append(fmt.format(attr, self.data_field_attrs[attr]))
+        lst = []
+        text = self._format_dimensions()
+        lst.append(text)
+        text = self._format_attributes('Data Group Attributes',
+                                       self.data_field_attrs)
+        lst.append(text)
+        text = self._format_fields('Data Fields', self.fields)
+        lst.append(text)
+        text = self._format_attributes('Zonal Average Attributes', self.attrs)
+        lst.append(text)
 
-        lst.append("    Data Fields:")
-        for field in self.fields.keys():
-            if sys.hexversion <= 0x03000000:
-                textstr = str(self.fields[field])
-                field_lst = [(' ' * 8 + line) for line in textstr.split('\n')]
-                lst.extend(field_lst)
-            else:
-                lst.append(textwrap.indent(str(self.fields[field]), ' ' * 8))
+        text = '\n'.join(lst)
+        text = self._textwrap(text, 4)
 
-        lst.append("    Zonal Average Attributes:")
-        for attr in self.attrs.keys():
-            lst.append("        {0}:  {1}".format(attr, self.attrs[attr]))
-        return '\n'.join(lst)
+        return title + '\n' + text
 
 
 class _ZonalAverageVariable(_EosField):

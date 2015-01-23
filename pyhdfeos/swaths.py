@@ -3,13 +3,11 @@ Support for HDF-EOS and HDF-EOS5 swath files.
 """
 import collections
 import os
-import sys
-import textwrap
 
 import numpy as np
 
 from .lib import he4, he5
-from .core import EosFile, _EosField, DimensionMap
+from .core import EosFile, _EosStruct, _EosField, DimensionMap
 
 
 class SwathFile(EosFile):
@@ -71,7 +69,7 @@ class SwathFile(EosFile):
         self._he.swclose(self._swfid)
 
 
-class _Swath(object):
+class _Swath(_EosStruct):
     """
     Swath object.
 
@@ -158,69 +156,81 @@ class _Swath(object):
         self._he.swdetach(self._swathid)
         self._he.swclose(self._swfid)
 
-    def _format_attributes(self, title, attrs):
+    def _format_index_maps(self):
+        """
+        __str__ helper for index maps
+        """
+        title = 'Index Maps:'
+
+        if len(self.idxmaps) == 0:
+            return title
+
         lst = []
-        lst.append("    {0}:".format(title))
-        fmt = "        {0}:  {1}"
-        fmt_flt = "        {0}:  {1:.8f}"
-        for attr in attrs.keys():
-            if isinstance(attrs[attr], np.float32):
-                lst.append(fmt_flt.format(attr, attrs[attr]))
-            else:
-                lst.append(fmt.format(attr, attrs[attr]))
-        return lst
+        for name, idx in self.idxmaps.items():
+            msg = "{0}:  index={1}".format(name, idx)
+            lst.append(msg)
+        text = '\n'.join(lst)
+        text = title + '\n' + self._textwrap(text, 4)
 
-    def __str__(self):
-        lst = ["Swath:  {0}".format(self.name)]
-        lst.append("    Dimensions:")
-        for dimname, dimlen in self.dims.items():
-            lst.append("        {0}:  {1}".format(dimname, dimlen))
+        return text
 
-        lst.append("    Dimension Maps:")
+    def _format_dimension_maps(self):
+        """
+        __str__ helper for dimension maps
+        """
+        title = 'Dimension Maps:'
+
+        if len(self.dimmaps) == 0:
+            return title
+
+        lst = []
         for name, map in self.dimmaps.items():
-            msg = "        {0}:  offset={1}, increment={2}"
+            msg = "{0}:  offset={1}, increment={2}"
             msg = msg.format(name, map.offset, map.increment)
             lst.append(msg)
+        text = '\n'.join(lst)
+        text = title + '\n' + self._textwrap(text, 4)
 
-        lst.append("    Index Maps:")
-        for name, idx in self.idxmaps.items():
-            msg = "        {0}:  index={1}".format(name, idx)
-            lst.append(msg)
+        return text
+
+    def __str__(self):
+        lst = []
+
+        text = self._format_dimensions()
+        lst.append(text)
+
+        text = self._format_dimension_maps()
+        lst.append(text)
+
+        text = self._format_index_maps()
+        lst.append(text)
 
         if hasattr(self._he, 'swinqgeogrpattrs'):
-            lst.extend(self._format_attributes('Geolocation Group Attributes',
-                                               self.geofield_attrs))
+            text = self._format_attributes('Geolocation Group Attributes',
+                                           self.geofield_attrs)
+            lst.append(text)
 
-        lst.append("    Geolocation Group Fields:")
-        for field in self.geofields.keys():
-            if sys.hexversion <= 0x03000000:
-                textstr = str(self.geofields[field])
-                field_lst = [(' ' * 8 + line) for line in textstr.split('\n')]
-                lst.extend(field_lst)
-            else:
-                lst.append(textwrap.indent(str(self.geofields[field]),
-                           ' ' * 8))
+        text = self._format_fields('Geolocation Group Fields', self.geofields)
+        lst.append(text)
 
         if hasattr(self._he, 'swinqgrpattrs'):
-            lst.append("    Data Group Attributes:")
-            fmt = "        {0}:  {1}"
-            for attr in self.datafield_attrs.keys():
-                lst.append(fmt.format(attr, self.datafield_attrs[attr]))
+            text = self._format_attributes('Data Group Attributes',
+                                           self.datafield_attrs)
+            lst.append(text)
 
-        lst.append("    Data Group Fields:")
-        for field in self.datafields.keys():
-            if sys.hexversion <= 0x03000000:
-                textstr = str(self.datafields[field])
-                field_lst = [(' ' * 8 + line) for line in textstr.split('\n')]
-                lst.extend(field_lst)
-            else:
-                lst.append(textwrap.indent(str(self.datafields[field]),
-                           ' ' * 8))
+        text = self._format_fields('Data Group Fields', self.datafields)
+        lst.append(text)
+        text = self._format_attributes('Swath Attributes', self.attrs)
+        lst.append(text)
 
-        lst.append("    Swath Attributes:")
-        for attr in self.attrs.keys():
-            lst.append("        {0}:  {1}".format(attr, self.attrs[attr]))
-        return '\n'.join(lst)
+        text = '\n'.join(lst)
+        text = self._textwrap(text, 4)
+
+        title = "Swath:  {0}".format(self.name)
+
+        text = title + '\n' + text
+
+        return text
 
 
 class _SwathVariable(_EosField):

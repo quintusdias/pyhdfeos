@@ -116,6 +116,7 @@ class TestPrinting(unittest.TestCase):
             self.assertEqual(glist1, glist2)
 
     def test_zonal_average(self):
+        self.maxDiff = None
         zf = ZonalAverageFile(self.zonalavgfile)
         with patch('sys.stdout', new=StringIO()) as stdout:
             print(zf)
@@ -197,6 +198,7 @@ class TestSwathPrinting(unittest.TestCase):
             self.assertEqual(swf1.filename, swf2.filename)
 
     def test_print_swath4file(self):
+        self.maxDiff = None
         with SwathFile(self.swath4file) as swf:
             with patch('sys.stdout', new=StringIO()) as stdout:
                 print(swf)
