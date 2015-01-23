@@ -158,6 +158,18 @@ class _Swath(object):
         self._he.swdetach(self._swathid)
         self._he.swclose(self._swfid)
 
+    def _format_attributes(self, title, attrs):
+        lst = []
+        lst.append("    {0}:".format(title))
+        fmt = "        {0}:  {1}"
+        fmt_flt = "        {0}:  {1:.8f}"
+        for attr in attrs.keys():
+            if isinstance(attrs[attr], np.float32):
+                lst.append(fmt_flt.format(attr, attrs[attr]))
+            else:
+                lst.append(fmt.format(attr, attrs[attr]))
+        return lst
+
     def __str__(self):
         lst = ["Swath:  {0}".format(self.name)]
         lst.append("    Dimensions:")
@@ -176,10 +188,8 @@ class _Swath(object):
             lst.append(msg)
 
         if hasattr(self._he, 'swinqgeogrpattrs'):
-            lst.append("    Geolocation Group Attributes:")
-            fmt = "        {0}:  {1}"
-            for attr in self.geofield_attrs.keys():
-                lst.append(fmt.format(attr, self.geofield_attrs[attr]))
+            lst.extend(self._format_attributes('Geolocation Group Attributes',
+                                               self.geofield_attrs))
 
         lst.append("    Geolocation Group Fields:")
         for field in self.geofields.keys():
