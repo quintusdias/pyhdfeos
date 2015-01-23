@@ -158,17 +158,37 @@ class _Swath(object):
         self._he.swdetach(self._swathid)
         self._he.swclose(self._swfid)
 
+    def _textwrap(self, text, nspace):
+        """
+        """
+        if sys.hexversion <= 0x03000000:
+            lst = [(' ' * nspace + line) for line in text.split('\n')]
+            indented_text = '\n'.join(lst)
+        else:
+            indented_text = textwrap.indent(text, ' ' * nspace)
+        return indented_text
+	
     def _format_attributes(self, title, attrs):
-        lst = []
-        lst.append("    {0}:".format(title))
-        fmt = "        {0}:  {1}"
-        fmt_flt = "        {0}:  {1:.8f}"
+        """
+        """
+        title = title + ':'
+        if len(attrs) == 0:
+            return [self._textwrap(title, 4)]
+
+        fmt_reg = "{0}:  {1}"
+        fmt_flt = "{0}:  {1:.8f}"
+
+        attrs_text = ''
         for attr in attrs.keys():
             if isinstance(attrs[attr], np.float32):
-                lst.append(fmt_flt.format(attr, attrs[attr]))
+                attrs_text += fmt_flt.format(attr, attrs[attr])
             else:
-                lst.append(fmt.format(attr, attrs[attr]))
-        return lst
+                attrs_text += fmt_reg.format(attr, attrs[attr])
+        attrs_text = self._textwrap(attrs_text, 4)
+
+        text = title + '\n' + attrs_text
+        text = self._textwrap(text, 4)
+        return text.split('\n')
 
     def __str__(self):
         lst = ["Swath:  {0}".format(self.name)]
@@ -202,10 +222,8 @@ class _Swath(object):
                            ' ' * 8))
 
         if hasattr(self._he, 'swinqgrpattrs'):
-            lst.append("    Data Group Attributes:")
-            fmt = "        {0}:  {1}"
-            for attr in self.datafield_attrs.keys():
-                lst.append(fmt.format(attr, self.datafield_attrs[attr]))
+            lst.extend(self._format_attributes('Data Group Attributes',
+                                               self.datafield_attrs))
 
         lst.append("    Data Group Fields:")
         for field in self.datafields.keys():
@@ -217,9 +235,8 @@ class _Swath(object):
                 lst.append(textwrap.indent(str(self.datafields[field]),
                            ' ' * 8))
 
-        lst.append("    Swath Attributes:")
-        for attr in self.attrs.keys():
-            lst.append("        {0}:  {1}".format(attr, self.attrs[attr]))
+        lst.extend(self._format_attributes('Swath Attributes',
+                                           self.attrs))
         return '\n'.join(lst)
 
 
