@@ -80,9 +80,11 @@ include_dirs = config.include_dirs
 include_dirs.append("pyhdfeos/lib/source/hdfeos")
 
 hdfeos_srcs = ["EHapi.c", "GDapi.c", "PTapi.c", "SWapi.c"]
-sources = [os.path.join('pyhdfeos', 'lib', 'source', 'hdfeos', file) for file in hdfeos_srcs]
+sources = [os.path.join('pyhdfeos', 'lib', 'source', 'hdfeos', file)
+           for file in hdfeos_srcs]
 
-lst = [os.path.join('pyhdfeos', 'lib', 'source', 'gctp', file) for file in config.gctp_srcs]
+lst = [os.path.join('pyhdfeos', 'lib', 'source', 'gctp', file)
+       for file in config.gctp_srcs]
 sources.extend(lst)
 
 

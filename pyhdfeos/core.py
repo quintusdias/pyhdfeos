@@ -78,19 +78,15 @@ class EosFile(object):
                 vg0 = hdf.vattach(self._fid, ref_i)
                 name = hdf.vgetname(vg0)
                 if (((hasattr(self, '_swfid')) and
-                     (geolocation and name == 'Geolocation Fields'))):
-                    self._hdf4_vgroup_ref = ref_i
-                    hdf.vdetach(vg0)
-                    return
-                elif (((hasattr(self, '_swfid')) and
-                       (not geolocation and name == 'Data Fields'))):
-                    self._hdf4_vgroup_ref = ref_i
-                    hdf.vdetach(vg0)
-                    return
-                elif hasattr(self, '_gdfid') and (name == 'Data Fields'):
-                    self._hdf4_vgroup_ref = ref_i
-                    hdf.vdetach(vg0)
-                    return
+                     ((geolocation and name == 'Geolocation Fields') or
+                      (not geolocation and name == 'Data Fields')))):
+                    attrs = self.collect_attrs_from_sds_in_vgroup(sd_id,
+                                                                  vg0,
+                                                                  fieldname)
+                elif hasattr(self, '_gdfid') and name == 'Data Fields':
+                    attrs = self.collect_attrs_from_sds_in_vgroup(sd_id,
+                                                                  vg0,
+                                                                  fieldname)
                 hdf.vdetach(vg0)
 
         hdf.vdetach(grid_vg)
