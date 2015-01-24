@@ -9,7 +9,7 @@ import textwrap
 import numpy as np
 
 from .lib import he5
-from .core import EosFile, _EosField
+from .core import EosFile, _EosStruct, _EosField
 
 
 class ZonalAverageFile(EosFile):
@@ -55,7 +55,7 @@ class ZonalAverageFile(EosFile):
         self._he.zaclose(self.zafid)
 
 
-class _ZonalAverage(object):
+class _ZonalAverage(_EosStruct):
     """
     Zonal Average object.
     """
@@ -98,10 +98,8 @@ class _ZonalAverage(object):
         for dimname, dimlen in self.dims.items():
             lst.append("        {0}:  {1}".format(dimname, dimlen))
 
-        lst.append("    Group Attributes:")
-        fmt = "        {0}:  {1}"
-        for attr in self.data_field_attrs.keys():
-            lst.append(fmt.format(attr, self.data_field_attrs[attr]))
+        lst.extend(self._format_attributes('Data Field Group Attributes',
+                                           self.data_field_attrs))
 
         lst.append("    Data Fields:")
         for field in self.fields.keys():
@@ -112,9 +110,9 @@ class _ZonalAverage(object):
             else:
                 lst.append(textwrap.indent(str(self.fields[field]), ' ' * 8))
 
-        lst.append("    Zonal Average Attributes:")
-        for attr in self.attrs.keys():
-            lst.append("        {0}:  {1}".format(attr, self.attrs[attr]))
+        lst.extend(self._format_attributes('Zonal Average Attributes',
+                                           self.attrs))
+
         return '\n'.join(lst)
 
 

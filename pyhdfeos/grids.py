@@ -15,7 +15,7 @@ else:
 import numpy as np
 
 from .lib import he4, he5, hdf
-from .core import EosFile, _EosField
+from .core import EosFile, _EosStruct, _EosField
 from . import _som
 
 
@@ -66,7 +66,7 @@ class _GridVariable(_EosField):
                                     start, stride, edge)
 
 
-class _Grid(object):
+class _Grid(_EosStruct):
     """
     Grid object, concerned only with coordinates of HDF-EOS grids.
 
@@ -260,9 +260,8 @@ class _Grid(object):
             else:
                 lst.append(textwrap.indent(str(self.fields[field]), ' ' * 8))
 
-        lst.append("    Grid Attributes:")
-        for attr in self.attrs.keys():
-            lst.append("        {0}:  {1}".format(attr, self.attrs[attr]))
+        lst.extend(self._format_attributes('Grid Attributes',
+                                           self.attrs))
         return '\n'.join(lst)
 
     def _projection_lonz_latz(self):

@@ -116,6 +116,7 @@ class TestPrinting(unittest.TestCase):
             self.assertEqual(glist1, glist2)
 
     def test_zonal_average(self):
+        self.maxDiff = None
         zf = ZonalAverageFile(self.zonalavgfile)
         with patch('sys.stdout', new=StringIO()) as stdout:
             print(zf)

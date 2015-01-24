@@ -9,7 +9,7 @@ import textwrap
 import numpy as np
 
 from .lib import he4, he5
-from .core import EosFile, _EosField, DimensionMap
+from .core import EosFile, _EosStruct, _EosField, DimensionMap
 
 
 class SwathFile(EosFile):
@@ -71,7 +71,7 @@ class SwathFile(EosFile):
         self._he.swclose(self._swfid)
 
 
-class _Swath(object):
+class _Swath(_EosStruct):
     """
     Swath object.
 
@@ -157,38 +157,6 @@ class _Swath(object):
     def __del__(self):
         self._he.swdetach(self._swathid)
         self._he.swclose(self._swfid)
-
-    def _textwrap(self, text, nspace):
-        """
-        """
-        if sys.hexversion <= 0x03000000:
-            lst = [(' ' * nspace + line) for line in text.split('\n')]
-            indented_text = '\n'.join(lst)
-        else:
-            indented_text = textwrap.indent(text, ' ' * nspace)
-        return indented_text
-	
-    def _format_attributes(self, title, attrs):
-        """
-        """
-        title = title + ':'
-        if len(attrs) == 0:
-            return [self._textwrap(title, 4)]
-
-        fmt_reg = "{0}:  {1}"
-        fmt_flt = "{0}:  {1:.8f}"
-
-        attrs_text = ''
-        for attr in attrs.keys():
-            if isinstance(attrs[attr], np.float32):
-                attrs_text += fmt_flt.format(attr, attrs[attr])
-            else:
-                attrs_text += fmt_reg.format(attr, attrs[attr])
-        attrs_text = self._textwrap(attrs_text, 4)
-
-        text = title + '\n' + attrs_text
-        text = self._textwrap(text, 4)
-        return text.split('\n')
 
     def __str__(self):
         lst = ["Swath:  {0}".format(self.name)]
