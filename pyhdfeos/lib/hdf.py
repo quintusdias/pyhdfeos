@@ -2,7 +2,6 @@
 Interface for HDF4 library.  Need this in order to access HDF-EOS2 field
 attributes.
 """
-import os
 import sys
 
 import numpy as np

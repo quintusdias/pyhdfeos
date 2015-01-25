@@ -14,6 +14,7 @@ CDEF = """
     typedef int hid_t;
     typedef int herr_t;
 
+    int    HE5_EHHEisHE5(char *filename);
     hid_t  HE5_GDattach(hid_t fid, char *gridname);
     long   HE5_GDattrinfo(hid_t gridID, const char *attrname,
                              hid_t *ntype, hsize_t *count);
@@ -204,6 +205,28 @@ cast_string_dict = {np.int32: "int *",
 def _handle_error(status):
     if status < 0:
         raise IOError("Library routine failed.")
+
+
+def ehheishe5(filename):
+    """Determine if the input file type is HDF-EOS5
+
+    This function wraps the HDF-EOS5 HE5_EHHEisHE5 library function.
+
+    Parameters
+    ----------
+    filename : str
+        name of the file
+
+    Returns
+    -------
+    True if the file is HDF-EOS5, False is not.
+    """
+    status = _lib.HE5_EHHEisHE5(filename.encode())
+    _handle_error(status)
+    if status == 1:
+        return True
+    else:
+        return False
 
 
 def gdattach(gdfid, gridname):
