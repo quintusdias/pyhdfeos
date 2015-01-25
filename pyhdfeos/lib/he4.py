@@ -13,6 +13,7 @@ CDEF = """
     typedef int intn;
     typedef double float64;
 
+    int   EHHEisHE2(char *filename);
     intn  EHidinfo(int32 fid, int32 *hdfid, int32 *sdid);
     int32 GDattach(int32 gdfid, char *grid);
     intn  GDattrinfo(int32 gdfid, char *attrname, int32 *nbyte, int32
@@ -141,6 +142,28 @@ cast_string_dict = {np.uint16: "unsigned short *",
                     np.uint32: "unsigned int *",
                     np.int64: "long long int",
                     np.uint64: "unsigned long long *"}
+
+
+def ehheishe2(filename):
+    """Determine if the input file type is HDF-EOS
+
+    This function wraps the HDF-EOS5 EHHEisHE library function.
+
+    Parameters
+    ----------
+    filename : str
+        name of the file
+
+    Returns
+    -------
+    True if the file is HDF-EOS, False is not.
+    """
+    status = _lib.EHHEisHE2(filename.encode())
+    _handle_error(status)
+    if status == 1:
+        return True
+    else:
+        return False
 
 
 def ehidinfo(fid):
