@@ -2,6 +2,7 @@
 Required for grids, swaths.
 """
 import collections
+import textwrap
 import sys
 
 if sys.hexversion < 0x03000000:
@@ -121,8 +122,106 @@ class EosFile(object):
         return attrs
 
 
+class _EosStruct(object):
+    """
+    Abstract superclass for grid, swath, zonal average structures.
+    """
+    def __init__(self):
+        pass
+
+    def _textwrap(self, text, nspace):
+        """
+        Indent text a certain number of spaces.
+
+        Parameters
+        ----------
+        text : str
+            Possibly multi-line text to be indented.
+        nspace : int
+            Number of spaces to indent.
+        """
+        if sys.hexversion <= 0x03000000:
+            lst = [(' ' * nspace + line) for line in text.split('\n')]
+            indented_text = '\n'.join(lst)
+        else:
+            indented_text = textwrap.indent(text, ' ' * nspace)
+        return indented_text
+
+    def _format_fields(self, title, fields):
+        """
+        Apply formatting to fields.
+
+        Parameters
+        ----------
+        title : str
+            Something like "Swath Data Field Group Attributes"
+        fields : dict
+            All fields for a particular entity, such as a Swath
+            Geolocation Field Group.
+        """
+        title = title + ':'
+
+        lst = []
+        for field in fields.keys():
+            lst.append(str(fields[field]))
+        text = '\n'.join(lst)
+        text = self._textwrap(text, 4)
+
+        return title + '\n' + text
+
+    def _format_dimensions(self):
+        """
+        Apply formatting to the dimensions.
+        """
+        text = "Dimensions:"
+
+        lst = []
+        for dimname, dimlen in self.dims.items():
+            lst.append("{0}:  {1}".format(dimname, dimlen))
+        text = '\n'.join(lst)
+        text = self._textwrap(text, 4)
+
+        return 'Dimensions:' + '\n' + text
+
+    def _format_attributes(self, title, attrs):
+        """
+        Apply formatting to attribute group.
+
+        Slap a title on top of an attribute name/value listing.
+
+        Parameters
+        ----------
+        title : str
+            Something like "Swath Data Field Group Attributes"
+        attrs : dict
+            All attributes for a particular entity, such as a Swath
+            Data Field Group.
+        """
+        title = title + ':'
+        if len(attrs) == 0:
+            return title
+
+        fmt_reg = "{0}:  {1}"
+        fmt_flt = "{0}:  {1:.8f}"
+
+        attrs_lst = []
+        for attr in attrs.keys():
+            if isinstance(attrs[attr], np.float32):
+                text = fmt_flt.format(attr, attrs[attr])
+            else:
+                text = fmt_reg.format(attr, attrs[attr])
+            attrs_lst.append(text)
+
+        attrs_text = '\n'.join(attrs_lst)
+        attrs_text = self._textwrap(attrs_text, 4)
+
+        text = title + '\n' + attrs_text
+        return text
+
+
 class _EosField(object):
     """
+    Abstract superclass for grid, swath, zonal average fields.
     """
     def __init__(self):
         pass
