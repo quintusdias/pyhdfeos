@@ -3,8 +3,6 @@ Support for HDF-EOS5 zonal average files.
 """
 import collections
 import os
-import sys
-import textwrap
 
 import numpy as np
 
@@ -94,24 +92,18 @@ class _ZonalAverage(_EosStruct):
 
     def __str__(self):
         lst = ["Zonal Average:  {0}".format(self.zaname)]
-        lst.append("    Dimensions:")
-        for dimname, dimlen in self.dims.items():
-            lst.append("        {0}:  {1}".format(dimname, dimlen))
 
-        lst.extend(self._format_attributes('Data Field Group Attributes',
-                                           self.data_field_attrs))
+        text = self._format_dimensions()
+        text += '\n'
+        text += self._format_attributes('Data Group Attributes',
+                                        self.data_field_attrs)
+        text += '\n'
+        text += self._format_fields('Data Fields', self.fields)
+        text += '\n'
+        text += self._format_attributes('Zonal Average Attributes', self.attrs)
 
-        lst.append("    Data Fields:")
-        for field in self.fields.keys():
-            if sys.hexversion <= 0x03000000:
-                textstr = str(self.fields[field])
-                field_lst = [(' ' * 8 + line) for line in textstr.split('\n')]
-                lst.extend(field_lst)
-            else:
-                lst.append(textwrap.indent(str(self.fields[field]), ' ' * 8))
-
-        lst.extend(self._format_attributes('Zonal Average Attributes',
-                                           self.attrs))
+        text = self._textwrap(text, 4)
+        lst.extend(text.split('\n'))
 
         return '\n'.join(lst)
 

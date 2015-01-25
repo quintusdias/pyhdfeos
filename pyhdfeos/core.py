@@ -147,6 +147,42 @@ class _EosStruct(object):
             indented_text = textwrap.indent(text, ' ' * nspace)
         return indented_text
 
+    def _format_fields(self, title, fields):
+        """
+        Apply formatting to fields.
+
+        Parameters
+        ----------
+        title : str
+            Something like "Swath Data Field Group Attributes"
+        fields : dict
+            All fields for a particular entity, such as a Swath
+            Geolocation Field Group.
+        """
+        title = title + ':'
+
+        lst = []
+        for field in fields.keys():
+            lst.append(str(fields[field]))
+        text = '\n'.join(lst)
+        text = self._textwrap(text, 4)
+
+        return title + '\n' + text
+
+    def _format_dimensions(self):
+        """
+        Apply formatting to the dimensions.
+        """
+        text = "Dimensions:"
+
+        lst = []
+        for dimname, dimlen in self.dims.items():
+            lst.append("{0}:  {1}".format(dimname, dimlen))
+        text = '\n'.join(lst)
+        text = self._textwrap(text, 4)
+
+        return 'Dimensions:' + '\n' + text
+
     def _format_attributes(self, title, attrs):
         """
         Apply formatting to attribute group.
@@ -163,7 +199,7 @@ class _EosStruct(object):
         """
         title = title + ':'
         if len(attrs) == 0:
-            return [self._textwrap(title, 4)]
+            return title
 
         fmt_reg = "{0}:  {1}"
         fmt_flt = "{0}:  {1:.8f}"
@@ -180,8 +216,7 @@ class _EosStruct(object):
         attrs_text = self._textwrap(attrs_text, 4)
 
         text = title + '\n' + attrs_text
-        text = self._textwrap(text, 4)
-        return text.split('\n')
+        return text
 
 
 class _EosField(object):

@@ -272,7 +272,7 @@ Zonal Average:  ZA1
         IndxTrack:  12
         ExtDim:  60
         Unlim:  18446744073709551615
-    Data Field Group Attributes:
+    Data Group Attributes:
         GroupAttribute:  [10 20 30 40]
     Data Fields:
         float32 Density[MyTrack1]:

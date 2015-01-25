@@ -241,9 +241,10 @@ class _Grid(_EosStruct):
 
     def __str__(self):
         lst = ["Grid:  {0}".format(self.name)]
-        lst.append("    Dimensions:")
-        for dimname, dimlen in self.dims.items():
-            lst.append("        {0}:  {1}".format(dimname, dimlen))
+
+        text = self._format_dimensions()
+        text = self._textwrap(text, 4)
+        lst.extend(text.split('\n'))
 
         lst.append("    Upper Left (x,y):  {0}".format(self.upleft))
         lst.append("    Lower Right (x,y):  {0}".format(self.lowright))
@@ -251,17 +252,14 @@ class _Grid(_EosStruct):
 
         lst.extend(self._projection_str().split('\n'))
 
-        lst.append("    Fields:")
-        for field in self.fields.keys():
-            if sys.hexversion <= 0x03000000:
-                textstr = str(self.fields[field])
-                field_lst = [(' ' * 8 + line) for line in textstr.split('\n')]
-                lst.extend(field_lst)
-            else:
-                lst.append(textwrap.indent(str(self.fields[field]), ' ' * 8))
+        text = self._format_fields('Fields', self.fields)
+        text += '\n'
+        text += self._format_attributes('Grid Attributes', self.attrs)
 
-        lst.extend(self._format_attributes('Grid Attributes',
-                                           self.attrs))
+        text = self._textwrap(text, 4)
+
+        lst.extend(text.split('\n'))
+
         return '\n'.join(lst)
 
     def _projection_lonz_latz(self):

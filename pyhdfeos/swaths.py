@@ -3,8 +3,6 @@ Support for HDF-EOS and HDF-EOS5 swath files.
 """
 import collections
 import os
-import sys
-import textwrap
 
 import numpy as np
 
@@ -160,9 +158,10 @@ class _Swath(_EosStruct):
 
     def __str__(self):
         lst = ["Swath:  {0}".format(self.name)]
-        lst.append("    Dimensions:")
-        for dimname, dimlen in self.dims.items():
-            lst.append("        {0}:  {1}".format(dimname, dimlen))
+
+        text = self._format_dimensions()
+        text = self._textwrap(text, 4)
+        lst.extend(text.split('\n'))
 
         lst.append("    Dimension Maps:")
         for name, map in self.dimmaps.items():
@@ -176,35 +175,28 @@ class _Swath(_EosStruct):
             lst.append(msg)
 
         if hasattr(self._he, 'swinqgeogrpattrs'):
-            lst.extend(self._format_attributes('Geolocation Group Attributes',
-                                               self.geofield_attrs))
+            text = self._format_attributes('Geolocation Group Attributes',
+                                           self.geofield_attrs)
+            text = self._textwrap(text, 4)
+            lst.extend(text.split('\n'))
 
-        lst.append("    Geolocation Group Fields:")
-        for field in self.geofields.keys():
-            if sys.hexversion <= 0x03000000:
-                textstr = str(self.geofields[field])
-                field_lst = [(' ' * 8 + line) for line in textstr.split('\n')]
-                lst.extend(field_lst)
-            else:
-                lst.append(textwrap.indent(str(self.geofields[field]),
-                           ' ' * 8))
+        text = self._format_fields('Geolocation Group Fields', self.geofields)
+        text = self._textwrap(text, 4)
+        lst.extend(text.split('\n'))
 
         if hasattr(self._he, 'swinqgrpattrs'):
-            lst.extend(self._format_attributes('Data Group Attributes',
-                                               self.datafield_attrs))
+            text = self._format_attributes('Data Group Attributes',
+                                           self.datafield_attrs)
+            text = self._textwrap(text, 4)
+            lst.extend(text.split('\n'))
 
-        lst.append("    Data Group Fields:")
-        for field in self.datafields.keys():
-            if sys.hexversion <= 0x03000000:
-                textstr = str(self.datafields[field])
-                field_lst = [(' ' * 8 + line) for line in textstr.split('\n')]
-                lst.extend(field_lst)
-            else:
-                lst.append(textwrap.indent(str(self.datafields[field]),
-                           ' ' * 8))
+        text = self._format_fields('Data Group Fields', self.datafields)
+        text += '\n'
+        text += self._format_attributes('Swath Attributes', self.attrs)
 
-        lst.extend(self._format_attributes('Swath Attributes',
-                                           self.attrs))
+        text = self._textwrap(text, 4)
+        lst.extend(text.split('\n'))
+
         return '\n'.join(lst)
 
 
