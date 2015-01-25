@@ -1,0 +1,22 @@
+language: python
+python:
+  - "2.7"
+  - "3.4"
+
+before_install:
+  - sudo apt-get update -qq
+  - sudo apt-get install -qq libhdf4-dev
+  - sudo apt-get install -qq python-all-dev 
+  - sudo apt-get install -qq libhdf5-serial-dev
+
+# command to install dependencies
+install:
+  - if [[ $TRAVIS_PYTHON_VERSION == '2.7' ]]; then pip install cffi numpy mock ; fi
+  - if [[ $TRAVIS_PYTHON_VERSION == '3.4' ]]; then pip install cffi numpy ; fi
+
+# command to run tests
+script:
+  - python -m unittest discover
+
+notifications:
+  email: "john.g.evans.ne@gmail.com"

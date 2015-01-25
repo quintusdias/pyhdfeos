@@ -49,7 +49,7 @@ Swath:  SIMPLE
         GeoTrack/GeoTrack:  offset=0, increment=1
     Index Maps:
     Geolocation Group Attributes:
-        ScalarFloat:  3.140000104904175
+        ScalarFloat:  3.14000010
     Geolocation Group Fields:
         float64 Time[GeoTrack]:
         float64 Latitude[GeoTrack, GeoXtrack]:
