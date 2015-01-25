@@ -91,21 +91,23 @@ class _ZonalAverage(_EosStruct):
         self._he.zaclose(self.zafid)
 
     def __str__(self):
-        lst = ["Zonal Average:  {0}".format(self.zaname)]
+        title = "Zonal Average:  {0}".format(self.zaname)
 
+        lst = []
         text = self._format_dimensions()
-        text += '\n'
-        text += self._format_attributes('Data Group Attributes',
-                                        self.data_field_attrs)
-        text += '\n'
-        text += self._format_fields('Data Fields', self.fields)
-        text += '\n'
-        text += self._format_attributes('Zonal Average Attributes', self.attrs)
+        lst.append(text)
+        text = self._format_attributes('Data Group Attributes',
+                                       self.data_field_attrs)
+        lst.append(text)
+        text = self._format_fields('Data Fields', self.fields)
+        lst.append(text)
+        text = self._format_attributes('Zonal Average Attributes', self.attrs)
+        lst.append(text)
 
+        text = '\n'.join(lst)
         text = self._textwrap(text, 4)
-        lst.extend(text.split('\n'))
 
-        return '\n'.join(lst)
+        return title + '\n' + text
 
 
 class _ZonalAverageVariable(_EosField):

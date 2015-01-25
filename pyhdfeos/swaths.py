@@ -156,48 +156,81 @@ class _Swath(_EosStruct):
         self._he.swdetach(self._swathid)
         self._he.swclose(self._swfid)
 
-    def __str__(self):
-        lst = ["Swath:  {0}".format(self.name)]
+    def _format_index_maps(self):
+        """
+        __str__ helper for index maps
+        """
+        title = 'Index Maps:'
 
-        text = self._format_dimensions()
-        text = self._textwrap(text, 4)
-        lst.extend(text.split('\n'))
+        if len(self.idxmaps) == 0:
+            return title
 
-        lst.append("    Dimension Maps:")
+        lst = []
+        for name, idx in self.idxmaps.items():
+            msg = "{0}:  index={1}".format(name, idx)
+            lst.append(msg)
+        text = '\n'.join(lst)
+        text = title + '\n' + self._textwrap(text, 4)
+
+        return text
+
+    def _format_dimension_maps(self):
+        """
+        __str__ helper for dimension maps
+        """
+        title = 'Dimension Maps:'
+
+        if len(self.dimmaps) == 0:
+            return title
+
+        lst = []
         for name, map in self.dimmaps.items():
-            msg = "        {0}:  offset={1}, increment={2}"
+            msg = "{0}:  offset={1}, increment={2}"
             msg = msg.format(name, map.offset, map.increment)
             lst.append(msg)
+        text = '\n'.join(lst)
+        text = title + '\n' + self._textwrap(text, 4)
 
-        lst.append("    Index Maps:")
-        for name, idx in self.idxmaps.items():
-            msg = "        {0}:  index={1}".format(name, idx)
-            lst.append(msg)
+        return text
+
+    def __str__(self):
+        lst = []
+
+        text = self._format_dimensions()
+        lst.append(text)
+
+        text = self._format_dimension_maps()
+        lst.append(text)
+
+        text = self._format_index_maps()
+        lst.append(text)
 
         if hasattr(self._he, 'swinqgeogrpattrs'):
             text = self._format_attributes('Geolocation Group Attributes',
                                            self.geofield_attrs)
-            text = self._textwrap(text, 4)
-            lst.extend(text.split('\n'))
+            lst.append(text)
 
         text = self._format_fields('Geolocation Group Fields', self.geofields)
-        text = self._textwrap(text, 4)
-        lst.extend(text.split('\n'))
+        lst.append(text)
 
         if hasattr(self._he, 'swinqgrpattrs'):
             text = self._format_attributes('Data Group Attributes',
                                            self.datafield_attrs)
-            text = self._textwrap(text, 4)
-            lst.extend(text.split('\n'))
+            lst.append(text)
 
         text = self._format_fields('Data Group Fields', self.datafields)
-        text += '\n'
-        text += self._format_attributes('Swath Attributes', self.attrs)
+        lst.append(text)
+        text = self._format_attributes('Swath Attributes', self.attrs)
+        lst.append(text)
 
+        text = '\n'.join(lst)
         text = self._textwrap(text, 4)
-        lst.extend(text.split('\n'))
 
-        return '\n'.join(lst)
+        title = "Swath:  {0}".format(self.name)
+
+        text = title + '\n' + text
+
+        return text
 
 
 class _SwathVariable(_EosField):
