@@ -15,12 +15,6 @@ ext_modules = [pyhdfeos.lib.he4.ffi.verifier.get_extension(),
 
 from distutils.extension import Extension
 cythonize("pyhdfeos/_som.pyx")
-<<<<<<< HEAD
-sources = ["pyhdfeos/_som.c"]
-gctp_srcs = [os.path.join("pyhdfeos", "lib", "source", "gctp", file) for file in pyhdfeos.lib.config.gctp_srcs]
-sources.extend(gctp_srcs)
-include_dirs = ["pyhdfeos/lib/source/hdfeos5"]
-=======
 sources = [os.path.join('pyhdfeos', '_som.c'),
            os.path.join('pyhdfeos', 'lib', 'source', 'gctp', 'cproj.c'),
            os.path.join('pyhdfeos', 'lib', 'source', 'gctp', 'report.c'),
@@ -30,7 +24,6 @@ sources = [os.path.join('pyhdfeos', '_som.c'),
            os.path.join('pyhdfeos', 'lib', 'source', 'gctp_som', 'inv_init.c')]
 include_dirs = ["pyhdfeos/lib/source/gctp_som",
                 "pyhdfeos/lib/source/gctp"]
->>>>>>> 0a36c1d063aab1e44a9910e432a57130d3472339
 e = Extension("pyhdfeos/_som", sources=sources, include_dirs=include_dirs)
 ext_modules.append(e)
 
