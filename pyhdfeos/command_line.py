@@ -3,7 +3,7 @@ import argparse
 from .grids import GridFile
 from .swaths import SwathFile
 from .za import ZonalAverageFile
-from .lib import he4, he5
+from .lib import he2, he5
 
 
 def dump_metadata():
@@ -14,7 +14,7 @@ def dump_metadata():
 
     args = parser.parse_args()
 
-    if not he4.ehheishe2(args.filename) and not he5.ehheishe5(args.filename):
+    if not he2.ehheishe2(args.filename) and not he5.ehheishe5(args.filename):
         print('No HDF-EOS structures detected.')
         return
 

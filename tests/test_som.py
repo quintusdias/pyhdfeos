@@ -4,7 +4,7 @@ import unittest
 import numpy as np
 
 from pyhdfeos import GridFile
-from pyhdfeos.lib import he4
+from pyhdfeos.lib import he2
 
 from . import fixtures
 
@@ -139,11 +139,11 @@ class TestSuite(unittest.TestCase):
         """
         file = 'MISR_AM1_GRP_ELLIPSOID_GM_P117_O058421_BA_F03_0024.hdf'
         file = fixtures.test_file_path(file)
-        gdfid = he4.gdopen(file)
-        gridid = he4.gdattach(gdfid, 'BlueBand')
-        actual = he4.gdblksomoffset(gridid)
-        he4.gddetach(gridid)
-        he4.gdclose(gdfid)
+        gdfid = he2.gdopen(file)
+        gridid = he2.gdattach(gdfid, 'BlueBand')
+        actual = he2.gdblksomoffset(gridid)
+        he2.gddetach(gridid)
+        he2.gdclose(gdfid)
         self.assertEqual(len(actual), 179)
 
         expected_offset = [0, 16, 0, 16, 0, 0, 0, 16, 0, 0, 0, 0, 16, 0, 0,

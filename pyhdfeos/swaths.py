@@ -6,7 +6,7 @@ import os
 
 import numpy as np
 
-from .lib import he4, he5
+from .lib import he2, he5
 from .core import EosFile, _EosStruct, _EosField, DimensionMap
 
 
@@ -24,8 +24,8 @@ class SwathFile(EosFile):
     def __init__(self, filename):
         EosFile.__init__(self, filename)
         try:
-            self._swfid = he4.swopen(filename)
-            self._he = he4
+            self._swfid = he2.swopen(filename)
+            self._he = he2
         except IOError:
             # try hdf5
             self._swfid = he5.swopen(filename)
@@ -35,7 +35,7 @@ class SwathFile(EosFile):
         self.swaths = collections.OrderedDict()
         for swathname in swathlist:
             self.swaths[swathname] = _Swath(self.filename, swathname, self._he)
-            if self._is_hdf4:
+            if self._is_hdfeos2:
                 # Inquire about hdf4 attributes using SD interface
                 self._position_to_hdf4_vgroup(swathname, True)
                 for fieldname in self.swaths[swathname].geofields.keys():
