@@ -1,110 +1,8 @@
-import os
 import sys
 
 import numpy as np
-from cffi import FFI
 
-from . import config
-from .core import decode_comma_delimited_ffi_string
-
-CDEF = """
-    typedef float float32;
-    typedef int int32;
-    typedef int intn;
-    typedef double float64;
-
-    int   EHHEisHE2(char *filename);
-    intn  EHidinfo(int32 fid, int32 *hdfid, int32 *sdid);
-    int32 GDattach(int32 gdfid, char *grid);
-    intn  GDattrinfo(int32 gdfid, char *attrname, int32 *nbyte, int32
-                     *count);
-    intn  GDblkSOMoffset(int32 fid, float32 [], int32 count, char *code);
-    intn  GDdetach(int32 gid);
-    intn  GDclose(int32 fid);
-    intn  GDfieldinfo(int32 gridid, char *fieldname, int32 *rank,
-                      int32 dims[], int32 *numbertype, char *dimlist);
-    int32 GDij2ll(int32 projcode, int32 zonecode,
-                  float64 projparm[], int32 spherecode, int32 xdimsize,
-                  int32 ydimsize, float64 upleft[], float64 lowright[],
-                  int32 npts, int32 row[], int32 col[], float64
-                  longititude[], float64 latitude[], int32 pixcen,
-                  int32 pixcnr);
-    int32 GDinqattrs(int32 gridid, char *attrlist, int32 *strbufsize);
-    int32 GDinqdims(int32 gridid, char *dimname, int32 *dims);
-    int32 GDinqfields(int32 gridid, char *fieldlist, int32 rank[],
-                      int32 numbertype[]);
-    int32 GDinqgrid(char *filename, char *gridlist, int32 *strbufsize);
-    int32 GDnentries(int32 gridid, int32 entrycode, int32 *strbufsize);
-    intn  GDgridinfo(int32 gridid, int32 *xdimsize, int32 *ydimsize,
-                     float64 upleft[2], float64 lowright[2]);
-    int32 GDopen(char *name, intn access);
-    intn  GDorigininfo(int32 gridid, int32 *origincode);
-    intn  GDpixreginfo(int32 gridid, int32 *pixregcode);
-    intn  GDprojinfo(int32 gridid, int32 *projcode, int32 *zonecode,
-                     int32 *spherecode, float64 projparm[]);
-    intn  GDreadattr(int32 gridid, char* attrname, void *buffer);
-    intn  GDreadfield(int32 gridid, char* fieldname, int32 start[],
-                      int32 stride[], int32 edge[], void *buffer);
-    int32 SWattach(int32 swfid, char *swath);
-    intn  SWattrinfo(int32 swathid, char *attrname, int32 *nbyte, int32
-                     *count);
-    intn  SWclose(int32 fid);
-    intn  SWdetach(int32 swfid);
-    intn  SWfieldinfo(int32 gridid, char *fieldname, int32 *rank,
-                      int32 dims[], int32 *numbertype, char *dimlist);
-    int32 SWidxmapinfo(int32, char *, char *, int32 []);
-    int32 SWinqattrs(int32 swathid, char *attrlist, int32 *strbufsize);
-    int32 SWinqdims(int32 swathid, char *dimname, int32 *dims);
-    int32 SWinqdatafields(int32 swathid, char *fieldlist, int32 rank[],
-                          int32 numbertype[]);
-    int32 SWinqgeofields(int32 swathid, char *fieldlist, int32 rank[],
-                         int32 numbertype[]);
-    int32 SWinqidxmaps(int32, char *, int32 []);
-    int32 SWinqmaps(int32, char *, int32 [], int32 []);
-    int32 SWinqswath(char *filename, char *swathlist, int32 *strbufsize);
-    int32 SWnentries(int32 swathid, int32 entrycode, int32 *strbufsize);
-    intn  SWreadattr(int32 swathid, char* attrname, void *buffer);
-    intn  SWreadfield(int32 gridid, char* fieldname, int32 start[],
-                      int32 stride[], int32 edge[], void *buffer);
-    int32 SWopen(char *name, intn access);
-"""
-
-SOURCE = """
-    #include "mfhdf.h"
-    #include "HdfEosDef.h"
-"""
-
-ffi = FFI()
-ffi.cdef(CDEF)
-
-include_dirs = config.include_dirs
-include_dirs.append("pyhdfeos/lib/source/hdfeos")
-
-hdfeos_srcs = ["EHapi.c", "GDapi.c", "PTapi.c", "SWapi.c"]
-sources = [os.path.join('pyhdfeos', 'lib', 'source', 'hdfeos', file)
-           for file in hdfeos_srcs]
-
-lst = [os.path.join('pyhdfeos', 'lib', 'source', 'gctp', file)
-       for file in config.gctp_srcs]
-sources.extend(lst)
-
-
-_lib = ffi.verify(SOURCE,
-                  ext_package='pyhdfeos',
-                  sources=sources,
-                  libraries=config.hdf4_libraries,
-                  include_dirs=include_dirs,
-                  library_dirs=config.library_dirs,
-                  extra_link_args=config.extra_link_args,
-                  modulename=config._create_modulename("_hdfeos",
-                                                       CDEF,
-                                                       SOURCE,
-                                                       sys.version))
-
-
-def _handle_error(status):
-    if status < 0:
-        raise IOError("Library routine failed.")
+from .core import decode_comma_delimited_ffi_string, ffi, _lib
 
 DFACC_READ = 1
 DFACC_WRITE = 2
@@ -142,6 +40,11 @@ cast_string_dict = {np.uint16: "unsigned short *",
                     np.uint32: "unsigned int *",
                     np.int64: "long long int",
                     np.uint64: "unsigned long long *"}
+
+
+def _handle_error(status):
+    if status < 0:
+        raise IOError("Library routine failed.")
 
 
 def ehheishe2(filename):
