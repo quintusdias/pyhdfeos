@@ -83,6 +83,9 @@ else:
     hdf5_libraries = None
     library_dirs = None
 
+libraries = hdf4_libraries
+libraries.extend(hdf5_libraries)
+
 include_dirs = ["/opt/local/include",
                 "/usr/include",
                 "/usr/include/hdf",

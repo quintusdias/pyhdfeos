@@ -9,7 +9,8 @@ import pyhdfeos
 
 # Three CFFI extension modules, one for HDF-EOS, one for HDF-EOS5, and one
 # for augmenting HDF-EOS with HDF4.
-ext_modules = [pyhdfeos.lib.he2.ffi.verifier.get_extension(),
+ext_modules = [pyhdfeos.lib.core.ffi.verifier.get_extension(),
+               pyhdfeos.lib.he2.ffi.verifier.get_extension(),
                pyhdfeos.lib.he5.ffi.verifier.get_extension(),
                pyhdfeos.lib.hdf.ffi.verifier.get_extension()]
 
