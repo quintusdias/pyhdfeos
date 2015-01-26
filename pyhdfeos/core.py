@@ -12,7 +12,7 @@ else:
 
 import numpy as np
 
-from .lib import hdf, he4, he5
+from .lib import hdf, he2, he5
 
 # swath dimension map definition
 DimensionMap = collections.namedtuple('DimensionMap', ['offset', 'increment'])
@@ -35,12 +35,12 @@ class EosFile(object):
 
         # Try to open the file as HDF4.  If we succeed, start up the SD and
         # vgroup interface to ease retrieval of SDS attributes.
-        self._is_hdf4 = False
-        if he4.ehheishe2(filename):
+        self._is_hdfeos2 = False
+        if he2.ehheishe2(filename):
             self._fid = hdf.hopen(filename)
             self._sd_id = hdf.sdstart(filename)
             hdf.vstart(self._fid)
-            self._is_hdf4 = True
+            self._is_hdfeos2 = True
         elif he5.ehheishe5(filename):
             pass
         else:
@@ -50,7 +50,7 @@ class EosFile(object):
     def __del__(self):
 
         # Close the HDF4 raw file IDs
-        if self._is_hdf4:
+        if self._is_hdfeos2:
             hdf.vend(self._fid)
             hdf.sdend(self._sd_id)
             hdf.hclose(self._fid)

@@ -13,7 +13,7 @@ else:
 
 import numpy as np
 
-from .lib import he4, he5, hdf
+from .lib import he2, he5, hdf
 from .core import EosFile, _EosStruct, _EosField
 from . import _som
 
@@ -592,8 +592,8 @@ class GridFile(EosFile):
     def __init__(self, filename):
         EosFile.__init__(self, filename)
         try:
-            self._gdfid = he4.gdopen(filename)
-            self._he = he4
+            self._gdfid = he2.gdopen(filename)
+            self._he = he2
         except IOError:
             # try hdf5
             try:
@@ -608,7 +608,7 @@ class GridFile(EosFile):
         self.grids = collections.OrderedDict()
         for gridname in gridlist:
             self.grids[gridname] = _Grid(self.filename, gridname, self._he)
-            if self._is_hdf4:
+            if self._is_hdfeos2:
                 self._position_to_hdf4_vgroup(gridname)
                 # Inquire about hdf4 attributes using SD interface
                 for fieldname in self.grids[gridname].fields.keys():
@@ -638,7 +638,7 @@ class GridFile(EosFile):
             self._he.gdclose(self._gdfid)
 
         # Close the HDF4 raw file IDs
-        if self._is_hdf4:
+        if self._is_hdfeos2:
             hdf.vend(self._fid)
             hdf.sdend(self._sd_id)
             hdf.hclose(self._fid)
