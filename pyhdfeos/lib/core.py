@@ -239,15 +239,15 @@ ffi = FFI()
 ffi.cdef(CDEF)
 
 include_dirs = config.include_dirs
-include_dirs.append("pyhdfeos/lib/source/hdfeos")
-include_dirs.append("pyhdfeos/lib/source/hdfeos5")
+include_dirs.append('pyhdfeos/lib/source/hdfeos')
+include_dirs.append('pyhdfeos/lib/source/hdfeos5')
 
-hdfeos_srcs = ["EHapi.c", "GDapi.c", "PTapi.c", "SWapi.c"]
+hdfeos_srcs = ['EHapi.c', 'GDapi.c', 'PTapi.c', 'SWapi.c']
 sources = [os.path.join('pyhdfeos', 'lib', 'source', 'hdfeos', file)
            for file in hdfeos_srcs]
 
-he5_srcs = ["EHapi.c", "GDapi.c", "PTapi.c",
-            "SWapi.c", "TSapi.c", "ZAapi.c"]
+he5_srcs = ['EHapi.c', 'GDapi.c', 'PTapi.c',
+            'SWapi.c', 'TSapi.c', 'ZAapi.c']
 lst = [os.path.join('pyhdfeos', 'lib', 'source', 'hdfeos5', file)
        for file in he5_srcs]
 sources.extend(lst)

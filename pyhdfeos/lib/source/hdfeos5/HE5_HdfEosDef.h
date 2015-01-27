@@ -91,6 +91,7 @@ typedef unsigned uintn;
 
 #ifdef WIN32
 #define LONGLONG __int64
+typedef unsigned char uint8_t;
 #else
 #define LONGLONG long long
 #endif

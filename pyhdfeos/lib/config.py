@@ -1,5 +1,7 @@
 import binascii
 import os
+import platform
+import sys
 
 
 gctp_srcs = ["alberfor.c", "alberinv.c", "alconfor.c", "alconinv.c",
@@ -90,3 +92,15 @@ include_dirs = ["/opt/local/include",
                 "/usr/include",
                 "/usr/include/hdf",
                 "/usr/local/include"]
+
+if platform.system() == 'Windows':
+    hdf4_root = os.path.join('C:\\', 'Program Files', 'HDF_Group',
+                             'HDF', '4.2.10')
+    library_dirs.append(os.path.join(hdf4_root, 'bin'))
+    include_dirs.append(os.path.join(hdf4_root, 'include'))
+
+    hdf5_root = os.path.dirname(sys.executable)
+    hdf5_root = os.path.join(hdf5_root, 'Library')
+    library_dirs.append(os.path.join(hdf5_root, 'lib'))
+    include_dirs.append(os.path.join(hdf5_root, 'include'))
+                   
