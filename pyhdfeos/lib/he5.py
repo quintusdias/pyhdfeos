@@ -1,170 +1,9 @@
-import os
 import platform
 import sys
 
-from cffi import FFI
 import numpy as np
 
-from . import config
-from .core import decode_comma_delimited_ffi_string
-
-CDEF = """
-    typedef unsigned uintn;
-    typedef unsigned long long hsize_t;
-    typedef int hid_t;
-    typedef int herr_t;
-
-    hid_t  HE5_GDattach(hid_t fid, char *gridname);
-    long   HE5_GDattrinfo(hid_t gridID, const char *attrname,
-                             hid_t *ntype, hsize_t *count);
-    herr_t HE5_GDclose(hid_t fid);
-    herr_t HE5_GDdetach(hid_t gridid);
-    herr_t HE5_GDfieldinfo(hid_t gridID, const char *fieldname, int *rank,
-                           hsize_t dims[], hid_t *ntype, char *dimlist,
-                           char *maxdimlist);
-    herr_t HE5_GDgridinfo(hid_t gridID, long *xdimsize, long *ydimsize,
-                          double upleftpt[], double lowrightpt[]);
-    herr_t HE5_GDij2ll(int projcode, int zonecode,
-                       double projparm[], int spherecode, long xdimsize,
-                       long ydimsize, double upleft[], double lowright[],
-                       long npts, long row[], long col[],
-                       double longititude[], double latitude[],
-                       int pixcen, int pixcnr);
-    long   HE5_GDinqattrs(hid_t gridID, char *attrnames, long *strbufsize);
-    int    HE5_GDinqdims(hid_t gridid, char *dims, hsize_t *dims);
-    int    HE5_GDinqfields(hid_t gridID, char *fieldlist, int rank[],
-                           hid_t ntype[]);
-    long   HE5_GDinqgrid(const char *filename, char *gridlist,
-                         long *strbufsize);
-    long   HE5_GDinqlocattrs(hid_t gridID, char *fieldname, char *attrnames,
-                             long *strbufsize);
-    long   HE5_GDlocattrinfo(hid_t gridID, char *fieldname, char *attrname,
-                             hid_t *ntype, hsize_t *count);
-    long   HE5_GDnentries(hid_t gridID, int entrycode, long *strbufsize);
-    hid_t  HE5_GDopen(const char *filename, uintn access);
-    herr_t HE5_GDorigininfo(hid_t gridID, int *origincode);
-    herr_t HE5_GDpixreginfo(hid_t gridID, int *pixregcode);
-    herr_t HE5_GDprojinfo(hid_t gridID, int *projcode, int *zonecode,
-                          int *spherecode, double projparm[]);
-    herr_t HE5_GDreadattr(hid_t gridID, const char* attrname, void *buffer);
-    herr_t HE5_GDreadfield(hid_t gridid, const char* fieldname,
-                           const hsize_t start[],
-                           const hsize_t stride[],
-                           const hsize_t edge[],
-                           void *buffer);
-    herr_t HE5_GDreadlocattr(hid_t gridID, const char *fieldname,
-                             const char *attrname, void *databuf);
-    /*int HE5_EHHEisHE5(char *filename);*/
-    hid_t  HE5_SWattach(hid_t fid, char *swathname);
-    long   HE5_SWattrinfo(hid_t gridID, const char *attrname,
-                             hid_t *ntype, hsize_t *count);
-    herr_t HE5_SWdetach(hid_t swathid);
-    herr_t HE5_SWfieldinfo(hid_t gridID, const char *fieldname, int *rank,
-                           hsize_t dims[], hid_t *ntype, char *dimlist,
-                           char *maxdimlist);
-    long   HE5_SWgeogrpattrinfo(hid_t gridID, const char *attrname,
-                                hid_t *ntype, hsize_t *count);
-    long   HE5_SWgrpattrinfo(hid_t gridID, const char *attrname,
-                             hid_t *ntype, hsize_t *count);
-    hsize_t HE5_SWidxmapinfo(hid_t swathID, char *geodim, char *datadim,
-                             long index []);
-    long   HE5_SWinqattrs(hid_t gridID, char *attrnames, long *strbufsize);
-    int    HE5_SWinqdims(hid_t swathid, char *dims, hsize_t *dims);
-    int    HE5_SWinqdatafields(hid_t gridID, char *fieldlist, int rank[],
-                               hid_t ntype[]);
-    int    HE5_SWinqgeofields(hid_t gridID, char *fieldlist, int rank[],
-                              hid_t ntype[]);
-    long   HE5_SWinqgeogrpattrs(hid_t gridID, char *attrnames,
-                                long *strbufsize);
-    long   HE5_SWinqgrpattrs(hid_t gridID, char *attrnames, long *strbufsize);
-    long   HE5_SWinqlocattrs(hid_t swathID, char *fieldname, char *attrnames,
-                             long *strbufsize);
-    long   HE5_SWinqidxmaps(hid_t, char *, hsize_t []);
-    long   HE5_SWinqmaps(hid_t, char *, long [], long []);
-    long   HE5_SWinqswath(const char *filename, char *swathlist,
-                          long *strbufsize);
-    long   HE5_SWlocattrinfo(hid_t swathID, char *fieldname, char *attrname,
-                             hid_t *ntype, hsize_t *count);
-    long   HE5_SWnentries(hid_t swathID, int entrycode, long *strbufsize);
-    hid_t  HE5_SWopen(const char *filename, uintn access);
-    herr_t HE5_SWreadattr(hid_t swathID, const char* attrname, void *buffer);
-    herr_t HE5_SWreadgeogrpattr(hid_t swathID, const char* attrname,
-                                void *buffer);
-    herr_t HE5_SWreadgrpattr(hid_t swathID, const char* attrname,
-                             void *buffer);
-    herr_t HE5_SWreadfield(hid_t swathID, const char* fieldname,
-                           const hsize_t start[],
-                           const hsize_t stride[],
-                           const hsize_t edge[],
-                           void *buffer);
-    herr_t HE5_SWreadlocattr(hid_t swathID, const char *fieldname,
-                             const char *attrname, void *databuf);
-    herr_t HE5_SWclose(hid_t fid);
-    hid_t  HE5_ZAattach(hid_t fid, char *zaname);
-    long   HE5_ZAattrinfo(hid_t zaid, const char *attrname,
-                             hid_t *ntype, hsize_t *count);
-    hid_t  HE5_ZAopen(const char *filename, uintn access);
-    herr_t HE5_ZAclose(hid_t fid);
-    herr_t HE5_ZAdetach(hid_t zaid);
-    long   HE5_ZAgrpattrinfo(hid_t zaid, const char *attrname,
-                             hid_t *ntype, hsize_t *count);
-    herr_t HE5_ZAinfo(hid_t zaid, const char *fieldname, int *rank,
-                      hsize_t dims[], hid_t *ntype, char *dimlist,
-                      char *maxdimlist);
-    long   HE5_ZAinqattrs(hid_t zaid, char *attrnames, long *strbufsize);
-    long   HE5_ZAinqdims(hid_t zaid, char *dims, hsize_t *dims);
-    long   HE5_ZAinqgrpattrs(hid_t zaid, char *attrnames, long *strbufsize);
-    long   HE5_ZAinqlocattrs(hid_t zaid, char *fieldname, char *attrnames,
-                             long *strbufsize);
-    long   HE5_ZAinqza(const char *filename, char *zalist, long *strbufsize);
-    long   HE5_ZAinquire(hid_t zaid, char *fieldlist, int rank[],
-                         hid_t ntype[]);
-    long   HE5_ZAlocattrinfo(hid_t zaid, char *fieldname, char *attrname,
-                             hid_t *ntype, hsize_t *count);
-    long   HE5_ZAnentries(hid_t zaid, int entrycode, long *strbufsize);
-    herr_t HE5_ZAreadattr(hid_t zaid, const char* attrname, void *buffer);
-    herr_t HE5_ZAreadgrpattr(hid_t zaid, const char* attrname,
-                             void *buffer);
-    herr_t HE5_ZAread(hid_t zaid, const char* fieldname,
-                      const hsize_t start[],
-                      const hsize_t stride[],
-                      const hsize_t edge[],
-                      void *buffer);
-    herr_t HE5_ZAreadlocattr(hid_t zaid, const char *fieldname,
-                             const char *attrname, void *databuf);
-"""
-
-SOURCE = """
-    #include "HE5_HdfEosDef.h"
-"""
-
-ffi = FFI()
-ffi.cdef(CDEF)
-
-include_dirs = config.include_dirs
-include_dirs.append("pyhdfeos/lib/source/hdfeos5")
-
-he5_srcs = ["EHapi.c", "GDapi.c", "PTapi.c",
-            "SWapi.c", "TSapi.c", "ZAapi.c"]
-sources = [os.path.join('pyhdfeos', 'lib', 'source', 'hdfeos5', file)
-           for file in he5_srcs]
-
-lst = [os.path.join('pyhdfeos', 'lib', 'source', 'gctp', file)
-       for file in config.gctp_srcs]
-sources.extend(lst)
-
-_lib = ffi.verify(SOURCE,
-                  ext_package='pyhdfeos',
-                  sources=sources,
-                  libraries=config.hdf5_libraries,
-                  extra_compile_args=['-DH5_USE_16_API'],
-                  include_dirs=include_dirs,
-                  library_dirs=config.library_dirs,
-                  extra_link_args=None,
-                  modulename=config._create_modulename("_hdfeos5",
-                                                       CDEF,
-                                                       SOURCE,
-                                                       sys.version))
+from .core import decode_comma_delimited_ffi_string, ffi, _lib
 
 H5F_ACC_RDONLY = 0x0000
 
@@ -204,6 +43,28 @@ cast_string_dict = {np.int32: "int *",
 def _handle_error(status):
     if status < 0:
         raise IOError("Library routine failed.")
+
+
+def ehheishe5(filename):
+    """Determine if the input file type is HDF-EOS5
+
+    This function wraps the HDF-EOS5 HE5_EHHEisHE5 library function.
+
+    Parameters
+    ----------
+    filename : str
+        name of the file
+
+    Returns
+    -------
+    True if the file is HDF-EOS5, False is not.
+    """
+    status = _lib.HE5_EHHEisHE5(filename.encode())
+    _handle_error(status)
+    if status == 1:
+        return True
+    else:
+        return False
 
 
 def gdattach(gdfid, gridname):

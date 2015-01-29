@@ -5,7 +5,6 @@ Support for HDF-EOS and HDF-EOS5 grid files
 import collections
 import os
 import sys
-import textwrap
 
 if sys.hexversion < 0x03000000:
     from itertools import ifilterfalse as filterfalse
@@ -14,8 +13,8 @@ else:
 
 import numpy as np
 
-from .lib import he4, he5, hdf
-from .core import EosFile, _EosField
+from .lib import he2, he5, hdf
+from .core import EosFile, _EosStruct, _EosField
 from . import _som
 
 
@@ -66,7 +65,7 @@ class _GridVariable(_EosField):
                                     start, stride, edge)
 
 
-class _Grid(object):
+class _Grid(_EosStruct):
     """
     Grid object, concerned only with coordinates of HDF-EOS grids.
 
@@ -226,44 +225,43 @@ class _Grid(object):
                    self._projection_false_easting(),
                    self._projection_false_northing()]
 
-        # Indent the projection title 4 spaces, indent the projection
-        # parameters 8 spaces.
-        if sys.hexversion < 0x03000000:
-            msg = ' ' * 4 + title
-            lst = [(' ' * 8 + line) for line in lst]
-        else:
-            msg = textwrap.indent(title, ' ' * 4)
-            lst = [textwrap.indent(line, ' ' * 8) for line in lst]
-        if len(lst) > 0:
-            msg += '\n' + '\n'.join(lst)
+        if len(lst) == 0:
+            return title
 
-        return msg
+        text = '\n'.join(lst)
+        text = self._textwrap(text, 4)
+
+        text = title + '\n' + text
+
+        return text
 
     def __str__(self):
-        lst = ["Grid:  {0}".format(self.name)]
-        lst.append("    Dimensions:")
-        for dimname, dimlen in self.dims.items():
-            lst.append("        {0}:  {1}".format(dimname, dimlen))
+        title = "Grid:  {0}".format(self.name)
 
-        lst.append("    Upper Left (x,y):  {0}".format(self.upleft))
-        lst.append("    Lower Right (x,y):  {0}".format(self.lowright))
-        lst.append("    Sphere:  {0}".format(self._sphere))
+        lst = []
 
-        lst.extend(self._projection_str().split('\n'))
+        text = self._format_dimensions()
+        lst.append(text)
 
-        lst.append("    Fields:")
-        for field in self.fields.keys():
-            if sys.hexversion <= 0x03000000:
-                textstr = str(self.fields[field])
-                field_lst = [(' ' * 8 + line) for line in textstr.split('\n')]
-                lst.extend(field_lst)
-            else:
-                lst.append(textwrap.indent(str(self.fields[field]), ' ' * 8))
+        lst.append("Upper Left (x,y):  {0}".format(self.upleft))
+        lst.append("Lower Right (x,y):  {0}".format(self.lowright))
+        lst.append("Sphere:  {0}".format(self._sphere))
 
-        lst.append("    Grid Attributes:")
-        for attr in self.attrs.keys():
-            lst.append("        {0}:  {1}".format(attr, self.attrs[attr]))
-        return '\n'.join(lst)
+        text = self._projection_str()
+        lst.append(text)
+
+        text = self._format_fields('Fields', self.fields)
+        lst.append(text)
+
+        text = self._format_attributes('Grid Attributes', self.attrs)
+        lst.append(text)
+
+        text = '\n'.join(lst)
+        text = self._textwrap(text, 4)
+
+        text = title + '\n' + text
+
+        return text
 
     def _projection_lonz_latz(self):
         """
@@ -594,8 +592,8 @@ class GridFile(EosFile):
     def __init__(self, filename):
         EosFile.__init__(self, filename)
         try:
-            self._gdfid = he4.gdopen(filename)
-            self._he = he4
+            self._gdfid = he2.gdopen(filename)
+            self._he = he2
         except IOError:
             # try hdf5
             try:
@@ -610,7 +608,7 @@ class GridFile(EosFile):
         self.grids = collections.OrderedDict()
         for gridname in gridlist:
             self.grids[gridname] = _Grid(self.filename, gridname, self._he)
-            if self._is_hdf4:
+            if self._is_hdfeos2:
                 self._position_to_hdf4_vgroup(gridname)
                 # Inquire about hdf4 attributes using SD interface
                 for fieldname in self.grids[gridname].fields.keys():
@@ -640,7 +638,7 @@ class GridFile(EosFile):
             self._he.gdclose(self._gdfid)
 
         # Close the HDF4 raw file IDs
-        if self._is_hdf4:
+        if self._is_hdfeos2:
             hdf.vend(self._fid)
             hdf.sdend(self._sd_id)
             hdf.hclose(self._fid)

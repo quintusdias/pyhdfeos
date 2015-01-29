@@ -49,7 +49,7 @@ Swath:  SIMPLE
         GeoTrack/GeoTrack:  offset=0, increment=1
     Index Maps:
     Geolocation Group Attributes:
-        ScalarFloat:  3.140000104904175
+        ScalarFloat:  3.14000010
     Geolocation Group Fields:
         float64 Time[GeoTrack]:
         float64 Latitude[GeoTrack, GeoXtrack]:
@@ -272,7 +272,7 @@ Zonal Average:  ZA1
         IndxTrack:  12
         ExtDim:  60
         Unlim:  18446744073709551615
-    Group Attributes:
+    Data Group Attributes:
         GroupAttribute:  [10 20 30 40]
     Data Fields:
         float32 Density[MyTrack1]:

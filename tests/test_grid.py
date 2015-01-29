@@ -4,7 +4,7 @@ import unittest
 
 import numpy as np
 
-from pyhdfeos.lib import he4
+from pyhdfeos.lib import he2
 from pyhdfeos import GridFile
 
 from . import fixtures
@@ -103,7 +103,7 @@ class TestRead(unittest.TestCase):
 
         self.assertEqual(actual.shape, (20, 12))
 
-    def test_read_he4_2d_single_ellipsis(self):
+    def test_read_he2_2d_single_ellipsis(self):
         """
         array-style indexing case of [...]
         """
@@ -125,7 +125,7 @@ class TestRead(unittest.TestCase):
         expected = np.array([[10, 0], [0, 76]], dtype=np.float32)
         np.testing.assert_array_equal(actual[0:280:279, 0:180:179], expected)
 
-    def test_read_he4_2d_full(self):
+    def test_read_he2_2d_full(self):
         """
         array-style indexing case of [:]
         """
@@ -147,7 +147,7 @@ class TestRead(unittest.TestCase):
         expected = np.array([[10, 0], [0, 76]], dtype=np.float32)
         np.testing.assert_array_equal(actual[0:280:279, 0:180:179], expected)
 
-    def test_read_he4_2d_full_full(self):
+    def test_read_he2_2d_full_full(self):
         """
         array-style indexing case of [:,:]
         """
@@ -159,7 +159,7 @@ class TestRead(unittest.TestCase):
             expected[j] = j + 10
         np.testing.assert_array_equal(actual, expected)
 
-    def test_read_he4_2d_row(self):
+    def test_read_he2_2d_row(self):
         """
         array-style indexing case of [scalar int]
         """
@@ -180,7 +180,7 @@ class TestRead(unittest.TestCase):
         expected[120:180] = 0
         np.testing.assert_array_equal(actual, expected)
 
-    def test_read_he4_2d_slice_slice(self):
+    def test_read_he2_2d_slice_slice(self):
         """
         array-style indexing case of [r1;r2, c1:c2]
         """
@@ -204,7 +204,7 @@ class TestRead(unittest.TestCase):
             expected[j] = j + 13
         np.testing.assert_array_equal(actual, expected)
 
-    def test_read_he4_2d_int_ellipsis(self):
+    def test_read_he2_2d_int_ellipsis(self):
         """
         array-style indexing case of [scalar, ...]
         """
@@ -214,7 +214,7 @@ class TestRead(unittest.TestCase):
         expected = np.ones(120, dtype=np.float32) * 13
         np.testing.assert_array_equal(actual, expected)
 
-    def test_read_he4_2d_int_slice(self):
+    def test_read_he2_2d_int_slice(self):
         """
         array-style indexing case of [scalar, :]
         """
@@ -224,7 +224,7 @@ class TestRead(unittest.TestCase):
         expected = np.ones(120, dtype=np.float32) * 13
         np.testing.assert_array_equal(actual, expected)
 
-    def test_read_he4_2d_int_int(self):
+    def test_read_he2_2d_int_int(self):
         """
         array-style indexing case of [scalar, scalar]
         """
@@ -269,7 +269,7 @@ class TestClass(unittest.TestCase):
         GridFile(self.test_driver_pointfile4)
         self.assertTrue(True)
 
-    def test_read_he4_2d_single_ellipsis(self):
+    def test_read_he2_2d_single_ellipsis(self):
         """
         array-style indexing case of [...]
         """
@@ -281,7 +281,7 @@ class TestClass(unittest.TestCase):
             expected[j] = j + 10
         np.testing.assert_array_equal(actual, expected)
 
-    def test_read_he4_2d_full(self):
+    def test_read_he2_2d_full(self):
         """
         array-style indexing case of [:]
         """
@@ -293,7 +293,7 @@ class TestClass(unittest.TestCase):
             expected[j] = j + 10
         np.testing.assert_array_equal(actual, expected)
 
-    def test_read_he4_2d_full_full(self):
+    def test_read_he2_2d_full_full(self):
         """
         array-style indexing case of [:,:]
         """
@@ -305,7 +305,7 @@ class TestClass(unittest.TestCase):
             expected[j] = j + 10
         np.testing.assert_array_equal(actual, expected)
 
-    def test_read_he4_2d_row(self):
+    def test_read_he2_2d_row(self):
         """
         array-style indexing case of [scalar int]
         """
@@ -315,7 +315,7 @@ class TestClass(unittest.TestCase):
         expected = np.ones(120, dtype=np.float32) * 11
         np.testing.assert_array_equal(actual, expected)
 
-    def test_read_he4_2d_slice_slice(self):
+    def test_read_he2_2d_slice_slice(self):
         """
         array-style indexing case of [r1;r2, c1:c2]
         """
@@ -327,7 +327,7 @@ class TestClass(unittest.TestCase):
             expected[j] = j + 13
         np.testing.assert_array_equal(actual, expected)
 
-    def test_read_he4_2d_int_ellipsis(self):
+    def test_read_he2_2d_int_ellipsis(self):
         """
         array-style indexing case of [scalar, ...]
         """
@@ -337,7 +337,7 @@ class TestClass(unittest.TestCase):
         expected = np.ones(120, dtype=np.float32) * 13
         np.testing.assert_array_equal(actual, expected)
 
-    def test_read_he4_2d_int_slice(self):
+    def test_read_he2_2d_int_slice(self):
         """
         array-style indexing case of [scalar, :]
         """
@@ -347,7 +347,7 @@ class TestClass(unittest.TestCase):
         expected = np.ones(120, dtype=np.float32) * 13
         np.testing.assert_array_equal(actual, expected)
 
-    def test_read_he4_2d_int_int(self):
+    def test_read_he2_2d_int_int(self):
         """
         array-style indexing case of [scalar, scalar]
         """
@@ -365,7 +365,7 @@ class TestClass(unittest.TestCase):
         GridFile(self.test_driver_zonal_average_file)
         self.assertTrue(True)
 
-    def test_explicit_del_he4(self):
+    def test_explicit_del_he2(self):
         """
         should not generate a ReferenceError when del is explicitly used
         """
@@ -529,12 +529,12 @@ class TestMetadata(unittest.TestCase):
     def test_origininfo(self):
         gdf = GridFile(self.test_driver_gridfile4)
         origincode = gdf.grids['UTMGrid'].origincode
-        self.assertEqual(origincode, he4.HDFE_GD_UL)
+        self.assertEqual(origincode, he2.HDFE_GD_UL)
 
     def test_pixreginfo(self):
         gdf = GridFile(self.test_driver_gridfile4)
         pixregcode = gdf.grids['UTMGrid'].pixregcode
-        self.assertEqual(pixregcode, he4.HDFE_CENTER)
+        self.assertEqual(pixregcode, he2.HDFE_CENTER)
 
     def test_projinfo(self):
         gdf = GridFile(self.test_driver_gridfile4)
