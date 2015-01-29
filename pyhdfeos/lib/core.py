@@ -271,14 +271,63 @@ include_dirs = ["/opt/local/include",
 include_dirs.append("pyhdfeos/lib/source/hdfeos")
 include_dirs.append("pyhdfeos/lib/source/hdfeos5")
 
-hdf4_libraries = ["mfhdf", "df", "jpeg", "z"]
-hdf5_libraries = ["hdf5_hl", "hdf5"]
 library_dirs = ["/opt/local/lib",
                 "/usr/lib",
                 "/usr/lib64/hdf",
                 "/usr/local/lib"]
 
-libraries = hdf4_libraries
+
+def _locate_hdf4_library(libname):
+    """
+    Determine path to the given hdf4 library.
+
+    Parameters
+    ----------
+    libname : str
+        name of hdf4 library
+    """
+
+    suffix_list = ['a', 'so', 'dylib', 'dll']
+    for library_dir in library_dirs:
+        for suffix in suffix_list:
+            if libname is None:
+                continue
+            path = os.path.join(library_dir, 'lib' + libname + '.' + suffix)
+            if os.path.exists(path):
+                return True
+
+    return False
+
+
+def _construct_hdf4_library_dirlist(library_dirs):
+    """
+    Try to determine the name of the HDF4 libraries to use.
+
+    On linux mint 17, at least, it is possible that an alternative package
+    "hdf4-0-alt" may be installed, meaning that "mfhdf" and "df" cannot be
+    used.
+    """
+
+    hdf4_libraries = []
+    # Can we find mfhdf or mfhdfalt?
+    if not _locate_hdf4_library('mfhdf') and _locate_hdf4_library('mfhdfalt'):
+        hdf4_libraries.append('mfhdfalt')
+    else:
+        hdf4_libraries.append('mfhdf')
+
+    # Can we find df or dfalt?
+    if not _locate_hdf4_library('df') and _locate_hdf4_library('dfalt'):
+        hdf4_libraries.append('dfalt')
+    else:
+        hdf4_libraries.append('df')
+
+    hdf4_libraries.extend(['jpeg', 'z'])
+
+    return hdf4_libraries
+
+libraries = _construct_hdf4_library_dirlist(library_dirs)
+
+hdf5_libraries = ["hdf5_hl", "hdf5"]
 libraries.extend(hdf5_libraries)
 
 
@@ -318,31 +367,3 @@ def decode_comma_delimited_ffi_string(strbuf):
     else:
         lst = strbuf.decode('ascii').split(',')
     return lst
-
-
-def library_config(libraries):
-    """
-    Determine library directories where HDF4, HDFEOS, and HDFEOS5 can be found.
-
-    Parameters
-    ----------
-    libraries : list
-        List of libraries that must be found.
-    """
-    library_dir_candidates = []
-    library_dirs = []
-
-    # On Fedora, gctp is named libGctp, but on ubuntu variants, it is libgctp.
-    suffix_list = ['a', 'so', 'dylib', 'dll']
-    for libname in libraries:
-        for library_dir in library_dir_candidates:
-            for suffix in suffix_list:
-                if libname is None:
-                    continue
-                path = os.path.join(library_dir,
-                                    'lib' + libname + '.' + suffix)
-                if os.path.exists(path):
-                    if library_dir not in library_dirs:
-                        library_dirs.append(library_dir)
-
-    return library_dirs
