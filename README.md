@@ -24,3 +24,15 @@ packages include
 You must have both the hdf4 and hdf5 libraries installed, along with their
 respective development packages.  It is not necessary to install HDF-EOS or 
 HDF-EOS5, as that functionality is provided by this package.
+
+Quick Start
+===========
+    * git clone https://github.com/quintusdias/pyhdfeos.git
+    * git checkout devel
+    * python setup.py develop
+
+::
+    
+    >>> from pyhdfeos import GridFile
+    >>> gdf = GridFile('tests/data/Grid.h5')
+    >>> lat, lon = gdf.grids['UTMGrid'][:]
