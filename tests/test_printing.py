@@ -11,7 +11,7 @@ else:
     from unittest.mock import patch
 
 import pyhdfeos
-from pyhdfeos import GridFile, SwathFile
+from pyhdfeos import GridFile
 
 from . import fixtures
 from .fixtures import test_file_exists, test_file_path
@@ -181,41 +181,3 @@ class TestSwathPrinting(unittest.TestCase):
 
     def tearDown(self):
         pass
-
-    def test_repr_swath4file(self):
-        with SwathFile(self.swath4file) as swf1:
-            swf2 = eval(repr(swf1))
-            self.assertEqual(swf1.filename, swf2.filename)
-
-    def test_print_swath4file(self):
-        self.maxDiff = None
-        with SwathFile(self.swath4file) as swf:
-            with patch('sys.stdout', new=StringIO()) as stdout:
-                print(swf)
-                actual = stdout.getvalue().strip()
-        expected = fixtures.swath4
-        self.assertEqual(actual, expected)
-
-
-class TestSwath5Printing(unittest.TestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        file = pkg.resource_filename(__name__, os.path.join('data',
-                                                            'SimpleSwath.h5'))
-        cls.swathfile = file
-
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
-
-    def test_print_swathfile(self):
-        self.maxDiff = None
-        swf = SwathFile(self.swathfile)
-        with patch('sys.stdout', new=StringIO()) as stdout:
-            print(swf)
-            actual = stdout.getvalue().strip()
-        expected = fixtures.swath5
-        self.assertEqual(actual, expected)

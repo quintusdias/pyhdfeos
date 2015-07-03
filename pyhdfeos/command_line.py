@@ -1,7 +1,6 @@
 import argparse
 
 from .grids import GridFile
-from .swaths import SwathFile
 from .lib import he2, he5
 
 
