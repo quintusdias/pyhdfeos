@@ -4,7 +4,7 @@ PYHDFEOS
 
 ![ScreenShot](https://github.com/quintusdias/pyhdfeos/blob/issue37/docs/source/misr.png)
 
-pyhdfeos is a wrapper for the HDF-EOS and HDF-EOS5 libraries.  
+pyhdfeos is a package for reading HDF-EOS grid information.
 
 
 ============
