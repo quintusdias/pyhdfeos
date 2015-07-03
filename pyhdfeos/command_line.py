@@ -2,7 +2,6 @@ import argparse
 
 from .grids import GridFile
 from .swaths import SwathFile
-from .za import ZonalAverageFile
 from .lib import he2, he5
 
 
@@ -27,9 +26,3 @@ def dump_metadata():
     numswaths = len(swf.swaths)
     if numswaths > 0:
         print(swf)
-
-    if he5.ehheishe5(args.filename):
-        zaf = ZonalAverageFile(args.filename)
-        numzas = len(zaf.zas)
-        if numzas > 0:
-            print(zaf)
